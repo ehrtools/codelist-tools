@@ -1,5 +1,10 @@
+//! This file contains the core functionality for the codelist
+
+// External imports
 use std::collections::HashSet;
 use std::str::FromStr;
+
+// Internal imports
 use crate::errors::CodeListValidatorError;
 use crate::validation::{
     icd10_validator::ICD10Validator,
@@ -7,19 +12,25 @@ use crate::validation::{
     snomed_validator::SNOMEDValidator
 };
 use crate::codelist_type::CodeListType;
+use crate::code_entry::CodeEntry;
 
-pub struct CodeEntry {
-    code: String,
-    term: String,
-}
 
+/// Struct to represent a codelist
+///
+/// # Fields
+/// * `file_path` - The path to the file containing original codelist data
+/// * `codelist_type` - The type of codelist
+/// * `code_column` - The name of the column containing the codes (e.g. 'code')
+/// * `term_column` - The name of the column containing the terms (e.g. 'term')
+/// * `data` - The set of code entries once they have been validated
 pub struct CodeList {
     file_path: String,
     codelist_type: CodeListType,
     code_column: String,
     term_column: String,
-    entries: HashSet<CodeEntry>,
+    data: HashSet<CodeEntry>,
 }
+
 
 impl CodeList {
     pub fn new(codelist_type: &str, code_column: String, term_column: String, file_path: String) -> Result<CodeList, CodeListValidatorError> {
@@ -29,7 +40,7 @@ impl CodeList {
             codelist_type,
             code_column,
             term_column,
-            entries: HashSet::new(),
+            data: HashSet::new(),
         };
         
         // Load the codelist entries
@@ -46,18 +57,27 @@ impl CodeList {
         // will need to pick up the errors
     }
 
+    /// Validate the format of the codelist given the codelist type
     pub fn validate_format(&self) {
         match self.codelist_type {
             CodeListType::ICD10 => {
                 ICD10Validator::validate_all_code(self);
-            }
+            },
             CodeListType::SNOMED => {
                 SNOMEDValidator::validate_all_code(self);
-            }
+            },
             CodeListType::OPCS => {
                 OPCSValidator::validate_all_code(self);
+            },
+            _ => {
+                //TODO: error
             }
         }
+    }
+
+    pub fn save_to_format(&self, format: &str) {
+        //TODO
+        // save to csv, txt, excel, etc.
     }
 }
 

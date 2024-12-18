@@ -1,11 +1,24 @@
+/// This module defines the different types of codelists that can be used
+
+/// External imports
 use std::str::FromStr;
+
+/// Internal imports
 use crate::errors::CodeListValidatorError;
 
+
+/// Enum to represent the different types of codelists
+///
+/// # Variants
+/// * `ICD10` - The ICD10 codelist
+/// * `SNOMED` - The SNOMED codelist
+/// * `OPCS` - The OPCS codelist
 pub enum CodeListType {
     ICD10,
     SNOMED,
     OPCS,
 }
+
 
 impl FromStr for CodeListType {
     type Err = CodeListValidatorError;
