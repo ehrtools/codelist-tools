@@ -2,13 +2,13 @@ use std::fmt;
 
 #[derive(Debug)]
 pub enum CodeListValidatorError {
-    InvalidSNOMEDCodeError,
-    InvalidICD10CodeError,
-    InvalidOPCSCodesError,
-    RepeatedCodeError,
-    InvalidDataShapeError,
-    InvalidProcessingRequest,
-    InvalidCodeListError,
+    // InvalidSNOMEDCodeError,
+    // InvalidICD10CodeError,
+    // InvalidOPCSCodesError,
+    // RepeatedCodeError,
+    // InvalidDataShapeError,
+    // InvalidProcessingRequest,
+    // InvalidCodeListError,
     InvalidCodelistType(String),
 }
 
