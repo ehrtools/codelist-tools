@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 use std::str::FromStr;
+use crate::errors::CodeListValidatorError;
 use crate::validation::{
     icd10_validator::ICD10Validator,
     opcs_validator::OPCSValidator,
@@ -13,14 +14,14 @@ pub enum CodeListType {
 }
 
 impl FromStr for CodeListType {
-    type Err = String; // TODO: add custom error handling
+    type Err = CodeListValidatorError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "icd10" => Ok(CodeListType::ICD10),
             "snomed" => Ok(CodeListType::SNOMED),
             "opcs" => Ok(CodeListType::OPCS),
-            _ => Err(format!("Invalid codelist type: {}", s)),
+            invalid_code => Err(CodeListValidatorError::InvalidCodelistType(invalid_code.to_string())),
         }
     }
 }
@@ -38,9 +39,8 @@ pub struct CodeList {
     entries: HashSet<CodeEntry>,
 }
 
-// TODO: add custom error handling
 impl CodeList {
-    pub fn new(codelist_type: &str, code_column: String, term_column: String, file_path: String) -> Result<CodeList, String> {
+    pub fn new(codelist_type: &str, code_column: String, term_column: String, file_path: String) -> Result<CodeList, CodeListValidatorError> {
         let codelist_type = CodeListType::from_str(codelist_type)?;
         let mut codelist = CodeList {
             file_path: file_path.clone(),
@@ -61,6 +61,7 @@ impl CodeList {
         //TODO
         // read data from csv, for each row validate code based on codelist type using validate_codelist
         // store validated code/term pairs in entries within codelist
+        // will need to pick up the errors
     }
 
     pub fn validate_codelist(&self, code: &str) -> bool {
