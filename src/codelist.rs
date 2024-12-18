@@ -6,25 +6,7 @@ use crate::validation::{
     opcs_validator::OPCSValidator,
     snomed_validator::SNOMEDValidator
 };
-
-pub enum CodeListType {
-    ICD10,
-    SNOMED,
-    OPCS,
-}
-
-impl FromStr for CodeListType {
-    type Err = CodeListValidatorError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "icd10" => Ok(CodeListType::ICD10),
-            "snomed" => Ok(CodeListType::SNOMED),
-            "opcs" => Ok(CodeListType::OPCS),
-            invalid_code => Err(CodeListValidatorError::InvalidCodelistType(invalid_code.to_string())),
-        }
-    }
-}
+use crate::codelist_type::CodeListType;
 
 pub struct CodeEntry {
     code: String,
@@ -56,7 +38,7 @@ impl CodeList {
         Ok(codelist)
     }
 
-    // function to add term/code entries to codelist struct for validating
+    // this is a temporary function and will be pulled into a CodeListFactory method
     pub fn load_codelist(&mut self, file_path: &str) {
         //TODO
         // read data from csv, for each row validate code based on codelist type using validate_codelist
@@ -64,11 +46,30 @@ impl CodeList {
         // will need to pick up the errors
     }
 
-    pub fn validate_codelist(&self, code: &str) -> bool {
+    pub fn validate_format(&self) {
         match self.codelist_type {
-            CodeListType::ICD10 => ICD10Validator::validate(self, code),
-            CodeListType::SNOMED => SNOMEDValidator::validate(self, code),
-            CodeListType::OPCS => OPCSValidator::validate(self, code),
+            CodeListType::ICD10 => {
+                ICD10Validator::validate_all_code(self);
+            }
+            CodeListType::SNOMED => {
+                SNOMEDValidator::validate_all_code(self);
+            }
+            CodeListType::OPCS => {
+                OPCSValidator::validate_all_code(self);
+            }
         }
     }
 }
+
+//TODO:
+// several options of making codelist, e.g. excel, txt file, csv, hashset - codelistfactory handles this
+// pub struct CodeListFactory {
+//     input_directory: String,
+//     output_directory: String,
+// }
+// impl CodeListFactory {
+//     pub fn generate_codelist() {
+//         // method for taking in data and outputting result of codelist or error
+//     }
+// also need save to format function (e.g. to csv) - code/term columns, all valid
+// }

@@ -9,13 +9,13 @@ pub enum CodeListValidatorError {
     // InvalidDataShapeError,
     // InvalidProcessingRequest,
     // InvalidCodeListError,
-    InvalidCodelistType(String),
+    InvalidCodeListType(String),
 }
 
 impl fmt::Display for CodeListValidatorError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::InvalidCodelistType(invalid_type) => write!(f, "Invalid codelist type provided: {}", invalid_type)
+            Self::InvalidCodeListType(invalid_type) => write!(f, "Invalid codelist type provided: {}", invalid_type),
             // TODO
         }
     }
