@@ -4,6 +4,7 @@
 //! is the ICD-10 code and the term is the description of the code. like 'B29.0' and
 //! 'Acute viral hepatitis C'.
 
+use serde::{Deserialize, Serialize};
 
 /// Struct to represent a code entry
 ///
@@ -13,6 +14,7 @@
 /// Fields:
 /// * `code` - The code
 /// * `term` - The term
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CodeEntry {
     code: String,
     term: String,

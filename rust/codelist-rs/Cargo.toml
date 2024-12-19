@@ -1,0 +1,9 @@
+[package]
+name = "codelist-rs"
+version = "0.1.0"
+edition = "2021"
+authors = ["Caroline Morton <caroline@parakeetconsulting.com>", "Emma Bagshaw"]
+description = "Base library for medical code list handling"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }

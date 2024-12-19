@@ -2,6 +2,7 @@
 
 /// External imports
 use std::str::FromStr;
+use serde::{Serialize, Deserialize};
 
 /// Internal imports
 use crate::errors::CodeListValidatorError;
@@ -13,6 +14,7 @@ use crate::errors::CodeListValidatorError;
 /// * `ICD10` - The ICD10 codelist
 /// * `SNOMED` - The SNOMED codelist
 /// * `OPCS` - The OPCS codelist
+#[derive(Debug, Serialize, Deserialize)]
 pub enum CodeListType {
     ICD10,
     SNOMED,
