@@ -2,24 +2,19 @@
 
 // External imports
 use std::collections::HashSet;
-use std::str::FromStr;
 use serde::{Serialize, Deserialize};
 
 // Internal imports
 use crate::types::CodeListType;
 use crate::code_entry::CodeEntry;
+use crate::metadata::Metadata;
 
 
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Metadata {
-    source: String, /// @emma this could be an enum at some point .e.g mapped from another codelist, or laoded from file
-    authors: Option<Vec<String>>,
-    version: Option<String>, /// @emma we can enforce this to be something with a date format
-    description: Option<String>,
-}
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct CodeListOptions {
     allow_duplicates: bool,
     truncate_to_3_digits: bool,  // ICD10 specific only
@@ -51,7 +46,7 @@ impl Default for CodeListOptions {
 /// * `metadata` - Metadata about the codelist
 /// * `logs` - Logs of anything that happened during the codelist creation
 /// * `codelist_options` - Options for the codelist
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct CodeList {
     entries: HashSet<CodeEntry>,
     codelist_type: CodeListType,

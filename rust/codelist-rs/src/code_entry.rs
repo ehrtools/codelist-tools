@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// Fields:
 /// * `code` - The code
 /// * `term` - The term
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Eq, Hash)]
 pub struct CodeEntry {
     pub code: String,
     pub term: String,
