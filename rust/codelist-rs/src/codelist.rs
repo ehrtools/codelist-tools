@@ -82,7 +82,7 @@ impl CodeList {
     }
 
     pub fn remove_entry(&mut self, code: &str) {
-        // Some implementation
+        self.entries.retain(|entry| entry.code != code);
     }
 
     pub fn entries(&self) -> &HashSet<CodeEntry> {
@@ -101,6 +101,17 @@ impl CodeList {
         // Some implementation
     }
 
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_codelist() {
+
+    }
 }
 
 
