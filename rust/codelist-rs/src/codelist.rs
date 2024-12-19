@@ -4,14 +4,12 @@
 use std::collections::HashSet;
 use serde::{Serialize, Deserialize};
 
+
 // Internal imports
 use crate::types::CodeListType;
 use crate::code_entry::CodeEntry;
 use crate::metadata::Metadata;
-
-
-
-
+use crate::errors::CodeListError;
 
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -22,7 +20,6 @@ pub struct CodeListOptions {
     code_column_name: String,
     term_column_name: String,
 }
-
 
 /// Codelist Options
 impl Default for CodeListOptions {
@@ -36,7 +33,6 @@ impl Default for CodeListOptions {
         }
     }
 }
-
 
 /// Struct to represent a codelist
 ///
@@ -109,6 +105,7 @@ mod tests {
     }
 }
 
+// 
 
 
 
