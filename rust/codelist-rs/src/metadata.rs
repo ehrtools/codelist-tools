@@ -16,6 +16,7 @@ pub enum MetadataSource {
 
 /// Metadata Source
 impl MetadataSource {
+    /// Convert the metadata source to a string
     pub fn to_string(&self) -> String {
         match self {
             MetadataSource::LoadedFromFile => "Loaded from file".to_string(),
@@ -24,9 +25,6 @@ impl MetadataSource {
         }
     }
 }
-
-
-
 
 
 /// Struct to represent the metadata of a codelist
@@ -46,6 +44,12 @@ pub struct Metadata {
 
 impl Metadata {
     /// Create a new metadata
+    ///
+    /// # Arguments
+    /// * `source` - The source of the codelist
+    /// * `authors` - The authors of the codelist
+    /// * `version` - The version of the codelist
+    /// * `description` - The description of the codelist
     pub fn new(source: MetadataSource, authors: Option<Vec<String>>, version: Option<String>, description: Option<String>) -> Metadata {
         Metadata {
             source,
@@ -76,7 +80,6 @@ impl Metadata {
     }
 
 }
-
 
 
 #[cfg(test)]
