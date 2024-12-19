@@ -1,0 +1,10 @@
+[package]
+name = "codelist-validator-rs"
+version = "0.1.0"
+edition = "2021"
+authors = ["Caroline Morton <caroline@parakeetconsulting.com>", "Emma Bagshaw"]
+description = "Validation library for medical code lists"
+
+[dependencies]
+codelist-rs = { path = "../codelist-rs" }
+serde = { version = "1.0", features = ["derive"] }

@@ -1,0 +1,8 @@
+[
+workspace
+]
+members = [
+    "codelist-rs",
+    "codelist-validator-rs",
+]
+resolver = "2"
