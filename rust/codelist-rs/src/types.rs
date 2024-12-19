@@ -14,7 +14,7 @@ use crate::errors::CodeListValidatorError;
 /// * `ICD10` - The ICD10 codelist
 /// * `SNOMED` - The SNOMED codelist
 /// * `OPCS` - The OPCS codelist
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub enum CodeListType {
     ICD10,
     SNOMED,
