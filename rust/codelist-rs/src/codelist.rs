@@ -248,6 +248,14 @@ mod tests {
     }
 
     #[test]
+    fn test_duplicate_entries() {
+        let mut codelist = CodeList::new(CodeListType::ICD10, create_test_metadata(), None);
+        codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string());
+        codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string());
+        assert_eq!(codelist.entries().len(), 1);
+    }
+
+    #[test]
     fn test_getting_codelist_type() {
         let codelist = create_test_codelist();
         assert_eq!(codelist.codelist_type(), &CodeListType::ICD10);
@@ -334,6 +342,13 @@ mod tests {
         assert_eq!(content, "Test log message\n");
         std::fs::remove_file("test.log")?;
         Ok(())
+    }
+
+#[test]
+    fn test_get_metadata() {
+        let metadata = create_test_metadata();
+        let codelist = CodeList::new(CodeListType::ICD10, metadata.clone(), None);
+        assert_eq!(codelist.metadata(), &metadata);
     }
 }
 
