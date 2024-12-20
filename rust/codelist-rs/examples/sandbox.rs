@@ -3,9 +3,9 @@
 use codelist_rs::codelist::CodeList;
 use codelist_rs::metadata::{Metadata, MetadataSource};
 use codelist_rs::types::CodeListType;
+use codelist_rs::errors::CodeListError;
 
-
-fn main() {
+fn main() -> Result<(), CodeListError> {
 
     // Metadata for the codelist
     let metadata = Metadata {
@@ -22,8 +22,10 @@ fn main() {
         None,
     );
 
-    codelist.add_entry("A00".to_string(), "Cholera".to_string());
-    codelist.add_entry("A01".to_string(), "Typhoid and paratyphoid fevers".to_string());
+    codelist.add_entry("A00".to_string(), "Cholera".to_string())?;
+    codelist.add_entry("A01".to_string(), "Typhoid and paratyphoid fevers".to_string())?;
 
     println!("{:?}", codelist);
+
+    Ok(())
 }
