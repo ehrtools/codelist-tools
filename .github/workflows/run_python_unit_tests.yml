@@ -25,7 +25,7 @@ jobs:
 
       - name: Set up virtual environment and install dependencies
         run: |
-          cd python 
+          cd python_bindings
           python -m venv venv
           source venv/bin/activate
           python -m pip install --upgrade pip
