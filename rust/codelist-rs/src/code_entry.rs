@@ -45,8 +45,15 @@ mod tests {
     #[test]
     fn test_creating_code_entry() {
         let entry = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string());
-        
+
         assert_eq!(entry.code, "R65.2".to_string());
         assert_eq!(entry.term, "Severe sepsis".to_string());
     }
 }
+
+// TODO: 
+// tests:
+// if given empty string for code or term, return error
+// if given code with invalid characters, return error
+// think of other tests
+
