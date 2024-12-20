@@ -162,22 +162,90 @@ impl CodeList {
         Ok(())
     }
 
+    /// Get the metadata
+    ///
+    /// # Returns
+    /// * `&Metadata` - The metadata
+    pub fn metadata(&self) -> &Metadata {
+        &self.metadata
+    }
+
 }
 
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::metadata::MetadataSource;
+
+    // Helper function to create test metadata
+    fn create_test_metadata() -> Metadata {
+        Metadata {
+            source: MetadataSource::ManuallyCreated,
+            authors: Some(vec!["Caroline Morton".to_string()]),
+            version: Some("2024-12-19".to_string()),
+            description: Some("A test codelist".to_string()),
+        }
+    }
 
     #[test]
-    fn test_codelist() {
+    fn test_creating_codelist_default_options() {
+        let metadata = create_test_metadata();
+        let codelist = CodeList::new(CodeListType::ICD10, metadata, None);
 
+        assert_eq!(codelist.metadata().source, MetadataSource::ManuallyCreated);
+        assert_eq!(codelist.metadata().authors, Some(vec!["Caroline Morton".to_string()]));
+        assert_eq!(codelist.metadata().version, Some("2024-12-19".to_string()));
+        assert_eq!(codelist.metadata().description, Some("A test codelist".to_string()));
+        assert_eq!(codelist.codelist_type(), &CodeListType::ICD10);
+        assert_eq!(codelist.entries().len(), 0);
+        assert_eq!(codelist.logs.len(), 0);
+        assert_eq!(&codelist.codelist_options, &CodeListOptions::default());
+    }
+
+    #[test]
+    fn test_creating_codelist_custom_options() {
+        let metadata = create_test_metadata();
+
+        let codelist_options = CodeListOptions {
+            allow_duplicates: true,
+            truncate_to_3_digits: true,
+            add_x_codes: true,
+            code_column_name: "test_code".to_string(),
+            term_column_name: "test_term".to_string(),
+        };
+        
+        let codelist = CodeList::new(CodeListType::ICD10, metadata, Some(codelist_options));
+
+        assert_eq!(codelist.codelist_options.allow_duplicates, true);
+        assert_eq!(codelist.codelist_options.truncate_to_3_digits, true);
+        assert_eq!(codelist.codelist_options.add_x_codes, true);
+        assert_eq!(codelist.codelist_options.code_column_name, "test_code".to_string());
+        assert_eq!(codelist.codelist_options.term_column_name, "test_term".to_string());
+
+        assert_eq!(codelist.metadata().source, MetadataSource::ManuallyCreated);
+        assert_eq!(codelist.metadata().authors, Some(vec!["Caroline Morton".to_string()]));
+        assert_eq!(codelist.metadata().version, Some("2024-12-19".to_string()));
+        assert_eq!(codelist.metadata().description, Some("A test codelist".to_string()));
+        assert_eq!(codelist.codelist_type(), &CodeListType::ICD10);
+        assert_eq!(codelist.entries().len(), 0);
+        assert_eq!(codelist.logs.len(), 0);
+    }
+
+    #[test]
+    fn test_getting_codelist_type() {
+        let codelist = CodeList::new(CodeListType::SNOMED, create_test_metadata(), None);
+        assert_eq!(codelist.codelist_type(), &CodeListType::SNOMED);
     }
 }
 
-// 
-
-
+//todo
+// test adding an entry
+// test removing an entry that exists and doesnt exist
+// test getting entries
+// test saving to csv
+// test saving to json
+// test saving log
 
 //TODO:
 // several options of making codelist, e.g. excel, txt file, csv, hashset - codelistfactory handles this
