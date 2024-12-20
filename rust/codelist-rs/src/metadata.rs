@@ -71,12 +71,33 @@ impl Metadata {
         }
     }
 
+    /// Remove an author from the metadata
+    ///
+    /// # Arguments
+    /// * `author` - The author to remove
+    pub fn remove_author(&mut self, author: String) {
+        if let Some(authors) = &mut self.authors {
+            let index = authors.iter().position(|x| x == &author);
+            if let Some(index) = index {
+                authors.remove(index);
+            }
+        }
+    }
+
     /// Add a description to the metadata
     ///
     /// # Arguments
     /// * `description` - The description to add
     pub fn add_description(&mut self, description: String) {
         self.description = Some(description);
+    }
+
+    /// Remove the description from the metadata
+    ///
+    /// # Arguments
+    /// * `description` - The description to remove
+    pub fn remove_description(&mut self) {
+        self.description = None;
     }
 
 }
@@ -153,6 +174,19 @@ mod tests {
     }
 
     #[test]
+    fn test_remove_author() {
+        let mut metadata = Metadata {
+            source: MetadataSource::LoadedFromFile,
+            authors: Some(vec!["Author 1".to_string(), "Author 2".to_string()]),
+            version: Some("1.0.0".to_string()),
+            description: Some("This is a codelist".to_string()),
+        };
+
+        metadata.remove_author("Author 2".to_string());
+        assert_eq!(metadata.authors, Some(vec!["Author 1".to_string()]));
+    }
+
+    #[test]
     fn test_add_description() {
         let mut metadata = Metadata {
             source: MetadataSource::LoadedFromFile,
@@ -164,5 +198,20 @@ mod tests {
         metadata.add_description("This is a new description".to_string());
         assert_eq!(metadata.description, Some("This is a new description".to_string()));
     }
+
+    #[test]
+    fn test_remove_description() {
+        let mut metadata = Metadata {
+            source: MetadataSource::LoadedFromFile,
+            authors: Some(vec!["Author 1".to_string()]),
+            version: Some("1.0.0".to_string()),
+            description: Some("This is a codelist".to_string()),
+        };
+
+        metadata.remove_description();
+        assert_eq!(metadata.description, None);
+    }
+
+
 
 }
