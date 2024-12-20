@@ -28,3 +28,5 @@ todo.txt
 
 ## Python ##
 __pycache__/
+venv/
+.venv/
