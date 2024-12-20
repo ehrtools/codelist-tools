@@ -12,7 +12,14 @@ use crate::code_entry::CodeEntry;
 use crate::metadata::Metadata;
 use crate::errors::CodeListError;
 
-
+/// Struct to represent a codelist options
+///
+/// # Fields
+/// * `allow_duplicates` - Whether to allow duplicates in the codelist
+/// * `truncate_to_3_digits` - Whether to truncate the code to 3 digits
+/// * `add_x_codes` - Whether to add x codes to the codelist
+/// * `code_column_name` - The name of the code column
+/// * `term_column_name` - The name of the term column
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct CodeListOptions {
     allow_duplicates: bool,
@@ -22,8 +29,11 @@ pub struct CodeListOptions {
     term_column_name: String,
 }
 
-/// Codelist Options
 impl Default for CodeListOptions {
+    /// Default implementation for CodeListOptions
+    ///
+    /// # Returns
+    /// * `CodeListOptions` - The default CodeListOptions
     fn default() -> Self {
         Self {
             allow_duplicates: false,
@@ -122,7 +132,7 @@ impl CodeList {
     /// * `file_path` - The path to the file to save the codelist entries to
     ///
     /// # Errors
-    /// * `CodeListError::IOError` - If the file cannot be written to
+    /// * `CodeListError::IOError` - If an error occurs when writing to the file
     pub fn save_to_csv(&self, file_path: &str) -> std::result::Result<(), CodeListError> {
         let mut wtr = Writer::from_path(file_path)?;
         // use column names from options
@@ -140,7 +150,7 @@ impl CodeList {
     /// * `file_path` - The path to the file to save the codelist struct to
     ///
     /// # Errors
-    /// * `CodeListError::IOError` - If the file cannot be written to
+    /// * `CodeListError::IOError` - If an error occurs when writing to the file
     pub fn save_to_json(&self, file_path: &str) -> std::result::Result<(), CodeListError> {
         let json = serde_json::to_string_pretty(self)?;
         std::fs::write(file_path, json)?;
@@ -153,7 +163,7 @@ impl CodeList {
     /// * `file_path` - The path to the file to save the logs to
     ///
     /// # Errors
-    /// * `CodeListError::IOError` - If the file cannot be written to
+    /// * `CodeListError::IOError` - If an error occurs when writing to the file
     pub fn save_log(&self, file_path: &str) -> std::result::Result<(), CodeListError> {
         let mut file = std::fs::File::create(file_path)?;
         for log in &self.logs {
@@ -205,7 +215,7 @@ mod tests {
     }
 
     #[test]
-    fn test_creating_codelist_default_options() {
+    fn test_create_codelist_default_options() {
         let codelist = create_test_codelist();
 
         assert_eq!(codelist.metadata().source, MetadataSource::ManuallyCreated);
@@ -219,7 +229,7 @@ mod tests {
     }
 
     #[test]
-    fn test_creating_codelist_custom_options() {
+    fn test_create_codelist_custom_options() {
         let metadata = create_test_metadata();
 
         let codelist_options = CodeListOptions {
@@ -252,39 +262,48 @@ mod tests {
         let mut codelist = CodeList::new(CodeListType::ICD10, create_test_metadata(), None);
         codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string());
         codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string());
+
         assert_eq!(codelist.entries().len(), 1);
     }
 
     #[test]
-    fn test_getting_codelist_type() {
+    fn test_get_codelist_type() {
         let codelist = create_test_codelist();
+
         assert_eq!(codelist.codelist_type(), &CodeListType::ICD10);
     }
 
     #[test]
-    fn test_adding_entry() {
+    fn test_add_entry() {
         let codelist = create_test_codelist();
         let entry1 = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string());
         let entry2 = CodeEntry::new("A48.51".to_string(), "Infant botulism".to_string());
+    
         assert_eq!(codelist.entries().len(), 2);
         assert!(codelist.entries().contains(&entry1));
         assert!(codelist.entries().contains(&entry2));
     }
 
     #[test]
-    fn test_removing_entry_that_exists() -> Result<(), CodeListError> {
+    fn test_remove_entry_that_exists() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist();
         codelist.remove_entry("R65.2")?;
+        let entry = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string());
+
         assert_eq!(codelist.entries().len(), 1);
+        assert!(!codelist.entries().contains(&entry));
+
         Ok(())
     }
 
     #[test]
-    fn test_removing_entry_that_doesnt_exist() -> Result<(), CodeListError> {
+    fn test_remove_entry_that_doesnt_exist() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist();
         let error = codelist.remove_entry("A48.52").unwrap_err();
+
         assert!(matches!(error, CodeListError::EntryNotFound(code) if code == "A48.52"));
         assert_eq!(codelist.entries().len(), 2);
+
         Ok(())
     }
 
@@ -294,53 +313,65 @@ mod tests {
         let entries = codelist.entries();
         let test_entry_1 = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string());
         let test_entry_2 = CodeEntry::new("A48.51".to_string(), "Infant botulism".to_string());
+
         assert_eq!(entries.len(), 2);
         assert!(entries.contains(&test_entry_1));
         assert!(entries.contains(&test_entry_2));
     }
 
     #[test]
-    fn test_saving_to_csv() -> Result<(), CodeListError> {
+    fn test_save_to_csv() -> Result<(), CodeListError> {
         let codelist = create_test_codelist();
         codelist.save_to_csv("test.csv")?;
         let content = std::fs::read_to_string("test.csv")?;
         let lines: Vec<&str> = content.lines().collect();
-        assert_eq!(lines[0], "code,term");
         let mut data_lines = lines[1..].to_vec();
         data_lines.sort();
+
+        assert_eq!(lines[0], "code,term");
         assert_eq!(data_lines, vec!["A48.51,Infant botulism", "R65.2,Severe sepsis"]);
-        std::fs::remove_file("test.csv")?;   
+
+        std::fs::remove_file("test.csv")?;  
+
         Ok(())
     }
     
     #[test]
-    fn test_saving_to_json() -> Result<(), CodeListError> {
+    fn test_save_to_json() -> Result<(), CodeListError> {
         let original_codelist = create_test_codelist();
         original_codelist.save_to_json("test_codelist.json")?;
         let json_content = std::fs::read_to_string("test_codelist.json")?;
         let loaded_codelist: CodeList = serde_json::from_str(&json_content)?;
-        std::fs::remove_file("test_codelist.json")?;
+
         assert_eq!(original_codelist, loaded_codelist);
+
+        std::fs::remove_file("test_codelist.json")?;
+
         Ok(())
     }
 
     #[test]
-    fn test_adding_to_log() -> Result<(), CodeListError> {
+    fn test_add_to_log() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist();
         codelist.add_log("Test log message".to_string());
+
         assert_eq!(codelist.logs.len(), 1);
         assert_eq!(codelist.logs[0], "Test log message".to_string());
+
         Ok(())
     }   
 
     #[test]
-    fn test_saving_log() -> Result<(), CodeListError> {
+    fn test_save_log() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist();
         codelist.add_log("Test log message".to_string());
         codelist.save_log("test.log")?;
         let content = std::fs::read_to_string("test.log")?;
+
         assert_eq!(content, "Test log message\n");
+
         std::fs::remove_file("test.log")?;
+
         Ok(())
     }
 
@@ -348,9 +379,11 @@ mod tests {
     fn test_get_metadata() {
         let metadata = create_test_metadata();
         let codelist = CodeList::new(CodeListType::ICD10, metadata.clone(), None);
+
         assert_eq!(codelist.metadata(), &metadata);
     }
 }
+
 
 //TODO:
 // several options of making codelist, e.g. excel, txt file, csv, hashset - codelistfactory handles this
