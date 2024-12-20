@@ -61,17 +61,17 @@ mod tests {
 
     #[test]
     fn test_from_str() {
-        assert_eq!(CodeListType::from_str("icd10"), Ok(CodeListType::ICD10));
-        assert_eq!(CodeListType::from_str("snomed"), Ok(CodeListType::SNOMED));
-        assert_eq!(CodeListType::from_str("opcs"), Ok(CodeListType::OPCS));
-        assert_eq!(CodeListType::from_str("invalid"), Err(CodeListError::InvalidCodeListType("invalid".to_string())));
+        assert!(matches!(CodeListType::from_str("icd10"), Ok(CodeListType::ICD10)));
+        assert!(matches!(CodeListType::from_str("snomed"), Ok(CodeListType::SNOMED)));
+        assert!(matches!(CodeListType::from_str("opcs"), Ok(CodeListType::OPCS)));
+        assert!(matches!(CodeListType::from_str("invalid"), Err(CodeListError::InvalidCodeListType(_))));
     }
 
     #[test]
     fn test_from_str_case_insensitive() {
-        assert_eq!(CodeListType::from_str("ICD10"), Ok(CodeListType::ICD10));
-        assert_eq!(CodeListType::from_str("SNOMED"), Ok(CodeListType::SNOMED));
-        assert_eq!(CodeListType::from_str("OPCS"), Ok(CodeListType::OPCS));
+        assert!(matches!(CodeListType::from_str("ICD10"), Ok(CodeListType::ICD10)));
+        assert!(matches!(CodeListType::from_str("SNOMED"), Ok(CodeListType::SNOMED)));
+        assert!(matches!(CodeListType::from_str("OPCS"), Ok(CodeListType::OPCS)));
     }
 
     #[test]

@@ -4,7 +4,6 @@
 use std::collections::HashSet;
 use serde::{Serialize, Deserialize};
 
-
 // Internal imports
 use crate::types::CodeListType;
 use crate::code_entry::CodeEntry;
@@ -72,24 +71,34 @@ impl CodeList {
         self.entries.insert(entry);
     }
 
-    pub fn remove_entry(&mut self, code: &str) {
+    pub fn remove_entry(&mut self, code: &str) -> Result<(), CodeListError> {
+        let initial_size = self.entries.len();
         self.entries.retain(|entry| entry.code != code);
+        let final_size = self.entries.len();
+        if initial_size == final_size {
+            return Err(CodeListError::EntryNotFound(code.to_string()));
+        }
+        Ok(())
     }
 
     pub fn entries(&self) -> &HashSet<CodeEntry> {
         &self.entries
     }
 
-    pub fn save_to_csv(&self, file_path: &str) {
+    pub fn save_to_csv(&self, file_path: &str) -> std::result::Result<(), CodeListError> {
         // Some implementation
+        Ok(())
     }
 
-    pub fn save_to_json(&self, file_path: &str) {
-        // Some implementation
+    pub fn save_to_json(&self, file_path: &str) -> std::result::Result<(), CodeListError> {
+        let json = serde_json::to_string_pretty(self)?;
+        std::fs::write(file_path, json)?;
+        Ok(())
     }
 
-    pub fn save_log(&self, file_path: &str) {
+    pub fn save_log(&self, file_path: &str) -> std::result::Result<(), CodeListError> {
         // Some implementation
+        Ok(())
     }
 
 }
