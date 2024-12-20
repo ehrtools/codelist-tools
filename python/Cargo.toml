@@ -8,5 +8,5 @@ name = "codelist"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.23.3", features = ["extension-module"] }
-#codelist-rs = { path = "../rust/codelist-rs" }
+pyo3 = { version = "0.20.0", features = ["extension-module"] }
+codelist-rs = { path = "../rust/codelist-rs" }

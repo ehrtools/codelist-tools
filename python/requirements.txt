@@ -1,0 +1,2 @@
+-e git+https://github.com/CarolineMorton/codelist-validator.git@784f609a9290d0fb78f497160cc3b6b29e820c63#egg=codelist&subdirectory=python
+maturin==1.7.8
