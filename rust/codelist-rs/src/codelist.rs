@@ -16,11 +16,11 @@ use crate::metadata::Metadata;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct CodeListOptions {
-    allow_duplicates: bool,
-    truncate_to_3_digits: bool,  // ICD10 specific only
-    add_x_codes: bool,           // ICD10 specific only
-    code_column_name: String,
-    term_column_name: String,
+    pub allow_duplicates: bool,
+    pub truncate_to_3_digits: bool,  // ICD10 specific only
+    pub add_x_codes: bool,           // ICD10 specific only
+    pub code_column_name: String,
+    pub term_column_name: String,
 }
 
 
@@ -48,11 +48,11 @@ impl Default for CodeListOptions {
 /// * `codelist_options` - Options for the codelist
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct CodeList {
-    entries: HashSet<CodeEntry>,
-    codelist_type: CodeListType,
-    metadata: Metadata,
-    logs: Vec<String>, // We will want to make this a struct with more info at some point
-    codelist_options: CodeListOptions,
+    pub entries: HashSet<CodeEntry>,
+    pub codelist_type: CodeListType,
+    pub metadata: Metadata,
+    pub logs: Vec<String>, // We will want to make this a struct with more info at some point
+    pub codelist_options: CodeListOptions,
 }
 
 
