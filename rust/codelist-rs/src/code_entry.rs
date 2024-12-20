@@ -37,3 +37,15 @@ impl CodeEntry {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_creating_code_entry() {
+        let entry = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string());
+        assert_eq!(entry.code, "R65.2".to_string());
+        assert_eq!(entry.term, "Severe sepsis".to_string());
+    }
+}

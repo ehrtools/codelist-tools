@@ -162,6 +162,14 @@ impl CodeList {
         Ok(())
     }
 
+    /// Add a log message to the codelist
+    ///
+    /// # Arguments
+    /// * `message` - The message to add to the log
+    pub fn add_log(&mut self, message: String) {
+        self.logs.push(message);
+    }
+
     /// Get the metadata
     ///
     /// # Returns
@@ -188,17 +196,24 @@ mod tests {
         }
     }
 
+    // Helper function to create a test codelist with two entries, default options and test metadata
+    fn create_test_codelist() -> CodeList {
+        let mut codelist = CodeList::new(CodeListType::ICD10, create_test_metadata(), None);
+        codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string());
+        codelist.add_entry("A48.51".to_string(), "Infant botulism".to_string());
+        codelist
+    }
+
     #[test]
     fn test_creating_codelist_default_options() {
-        let metadata = create_test_metadata();
-        let codelist = CodeList::new(CodeListType::ICD10, metadata, None);
+        let codelist = create_test_codelist();
 
         assert_eq!(codelist.metadata().source, MetadataSource::ManuallyCreated);
         assert_eq!(codelist.metadata().authors, Some(vec!["Caroline Morton".to_string()]));
         assert_eq!(codelist.metadata().version, Some("2024-12-19".to_string()));
         assert_eq!(codelist.metadata().description, Some("A test codelist".to_string()));
         assert_eq!(codelist.codelist_type(), &CodeListType::ICD10);
-        assert_eq!(codelist.entries().len(), 0);
+        assert_eq!(codelist.entries().len(), 2);
         assert_eq!(codelist.logs.len(), 0);
         assert_eq!(&codelist.codelist_options, &CodeListOptions::default());
     }
@@ -234,18 +249,93 @@ mod tests {
 
     #[test]
     fn test_getting_codelist_type() {
-        let codelist = CodeList::new(CodeListType::SNOMED, create_test_metadata(), None);
-        assert_eq!(codelist.codelist_type(), &CodeListType::SNOMED);
+        let codelist = create_test_codelist();
+        assert_eq!(codelist.codelist_type(), &CodeListType::ICD10);
+    }
+
+    #[test]
+    fn test_adding_entry() {
+        let codelist = create_test_codelist();
+        let entry1 = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string());
+        let entry2 = CodeEntry::new("A48.51".to_string(), "Infant botulism".to_string());
+        assert_eq!(codelist.entries().len(), 2);
+        assert!(codelist.entries().contains(&entry1));
+        assert!(codelist.entries().contains(&entry2));
+    }
+
+    #[test]
+    fn test_removing_entry_that_exists() -> Result<(), CodeListError> {
+        let mut codelist = create_test_codelist();
+        codelist.remove_entry("R65.2")?;
+        assert_eq!(codelist.entries().len(), 1);
+        Ok(())
+    }
+
+    #[test]
+    fn test_removing_entry_that_doesnt_exist() -> Result<(), CodeListError> {
+        let mut codelist = create_test_codelist();
+        let error = codelist.remove_entry("A48.52").unwrap_err();
+        assert!(matches!(error, CodeListError::EntryNotFound(code) if code == "A48.52"));
+        assert_eq!(codelist.entries().len(), 2);
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_entries() {
+        let codelist = create_test_codelist();
+        let entries = codelist.entries();
+        let test_entry_1 = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string());
+        let test_entry_2 = CodeEntry::new("A48.51".to_string(), "Infant botulism".to_string());
+        assert_eq!(entries.len(), 2);
+        assert!(entries.contains(&test_entry_1));
+        assert!(entries.contains(&test_entry_2));
+    }
+
+    #[test]
+    fn test_saving_to_csv() -> Result<(), CodeListError> {
+        let codelist = create_test_codelist();
+        codelist.save_to_csv("test.csv")?;
+        let content = std::fs::read_to_string("test.csv")?;
+        let lines: Vec<&str> = content.lines().collect();
+        assert_eq!(lines[0], "code,term");
+        let mut data_lines = lines[1..].to_vec();
+        data_lines.sort();
+        assert_eq!(data_lines, vec!["A48.51,Infant botulism", "R65.2,Severe sepsis"]);
+        std::fs::remove_file("test.csv")?;   
+        Ok(())
+    }
+    
+    #[test]
+    fn test_saving_to_json() -> Result<(), CodeListError> {
+        let original_codelist = create_test_codelist();
+        original_codelist.save_to_json("test_codelist.json")?;
+        let json_content = std::fs::read_to_string("test_codelist.json")?;
+        let loaded_codelist: CodeList = serde_json::from_str(&json_content)?;
+        std::fs::remove_file("test_codelist.json")?;
+        assert_eq!(original_codelist, loaded_codelist);
+        Ok(())
+    }
+
+    #[test]
+    fn test_adding_to_log() -> Result<(), CodeListError> {
+        let mut codelist = create_test_codelist();
+        codelist.add_log("Test log message".to_string());
+        assert_eq!(codelist.logs.len(), 1);
+        assert_eq!(codelist.logs[0], "Test log message".to_string());
+        Ok(())
+    }   
+
+    #[test]
+    fn test_saving_log() -> Result<(), CodeListError> {
+        let mut codelist = create_test_codelist();
+        codelist.add_log("Test log message".to_string());
+        codelist.save_log("test.log")?;
+        let content = std::fs::read_to_string("test.log")?;
+        assert_eq!(content, "Test log message\n");
+        std::fs::remove_file("test.log")?;
+        Ok(())
     }
 }
-
-//todo
-// test adding an entry
-// test removing an entry that exists and doesnt exist
-// test getting entries
-// test saving to csv
-// test saving to json
-// test saving log
 
 //TODO:
 // several options of making codelist, e.g. excel, txt file, csv, hashset - codelistfactory handles this
