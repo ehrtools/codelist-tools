@@ -96,26 +96,27 @@ impl CodeList {
     /// # Arguments
     /// * `code` - The code to add
     /// * `term` - The term to add
-    pub fn add_entry(&mut self, code: String, term: String) {
-        let entry = CodeEntry::new(code, term);
+    pub fn add_entry(&mut self, code: String, term: String) -> Result<(), CodeListError> {
+        let entry = CodeEntry::new(code, term)?;
         self.entries.insert(entry);
+        Ok(())
     }
 
     /// Remove an entry from the codelist
     ///
     /// # Arguments
     /// * `code` - The code to remove
+    /// * `term` - The term to remove
     ///
     /// # Errors
     /// * `CodeListError::EntryNotFound` - If the entry to be removed is not found
-    pub fn remove_entry(&mut self, code: &str) -> Result<(), CodeListError> {
-        let initial_size = self.entries.len();
-        self.entries.retain(|entry| entry.code != code);
-        let final_size = self.entries.len();
-        if initial_size == final_size {
-            return Err(CodeListError::EntryNotFound(code.to_string()));
+    pub fn remove_entry(&mut self, code: &str, term: &str) -> Result<(), CodeListError> {
+        let removed = self.entries.remove(&CodeEntry::new(code.to_string(), term.to_string())?);
+        if removed {
+            Ok(())
+        } else {
+            Err(CodeListError::EntryNotFound(code.to_string()))
         }
-        Ok(())
     }
 
     /// Get the entries of the codelist
@@ -207,16 +208,17 @@ mod tests {
     }
 
     // Helper function to create a test codelist with two entries, default options and test metadata
-    fn create_test_codelist() -> CodeList {
+    fn create_test_codelist() -> Result<CodeList, CodeListError> {
         let mut codelist = CodeList::new(CodeListType::ICD10, create_test_metadata(), None);
-        codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string());
-        codelist.add_entry("A48.51".to_string(), "Infant botulism".to_string());
-        codelist
+        codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string())?;
+        codelist.add_entry("A48.51".to_string(), "Infant botulism".to_string())?;
+        
+        Ok(codelist)
     }
 
     #[test]
-    fn test_create_codelist_default_options() {
-        let codelist = create_test_codelist();
+    fn test_create_codelist_default_options() -> Result<(), CodeListError> {
+        let codelist = create_test_codelist()?;
 
         assert_eq!(codelist.metadata().source, MetadataSource::ManuallyCreated);
         assert_eq!(codelist.metadata().authors, Some(vec!["Caroline Morton".to_string()]));
@@ -226,6 +228,8 @@ mod tests {
         assert_eq!(codelist.entries().len(), 2);
         assert_eq!(codelist.logs.len(), 0);
         assert_eq!(&codelist.codelist_options, &CodeListOptions::default());
+
+        Ok(())
     }
 
     #[test]
@@ -255,40 +259,47 @@ mod tests {
         assert_eq!(codelist.codelist_type(), &CodeListType::ICD10);
         assert_eq!(codelist.entries().len(), 0);
         assert_eq!(codelist.logs.len(), 0);
+
     }
 
     #[test]
-    fn test_duplicate_entries() {
+    fn test_duplicate_entries() -> Result<(), CodeListError> {
         let mut codelist = CodeList::new(CodeListType::ICD10, create_test_metadata(), None);
-        codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string());
-        codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string());
+        codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string())?;
+        codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string())?;
 
         assert_eq!(codelist.entries().len(), 1);
+
+        Ok(())
     }
 
     #[test]
-    fn test_get_codelist_type() {
-        let codelist = create_test_codelist();
+    fn test_get_codelist_type() -> Result<(), CodeListError> {
+        let codelist = create_test_codelist()?;
 
         assert_eq!(codelist.codelist_type(), &CodeListType::ICD10);
+
+        Ok(())
     }
 
     #[test]
-    fn test_add_entry() {
-        let codelist = create_test_codelist();
-        let entry1 = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string());
-        let entry2 = CodeEntry::new("A48.51".to_string(), "Infant botulism".to_string());
+    fn test_add_entry() -> Result<(), CodeListError> {
+        let codelist = create_test_codelist()?;
+        let entry1 = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string())?;
+        let entry2 = CodeEntry::new("A48.51".to_string(), "Infant botulism".to_string())?;
     
         assert_eq!(codelist.entries().len(), 2);
         assert!(codelist.entries().contains(&entry1));
         assert!(codelist.entries().contains(&entry2));
+
+        Ok(())
     }
 
     #[test]
     fn test_remove_entry_that_exists() -> Result<(), CodeListError> {
-        let mut codelist = create_test_codelist();
-        codelist.remove_entry("R65.2")?;
-        let entry = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string());
+        let mut codelist = create_test_codelist()?;
+        codelist.remove_entry("R65.2", "Severe sepsis")?;
+        let entry = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string())?;
 
         assert_eq!(codelist.entries().len(), 1);
         assert!(!codelist.entries().contains(&entry));
@@ -298,8 +309,8 @@ mod tests {
 
     #[test]
     fn test_remove_entry_that_doesnt_exist() -> Result<(), CodeListError> {
-        let mut codelist = create_test_codelist();
-        let error = codelist.remove_entry("A48.52").unwrap_err();
+        let mut codelist = create_test_codelist()?;
+        let error = codelist.remove_entry("A48.52", "Infant botulism").unwrap_err();
 
         assert!(matches!(error, CodeListError::EntryNotFound(code) if code == "A48.52"));
         assert_eq!(codelist.entries().len(), 2);
@@ -308,20 +319,22 @@ mod tests {
     }
 
     #[test]
-    fn test_get_entries() {
-        let codelist = create_test_codelist();
+    fn test_get_entries() -> Result<(), CodeListError> {
+        let codelist = create_test_codelist()?;
         let entries = codelist.entries();
-        let test_entry_1 = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string());
-        let test_entry_2 = CodeEntry::new("A48.51".to_string(), "Infant botulism".to_string());
+        let test_entry_1 = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string())?;
+        let test_entry_2 = CodeEntry::new("A48.51".to_string(), "Infant botulism".to_string())?;
 
         assert_eq!(entries.len(), 2);
         assert!(entries.contains(&test_entry_1));
         assert!(entries.contains(&test_entry_2));
+
+        Ok(())
     }
 
     #[test]
     fn test_save_to_csv() -> Result<(), CodeListError> {
-        let codelist = create_test_codelist();
+        let codelist = create_test_codelist()?;
         codelist.save_to_csv("test.csv")?;
         let content = std::fs::read_to_string("test.csv")?;
         let lines: Vec<&str> = content.lines().collect();
@@ -338,7 +351,7 @@ mod tests {
     
     #[test]
     fn test_save_to_json() -> Result<(), CodeListError> {
-        let original_codelist = create_test_codelist();
+        let original_codelist = create_test_codelist()?;
         original_codelist.save_to_json("test_codelist.json")?;
         let json_content = std::fs::read_to_string("test_codelist.json")?;
         let loaded_codelist: CodeList = serde_json::from_str(&json_content)?;
@@ -352,7 +365,7 @@ mod tests {
 
     #[test]
     fn test_add_to_log() -> Result<(), CodeListError> {
-        let mut codelist = create_test_codelist();
+        let mut codelist = create_test_codelist()?;
         codelist.add_log("Test log message".to_string());
 
         assert_eq!(codelist.logs.len(), 1);
@@ -363,7 +376,7 @@ mod tests {
 
     #[test]
     fn test_save_log() -> Result<(), CodeListError> {
-        let mut codelist = create_test_codelist();
+        let mut codelist = create_test_codelist()?;
         codelist.add_log("Test log message".to_string());
         codelist.save_log("test.log")?;
         let content = std::fs::read_to_string("test.log")?;

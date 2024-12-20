@@ -18,6 +18,8 @@ pub enum CodeListError {
     IOError(io::Error),
     EntryNotFound(String),
     CSVError(csv::Error),
+    EmptyCode,
+    EmptyTerm,
 }
 
 impl From<io::Error> for CodeListError {
@@ -46,6 +48,8 @@ impl fmt::Display for CodeListError {
             Self::IOError(err) => write!(f, "IO error: {}", err),
             Self::EntryNotFound(code) => write!(f, "Entry not found: {}", code),
             Self::CSVError(err) => write!(f, "CSV error: {}", err),
+            Self::EmptyCode => write!(f, "Code is an empty string"),
+            Self::EmptyTerm => write!(f, "Term is an empty string"),
         }
     }
 }
