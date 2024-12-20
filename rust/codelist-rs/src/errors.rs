@@ -20,6 +20,7 @@ pub enum CodeListError {
     CSVError(csv::Error),
     EmptyCode,
     EmptyTerm,
+    InvalidFilePath,
 }
 
 impl From<io::Error> for CodeListError {
@@ -50,6 +51,7 @@ impl fmt::Display for CodeListError {
             Self::CSVError(err) => write!(f, "CSV error: {}", err),
             Self::EmptyCode => write!(f, "Code is an empty string"),
             Self::EmptyTerm => write!(f, "Term is an empty string"),
+            Self::InvalidFilePath => write!(f, "Invalid file path"),
         }
     }
 }

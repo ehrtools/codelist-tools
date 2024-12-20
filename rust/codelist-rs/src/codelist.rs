@@ -196,6 +196,7 @@ impl CodeList {
 mod tests {
     use super::*;
     use crate::metadata::MetadataSource;
+    use tempfile::TempDir;
 
     // Helper function to create test metadata
     fn create_test_metadata() -> Metadata {
@@ -334,9 +335,12 @@ mod tests {
 
     #[test]
     fn test_save_to_csv() -> Result<(), CodeListError> {
+        let temp_dir = TempDir::new()?;
+        let file_path = temp_dir.path().join("test.csv");
+        let file_path_str = file_path.to_str().ok_or(CodeListError::InvalidFilePath)?;
         let codelist = create_test_codelist()?;
-        codelist.save_to_csv("test.csv")?;
-        let content = std::fs::read_to_string("test.csv")?;
+        codelist.save_to_csv(file_path_str)?;
+        let content = std::fs::read_to_string(file_path_str)?;
         let lines: Vec<&str> = content.lines().collect();
         let mut data_lines = lines[1..].to_vec();
         data_lines.sort();
@@ -344,21 +348,21 @@ mod tests {
         assert_eq!(lines[0], "code,term");
         assert_eq!(data_lines, vec!["A48.51,Infant botulism", "R65.2,Severe sepsis"]);
 
-        std::fs::remove_file("test.csv")?;  
-
         Ok(())
     }
     
     #[test]
     fn test_save_to_json() -> Result<(), CodeListError> {
+        let temp_dir = TempDir::new()?;
+        let file_path = temp_dir.path().join("test_codelist.json");
+        let file_path_str = file_path.to_str().ok_or(CodeListError::InvalidFilePath)?;
+
         let original_codelist = create_test_codelist()?;
-        original_codelist.save_to_json("test_codelist.json")?;
-        let json_content = std::fs::read_to_string("test_codelist.json")?;
+        original_codelist.save_to_json(file_path_str)?;
+        let json_content = std::fs::read_to_string(file_path_str)?;
         let loaded_codelist: CodeList = serde_json::from_str(&json_content)?;
 
         assert_eq!(original_codelist, loaded_codelist);
-
-        std::fs::remove_file("test_codelist.json")?;
 
         Ok(())
     }
@@ -376,14 +380,16 @@ mod tests {
 
     #[test]
     fn test_save_log() -> Result<(), CodeListError> {
+        let temp_dir = TempDir::new()?;
+        let file_path = temp_dir.path().join("test.log");
+        let file_path_str = file_path.to_str().ok_or(CodeListError::InvalidFilePath)?;
+
         let mut codelist = create_test_codelist()?;
         codelist.add_log("Test log message".to_string());
-        codelist.save_log("test.log")?;
-        let content = std::fs::read_to_string("test.log")?;
+        codelist.save_log(file_path_str)?;
+        let content = std::fs::read_to_string(file_path_str)?;
 
         assert_eq!(content, "Test log message\n");
-
-        std::fs::remove_file("test.log")?;
 
         Ok(())
     }
