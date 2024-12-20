@@ -30,7 +30,10 @@ impl FromStr for CodeListType {
     /// * `s` - The string to convert to a CodeListType
     ///
     /// # Returns
-    /// * `Result<CodeListType, CodeListError>` - The CodeListType if the string is valid, otherwise an error CodeListError::InvalidCodeListType
+    /// * `Result<CodeListType, CodeListError>` - The CodeListType or a CodeListError
+    ///
+    /// # Errors
+    /// * `CodeListError::InvalidCodeListType` - If the string is not a valid CodeListType
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "icd10" => Ok(CodeListType::ICD10),

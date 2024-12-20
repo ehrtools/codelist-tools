@@ -2,7 +2,9 @@
 
 // External imports
 use std::collections::HashSet;
+use std::io::Write;
 use serde::{Serialize, Deserialize};
+use csv::Writer;
 
 // Internal imports
 use crate::types::CodeListType;
@@ -52,6 +54,15 @@ pub struct CodeList {
 
 
 impl CodeList {
+    /// Create a new CodeList
+    ///
+    /// # Arguments
+    /// * `codelist_type` - The type of codelist
+    /// * `metadata` - Metadata describing the codelist
+    /// * `options` - Customisable options for the codelist
+    ///
+    /// # Returns
+    /// * `CodeList` - The new CodeList
     pub fn new(codelist_type: CodeListType, metadata: Metadata, options: Option<CodeListOptions>) -> Self {
         CodeList {
             entries: HashSet::new(),
@@ -62,15 +73,31 @@ impl CodeList {
         }
     }
 
+    /// Get the type of the codelist
+    ///
+    /// # Returns
+    /// * `&CodeListType` - The type of the codelist
     pub fn codelist_type(&self) -> &CodeListType {
         &self.codelist_type
     }
 
+    /// Add an entry to the codelist
+    ///
+    /// # Arguments
+    /// * `code` - The code to add
+    /// * `term` - The term to add
     pub fn add_entry(&mut self, code: String, term: String) {
         let entry = CodeEntry::new(code, term);
         self.entries.insert(entry);
     }
 
+    /// Remove an entry from the codelist
+    ///
+    /// # Arguments
+    /// * `code` - The code to remove
+    ///
+    /// # Errors
+    /// * `CodeListError::EntryNotFound` - If the entry to be removed is not found
     pub fn remove_entry(&mut self, code: &str) -> Result<(), CodeListError> {
         let initial_size = self.entries.len();
         self.entries.retain(|entry| entry.code != code);
@@ -81,23 +108,57 @@ impl CodeList {
         Ok(())
     }
 
+    /// Get the entries of the codelist
+    ///
+    /// # Returns
+    /// * `&HashSet<CodeEntry>` - The entries of the codelist
     pub fn entries(&self) -> &HashSet<CodeEntry> {
         &self.entries
     }
 
+    /// Save the codelist entries to a CSV file
+    ///
+    /// # Arguments
+    /// * `file_path` - The path to the file to save the codelist entries to
+    ///
+    /// # Errors
+    /// * `CodeListError::IOError` - If the file cannot be written to
     pub fn save_to_csv(&self, file_path: &str) -> std::result::Result<(), CodeListError> {
-        // Some implementation
+        let mut wtr = Writer::from_path(file_path)?;
+        // use column names from options
+        wtr.write_record(&[&self.codelist_options.code_column_name, &self.codelist_options.term_column_name])?;
+        for entry in self.entries.iter() {
+            wtr.write_record(&[&entry.code, &entry.term])?;
+        }
+        wtr.flush()?;
         Ok(())
     }
 
+    /// Save the codelist struct to a JSON file
+    ///
+    /// # Arguments
+    /// * `file_path` - The path to the file to save the codelist struct to
+    ///
+    /// # Errors
+    /// * `CodeListError::IOError` - If the file cannot be written to
     pub fn save_to_json(&self, file_path: &str) -> std::result::Result<(), CodeListError> {
         let json = serde_json::to_string_pretty(self)?;
         std::fs::write(file_path, json)?;
         Ok(())
     }
 
+    /// Save the logs to a file
+    ///
+    /// # Arguments
+    /// * `file_path` - The path to the file to save the logs to
+    ///
+    /// # Errors
+    /// * `CodeListError::IOError` - If the file cannot be written to
     pub fn save_log(&self, file_path: &str) -> std::result::Result<(), CodeListError> {
-        // Some implementation
+        let mut file = std::fs::File::create(file_path)?;
+        for log in &self.logs {
+            writeln!(file, "{}", log)?;
+        }
         Ok(())
     }
 
