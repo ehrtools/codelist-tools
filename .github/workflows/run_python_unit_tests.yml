@@ -30,9 +30,12 @@ jobs:
           source venv/bin/activate
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install maturin
 
       - name: Build the codelist package
-        run: maturin develop
+        run: |
+          source python_bindings/venv/bin/activate
+          maturin develop
 
       - name: Run tests
         run: python -m unittest discover
