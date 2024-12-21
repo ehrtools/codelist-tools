@@ -25,7 +25,7 @@ jobs:
 
       - name: Build the codelist package
         run: |
-          cd python_bindings
+          cd bindings/python
           python -m venv venv
           source venv/bin/activate
           python -m pip install --upgrade pip
