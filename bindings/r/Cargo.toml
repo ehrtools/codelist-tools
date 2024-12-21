@@ -1,0 +1,13 @@
+[package]
+name = "codelist"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["staticlib"]
+name = "codelist"
+path = "src/lib.rs"
+# Build as a dynamic library
+
+[dependencies]
+extendr-api = "0.7.1"

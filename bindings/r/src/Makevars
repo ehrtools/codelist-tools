@@ -1,0 +1,13 @@
+LIBDIR = ../target/release
+STATLIB = $(LIBDIR)/libcodelist.a
+PKG_LIBS = -L$(LIBDIR) -lcodelist
+
+all: C_clean
+
+$(SHLIB): $(STATLIB)
+
+$(STATLIB):
+	cargo build --lib --release
+
+C_clean:
+	rm -Rf $(SHLIB) $(STATLIB) $(OBJECTS)
