@@ -1,0 +1,13 @@
+Package: codelist
+Title: R Wrapper for Rust Functions
+Version: 0.1.0
+Authors@R:
+    person("Your Name", "Your Last Name", email = "your.email@example.com", role = c("aut", "cre"))
+Description: Provides R bindings for Rust functions using extendr.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports:
+    rextendr
+Config/rextendr/version: 0.3.1
