@@ -402,17 +402,3 @@ mod tests {
         assert_eq!(codelist.metadata(), &metadata);
     }
 }
-
-
-//TODO:
-// several options of making codelist, e.g. excel, txt file, csv, hashset - codelistfactory handles this
-// pub struct CodeListFactory {
-//     input_directory: String,
-//     output_directory: String,
-// }
-// impl CodeListFactory {
-//     pub fn generate_codelist() {
-//         // method for taking in data and outputting result of codelist or error
-//     }
-// also need save to format function (e.g. to csv) - code/term columns, all valid
-// }
