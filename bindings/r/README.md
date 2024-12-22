@@ -30,16 +30,16 @@ which i said no to.
 
 1. First build the Rust library:
 ```bash
-cd R
+cd r
 cargo build --release
 ```
 
 This will create a shared library in `target/release/libcodelist.dylib` (macOS) or `target/release/libcodelist.so` (Linux).
 
 2. Open R with the terminal command `R`
-and install required packages:
+and install required packages. If you get an error message when running this, you may also need to install package dependencies for `devtools` first if not already installed:
 ```r
-install.packages("devtools")
+install.packages("devtools") 
 install.packages("rextendr")
 ```
 
