@@ -18,14 +18,16 @@ pub enum CodeListError {
     IOError(io::Error),
     EntryNotFound(String),
     CSVError(csv::Error),
-    EmptyCode,
-    EmptyTerm,
     InvalidFilePath,
     InvalidInput(String),
-    InvalidCodeColumnName(String),
-    InvalidTermColumnName(String),
-    CodeNotFound(String),
-    TermNotFound(String),
+
+    InvalidCodeField(String),
+    InvalidTermField(String),
+    EmptyCode(String),
+    EmptyTerm(String),
+    InvalidCode(String),
+    InvalidTerm(String),
+    ColumnIndexOutOfBounds(String),
 }
 
 impl From<io::Error> for CodeListError {
@@ -54,14 +56,15 @@ impl fmt::Display for CodeListError {
             Self::IOError(err) => write!(f, "IO error: {}", err),
             Self::EntryNotFound(code) => write!(f, "Entry not found: {}", code),
             Self::CSVError(err) => write!(f, "CSV error: {}", err),
-            Self::EmptyCode => write!(f, "Code is an empty string"),
-            Self::EmptyTerm => write!(f, "Term is an empty string"),
+            Self::EmptyCode(msg) => write!(f, "Empty code: {}", msg),
+            Self::EmptyTerm(msg) => write!(f, "Empty term: {}", msg),
             Self::InvalidFilePath => write!(f, "Invalid file path"),
             Self::InvalidInput(err) => write!(f, "Invalid input: {}", err),
-            Self::InvalidCodeColumnName(err) => write!(f, "Invalid code column name: {}", err),
-            Self::InvalidTermColumnName(err) => write!(f, "Invalid term column name: {}", err),
-            Self::CodeNotFound(err) => write!(f, "Code not found: {}", err),
-            Self::TermNotFound(err) => write!(f, "Term not found: {}", err),
+            Self::InvalidCodeField(err) => write!(f, "Invalid column field: {}", err),
+            Self::InvalidTermField(err) => write!(f, "Invalid term field: {}", err),
+            Self::InvalidCode(err) => write!(f, "Invalid code: {}", err),
+            Self::InvalidTerm(err) => write!(f, "Invalid term: {}", err),
+            Self::ColumnIndexOutOfBounds(err) => write!(f, "Column index out of bounds: {}", err),
         }
     }
 }

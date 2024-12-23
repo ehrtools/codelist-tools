@@ -40,14 +40,14 @@ impl CodeListFactory {
     /// * `Result<CodeList, CodeListError>` - The codelist or an error
     /// 
     /// # Errors
-    /// * `CodeListError::InvalidFilePath` - If the file path is not a valid file
-    /// * `CodeListError::CSVError` - If there is an error reading the CSV file
-    /// * `CodeListError::InvalidCodeColumnName` - If the provided code column name in codelist_options is invalid
-    /// * `CodeListError::InvalidTermColumnName` - If the provided term column name in codelist_options is invalid
-    /// * `CodeListError::CodeNotFound` - If the code is not found in the row
-    /// * `CodeListError::TermNotFound` - If the term is not found in the row
-    /// * `CodeListError::EmptyCode` - If the code is an empty string
-    /// * `CodeListError::EmptyTerm` - If the term is an empty string
+    /// * `CodeListError::IOError` - If there is an error reading the file
+    /// * `CodeListError::CSVError` - If there is an error parsing the CSV file
+    /// * `CodeListError::InvalidCodeField` - If the code field is missing from the JSON object
+    /// * `CodeListError::InvalidTermField` - If the term field is missing from the JSON object
+    /// * `CodeListError::InvalidCode` - If the code value is not a valid string
+    /// * `CodeListError::InvalidTerm` - If the term value is not a valid string
+    /// * `CodeListError::EmptyCode` - If the code value is an empty string
+    /// * `CodeListError::EmptyTerm` - If the term value is an empty string
     pub fn load_codelist_from_csv_file(&self, file_path: &str) -> Result<CodeList, CodeListError> {
         let mut rdr = csv::Reader::from_path(file_path)?;
         let headers = rdr.headers()?;
@@ -63,33 +63,37 @@ impl CodeListFactory {
             .collect();
         
         if code_column.len() > 1 {
-            return Err(CodeListError::InvalidCodeColumnName(format!("Multiple columns found with the header: {}", self.codelist_options.code_column_name)));
+            return Err(CodeListError::InvalidCodeField(format!("Multiple columns found with the header: {}", self.codelist_options.code_column_name)));
         }
         if term_column.len() > 1 {
-            return Err(CodeListError::InvalidTermColumnName(format!("Multiple columns found with the header: {}", self.codelist_options.term_column_name)));
+            return Err(CodeListError::InvalidTermField(format!("Multiple columns found with the header: {}", self.codelist_options.term_column_name)));
         }
 
         let code_idx = code_column.first()
             .map(|(idx, _)| *idx)
-            .ok_or_else(|| CodeListError::InvalidCodeColumnName(format!("Column not found with the header: {}", self.codelist_options.code_column_name)))?;
+            .ok_or_else(|| CodeListError::InvalidCodeField(format!("Column not found with the header: {}", self.codelist_options.code_column_name)))?;
 
         let term_idx = term_column.first()
             .map(|(idx, _)| *idx)
-            .ok_or_else(|| CodeListError::InvalidTermColumnName(format!("Column not found with the header: {}", self.codelist_options.term_column_name)))?;
+            .ok_or_else(|| CodeListError::InvalidTermField(format!("Column not found with the header: {}", self.codelist_options.term_column_name)))?;
 
         for (row_num, result) in rdr.records().enumerate() {
             let record = result?;
             let code = record.get(code_idx)
-                .ok_or_else(|| CodeListError::CodeNotFound(format!("Code not found in row: {}", row_num + 1)))?
+                .ok_or_else(|| CodeListError::ColumnIndexOutOfBounds(
+                    format!("Row {}: Cannot access column at index {}.", row_num + 2, code_idx)
+                ))?
                 .trim();
             if code.is_empty() {
-                return Err(CodeListError::CodeNotFound(format!("Empty code field in row: {}", row_num + 1)));
+                return Err(CodeListError::EmptyCode(format!("Empty code field in row: {}", row_num + 2)));
             }
             let term = record.get(term_idx)
-                .ok_or_else(|| CodeListError::TermNotFound(format!("Term not found in row: {}", row_num + 1)))?
+                .ok_or_else(|| CodeListError::ColumnIndexOutOfBounds(
+                    format!("Row {}: Cannot access column at index {}.", row_num + 2, term_idx)
+                ))?
                 .trim();
             if term.is_empty() {
-                return Err(CodeListError::TermNotFound(format!("Empty term field in row: {}", row_num + 1)));
+                return Err(CodeListError::EmptyTerm(format!("Empty term field in row: {}", row_num + 2)));
             }
             codelist.add_entry(code.to_string(), term.to_string())?;
         }
@@ -108,11 +112,15 @@ impl CodeListFactory {
     /// # Errors
     /// * `CodeListError::IOError` - If there is an error reading the json file
     /// * `CodeListError::JSONError` - If there is an error parsing the json file
-    /// * `CodeListError::CodeNotFound` - If the code is not found in json array
-    /// * `CodeListError::TermNotFound` - If the term is not found in json array
-    /// * `CodeListError::EmptyCode` - If the code is an empty string
-    /// * `CodeListError::EmptyTerm` - If the term is an empty string
-    /// * `CodeListError::InvalidInput` - If the json is not an array of objects
+    /// * `CodeListError::InvalidCodeField` - If the code field is missing from the JSON object
+    /// * `CodeListError::InvalidTermField` - If the term field is missing from the JSON object
+    /// * `CodeListError::InvalidCode` - If the code value is not a valid string
+    /// * `CodeListError::InvalidTerm` - If the term value is not a valid string
+    /// * `CodeListError::EmptyCode` - If the code value is an empty string
+    /// * `CodeListError::EmptyTerm` - If the term value is an empty string
+    /// * `CodeListError::InvalidInput` - If the JSON is not an array of objects
+    /// 
+    /// * Assumes that the json file is an array of objects with "code" and "term" fields 
     pub fn load_codelist_from_json_file(&self, file_path: &str) -> Result<CodeList, CodeListError> {
         let mut codelist = CodeList::new(self.codelist_type.clone(), self.metadata.clone(), Some(self.codelist_options.clone()));
 
@@ -122,22 +130,41 @@ impl CodeListFactory {
 
         if let Some(entries) = json_data.as_array() {
             for (index, entry) in entries.iter().enumerate() {
-                let code = entry[&self.codelist_options.code_column_name]
-                    .as_str()
-                    .ok_or_else(|| CodeListError::CodeNotFound(format!("Code not found in json file at index: {}", index + 1)))?
-                    .trim();
-                
-                let term = entry[&self.codelist_options.term_column_name]
-                    .as_str()
-                    .ok_or_else(|| CodeListError::TermNotFound(format!("Term not found in json file at index: {}", index + 1)))?
+                // First check if the "code" field exists
+                let code_value = entry.get("code")
+                    .ok_or_else(|| CodeListError::InvalidCodeField(
+                        format!("No 'code' field found in json file at index: {}", index)
+                    ))?;
+
+                // Then check if it's a string and non-empty
+                let code = code_value.as_str()
+                    .ok_or_else(|| CodeListError::InvalidCode(
+                        format!("'code' value is not a string at index: {}", index)
+                    ))?
                     .trim();
 
                 if code.is_empty() {
-                    return Err(CodeListError::CodeNotFound(format!("Empty code field in json file at index: {}", index + 1)));
+                    return Err(CodeListError::EmptyCode(format!("Empty code at index: {}", index)));
                 }
+
+                // Similar pattern for term
+                let term_value = entry.get("term")
+                    .ok_or_else(|| CodeListError::InvalidTermField(
+                        format!("No 'term' field found in json file at index: {}", index)
+                    ))?;
+
+                let term = term_value.as_str()
+                    .ok_or_else(|| CodeListError::InvalidTerm(
+                        format!("'term' value is not a string at index: {}", index)
+                    ))?
+                    .trim();
+
                 if term.is_empty() {
-                    return Err(CodeListError::TermNotFound(format!("Empty term field in json file at index: {}", index + 1)));
+                    return Err(CodeListError::EmptyTerm(
+                        format!("Empty term at index: {}", index)
+                    ));
                 }
+
                 codelist.add_entry(code.to_string(), term.to_string())?;
             }
         } else {
@@ -309,7 +336,7 @@ C03,Test Disease 3,Description 3";
         
         let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
 
-        assert!(matches!(error, CodeListError::InvalidTermColumnName(msg) if msg == format!("Column not found with the header: {}", factory.codelist_options.term_column_name)));
+        assert!(matches!(error, CodeListError::InvalidTermField(msg) if msg == format!("Column not found with the header: {}", factory.codelist_options.term_column_name)));
 
         Ok(())
     }
@@ -333,7 +360,7 @@ C03,Test Disease 3,Description 3";
         
         let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
 
-        assert!(matches!(error, CodeListError::InvalidCodeColumnName(msg) if msg == format!("Column not found with the header: {}", factory.codelist_options.code_column_name)));
+        assert!(matches!(error, CodeListError::InvalidCodeField(msg) if msg == format!("Column not found with the header: {}", factory.codelist_options.code_column_name)));
 
         Ok(())
     }
@@ -355,7 +382,7 @@ B02,Test Disease 2,Description 2";
         let factory = create_test_codelist_factory();
         
         let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
-        assert!(matches!(error, CodeListError::CodeNotFound(msg) if msg.contains("Empty code field in row: 1")));
+        assert!(matches!(error, CodeListError::EmptyCode(msg) if msg.contains("Empty code field in row: 2")));
 
         Ok(())
     }
@@ -377,55 +404,74 @@ B02,Test Disease 2,Description 2";
         let factory = create_test_codelist_factory();
         
         let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
-        assert!(matches!(error, CodeListError::TermNotFound(msg) if msg.contains("Empty term field in row: 1")));
+        assert!(matches!(error, CodeListError::EmptyTerm(msg) if msg.contains("Empty term field in row: 2")));
 
         Ok(())
     }
 
     #[test]
-    fn test_load_codelist_from_csv_file_missing_code() -> Result<(), CodeListError> {
+    fn test_load_codelist_from_csv_file_duplicate_code_column() -> Result<(), CodeListError> {
         let temp_dir = tempdir()?;
         let file_path = temp_dir.path().join("test_codelist.csv");
         let file_path_str = file_path.to_str()
             .ok_or_else(|| CodeListError::InvalidFilePath)?;
 
-        // Create CSV with missing code column
+        // CSV with duplicate code columns
         let csv_content = "\
-term,description
-Test Disease 1,Description 1
-Test Disease 2,Description 2";
+code,code,term
+A01,A01,Test Disease 1";
 
         fs::write(&file_path, csv_content)?;
         let factory = create_test_codelist_factory();
         
         let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
-        assert!(matches!(error, CodeListError::InvalidCodeColumnName(msg) if msg.contains("Column not found with the header: code")));
+        assert!(matches!(error, CodeListError::InvalidCodeField(msg) if msg.contains("Multiple columns found with the header: code")));
 
         Ok(())
     }
 
     #[test]
-    fn test_load_codelist_from_csv_file_missing_term() -> Result<(), CodeListError> {
+    fn test_load_codelist_from_csv_file_duplicate_term_column() -> Result<(), CodeListError> {
         let temp_dir = tempdir()?;
         let file_path = temp_dir.path().join("test_codelist.csv");
         let file_path_str = file_path.to_str()
             .ok_or_else(|| CodeListError::InvalidFilePath)?;
 
-        // Create CSV with missing term column
+        // CSV with duplicate term columns
         let csv_content = "\
-code,description
-A01,Description 1
-B02,Description 2";
+code,term,term
+A01,Test Disease 1,Test Disease 1";
 
         fs::write(&file_path, csv_content)?;
         let factory = create_test_codelist_factory();
         
         let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
-        assert!(matches!(error, CodeListError::InvalidTermColumnName(msg) if msg.contains("Column not found with the header: term")));
+        assert!(matches!(error, CodeListError::InvalidTermField(msg) if msg.contains("Multiple columns found with the header: term")));
 
         Ok(())
     }
 
+    #[test]
+    fn test_load_codelist_from_csv_file_unequal_columns() -> Result<(), CodeListError> {
+        let temp_dir = tempdir()?;
+        let file_path = temp_dir.path().join("test_codelist.csv");
+        let file_path_str = file_path.to_str()
+            .ok_or_else(|| CodeListError::InvalidFilePath)?;
+
+        // CSV with a row that has fewer columns than the header
+        let csv_content = "\
+code,term,description
+A01";  // Missing columns
+
+        fs::write(&file_path, csv_content)?;
+        let factory = create_test_codelist_factory();
+        
+        let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
+        assert!(matches!(error, CodeListError::CSVError(_)));
+
+        Ok(())
+    }
+    
     #[test]
     fn test_load_codelist_from_json_file() -> Result<(), CodeListError> {
         let temp_dir = tempdir()?;
@@ -466,10 +512,41 @@ B02,Description 2";
 
         Ok(())
     }
-}
 
-// * `CodeListError::CodeNotFound` - If the code is not found in json array
-    // * `CodeListError::TermNotFound` - If the term is not found in json array
-    // * `CodeListError::EmptyCode` - If the code is an empty string
-    // * `CodeListError::EmptyTerm` - If the term is an empty string
-    // * `CodeListError::InvalidInput` - If the json is not an array of objects
+    #[test]
+    fn test_load_codelist_from_json_file_invalid_code_field() -> Result<(), CodeListError> {
+        let temp_dir = tempdir()?;
+        let factory = create_test_codelist_factory();
+
+        let file_path = temp_dir.path().join("missing_code.json");
+        let file_path_str = file_path.to_str().unwrap();
+        let json_content = r#"[
+            {"wrong_code": "A01", "term": "Test Disease 1"}
+        ]"#;
+        fs::write(&file_path, json_content)?;
+        
+        let error = factory.load_codelist_from_json_file(file_path_str).unwrap_err();
+        assert!(matches!(error, CodeListError::InvalidCodeField(msg) if msg.contains("No 'code' field found in json file at index: 0")));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_load_codelist_from_json_file_invalid_term_field() -> Result<(), CodeListError> {
+        let temp_dir = tempdir()?;
+        let factory = create_test_codelist_factory();
+
+        let file_path = temp_dir.path().join("missing_term.json");
+        let file_path_str = file_path.to_str().unwrap();
+        let json_content = r#"[
+            {"code": "A01", "wrong_term": "Test Disease 1"}
+        ]"#;
+        fs::write(&file_path, json_content)?;
+
+        let error = factory.load_codelist_from_json_file(file_path_str).unwrap_err();
+        assert!(matches!(error, CodeListError::InvalidTermField(msg) if msg.contains("No 'term' field found in json file at index: 0")));
+
+        Ok(())
+    }    
+
+}
