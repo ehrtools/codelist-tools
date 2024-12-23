@@ -1,64 +1,58 @@
+use crate::errors::CodeListError;
+use crate::codelist::CodeList;
+use crate::codelist::CodeListOptions;
+use crate::metadata::Metadata;
+use crate::types::CodeListType;
+
 /// Struct to represent a codelist factory, which is used to load codelists from a directory and make sure all codelists are created following the same rules
 ///
 /// # Fields
-/// * `input_dir` - The path to the directory to load the codelists from
-/// * `output_dir` - The path to the directory to save the codelists to
+/// * `codelist_options` - The options for the codelist
+/// * `metadata` - The metadata for the codelist
+/// * `codelist_type` - The type of codelist
 pub struct CodeListFactory {
-    input_dir: Option<String>,
-    output_dir: Option<String>,
+    pub codelist_options: CodeListOptions,
+    pub metadata: Metadata,
+    pub codelist_type: CodeListType,
 }
 
 impl CodeListFactory {
-    pub fn new(input_dir: Option<String>, output_dir: Option<String>) -> Self {
+    /// Create a new codelist factory
+    ///
+    /// # Arguments
+    /// * `codelist_options` - The options for the codelist
+    /// * `metadata` - The metadata for the codelist
+    /// * `codelist_type` - The type of codelist
+    pub fn new(codelist_options: CodeListOptions, metadata: Metadata, codelist_type: CodeListType) -> Self {
         CodeListFactory {
-            input_dir: input_dir.or(Some(".".to_string())),
-            output_dir: output_dir.or(Some(".".to_string())),
+            codelist_options,
+            metadata,
+            codelist_type,
         }
     }
-
-    pub fn load_codelist_from_csv(&self, file_path: &str) -> Result<CodeList, CodeListError> {
-        
-    }
-
-    pub fn load_codelist_from_json(&self, file_path: &str) -> Result<CodeList, CodeListError> {
-        
-    }
-
-    pub fn process_directory(&self, directory: &str) -> Result<(), CodeListError> {
-        // call either load_codelist_from_csv or load_codelist_from_json
-    }
-
-    // pub fn process_icd_codelists(&self, directory: &str) -> Result<(), CodeListError> {
-        
-    // }
-
-    // pub fn process_snomed_codelists(&self, directory: &str) -> Result<(), CodeListError> {
-        
-    // }
 }
+
+// function wise- 
+
+// i think lets separate them:
+// •⁠  ⁠load_codelist_from_file
+// •⁠  ⁠⁠load_all_codelists_from_folder (whcih calls load_codelist_from_file in a loop)
+// •⁠  ⁠⁠load_codelist_directly
+// •⁠  ⁠⁠load_codelists (which would do some sort of logic that if it received a path, woudl call load_all_codelists_from_folder, and if it received Vec<Codelists>) it would just laod them
+// hen we want process codelists (one method)
+// then saving fns
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn test_new_codelist_factory_with_two_default_dirs() {
-        let codelist_factory = CodeListFactory::new(None, None);
-        assert_eq!(codelist_factory.input_dir, Some(".".to_string()));
-        assert_eq!(codelist_factory.output_dir, Some(".".to_string()));
-    }
-
-    #[test]
-    fn test_new_codelist_factory_with_one_default_dir() {
-        let codelist_factory = CodeListFactory::new(Some("input".to_string()), None);
-        assert_eq!(codelist_factory.input_dir, Some("input".to_string()));
-        assert_eq!(codelist_factory.output_dir, Some(".".to_string()));
-    }
-
-    #[test]
-    fn test_new_codelist_factory_with_two_specified_dirs() {
-        let codelist_factory = CodeListFactory::new(Some("input".to_string()), Some("output".to_string()));
-        assert_eq!(codelist_factory.input_dir, Some("input".to_string()));
-        assert_eq!(codelist_factory.output_dir, Some("output".to_string()));
-    }
 }
+
+// python flow
+// options =  {“allow_duplicates”: False, code_column_name: “code”, code_column_term “term”}
+// metadata={“authors”: [“Caroline”, “Emma”]}
+// factory = CodelistFactory(options=options, metadata=metadata)
+// factory.load_codelists(path=‘a_path’)
+// factory.process()
+// factory.output_codelists(path=‘a_path’)
