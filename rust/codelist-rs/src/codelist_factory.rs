@@ -53,7 +53,6 @@ impl CodeListFactory {
         let headers = rdr.headers()?;
         let mut codelist = CodeList::new(self.codelist_type.clone(), self.metadata.clone(), Some(self.codelist_options.clone()));
         
-        // Check for duplicate headers
         let code_column: Vec<_> = headers.iter()
             .enumerate()
             .filter(|(_, h)| *h == self.codelist_options.code_column_name)
@@ -70,17 +69,14 @@ impl CodeListFactory {
             return Err(CodeListError::InvalidTermColumnName(format!("Multiple columns found with the header: {}", self.codelist_options.term_column_name)));
         }
 
-        // Get the index of the code column
         let code_idx = code_column.first()
             .map(|(idx, _)| *idx)
             .ok_or_else(|| CodeListError::InvalidCodeColumnName(format!("Column not found with the header: {}", self.codelist_options.code_column_name)))?;
 
-        // Get the index of the term column
         let term_idx = term_column.first()
             .map(|(idx, _)| *idx)
             .ok_or_else(|| CodeListError::InvalidTermColumnName(format!("Column not found with the header: {}", self.codelist_options.term_column_name)))?;
 
-        // Iterate over the records in the code and term columns and add the code and term to the codelist
         for (row_num, result) in rdr.records().enumerate() {
             let record = result?;
             let code = record.get(code_idx)
@@ -110,6 +106,13 @@ impl CodeListFactory {
     /// * `Result<CodeList, CodeListError>` - The codelist or an error
     /// 
     /// # Errors
+    /// * `CodeListError::IOError` - If there is an error reading the json file
+    /// * `CodeListError::JSONError` - If there is an error parsing the json file
+    /// * `CodeListError::CodeNotFound` - If the code is not found in json array
+    /// * `CodeListError::TermNotFound` - If the term is not found in json array
+    /// * `CodeListError::EmptyCode` - If the code is an empty string
+    /// * `CodeListError::EmptyTerm` - If the term is an empty string
+    /// * `CodeListError::InvalidInput` - If the json is not an array of objects
     pub fn load_codelist_from_json_file(&self, file_path: &str) -> Result<CodeList, CodeListError> {
         let mut codelist = CodeList::new(self.codelist_type.clone(), self.metadata.clone(), Some(self.codelist_options.clone()));
 
@@ -422,4 +425,51 @@ B02,Description 2";
 
         Ok(())
     }
+
+    #[test]
+    fn test_load_codelist_from_json_file() -> Result<(), CodeListError> {
+        let temp_dir = tempdir()?;
+        let file_path = temp_dir.path().join("test_codelist.json");
+        let file_path_str = file_path.to_str()
+            .ok_or_else(|| CodeListError::InvalidFilePath)?;
+
+        // Create JSON with valid data
+        let json_content = r#"[
+            {"code": "A01", "term": "Test Disease 1"},
+            {"code": "B02", "term": "Test Disease 2"},
+            {"code": "C03", "term": "Test Disease 3"}
+        ]"#;
+
+        fs::write(&file_path, json_content)?;
+        let factory = create_test_codelist_factory();
+        
+        let result = factory.load_codelist_from_json_file(file_path_str);
+        assert!(result.is_ok());
+        let codelist = result?;
+        assert_eq!(codelist.entries.len(), 3);
+        
+        // Test individual entries exist
+        assert_eq!(codelist.entries.iter().find(|e| e.code == "A01" && e.term == "Test Disease 1").is_some(), true);
+        assert_eq!(codelist.entries.iter().find(|e| e.code == "B02" && e.term == "Test Disease 2").is_some(), true);
+        assert_eq!(codelist.entries.iter().find(|e| e.code == "C03" && e.term == "Test Disease 3").is_some(), true);
+        
+        assert_eq!(codelist.codelist_options.allow_duplicates, false);
+        assert_eq!(codelist.codelist_options.truncate_to_3_digits, false);
+        assert_eq!(codelist.codelist_options.add_x_codes, false);
+        assert_eq!(codelist.codelist_options.code_column_name, "code".to_string());
+        assert_eq!(codelist.codelist_options.term_column_name, "term".to_string());
+        assert_eq!(codelist.metadata.source, MetadataSource::ManuallyCreated);
+        assert_eq!(codelist.metadata.authors, Some(vec!["Caroline Morton".to_string()]));
+        assert_eq!(codelist.metadata.version, Some("2024-12-19".to_string()));
+        assert_eq!(codelist.metadata.description, Some("A test codelist".to_string()));
+        assert_eq!(codelist.codelist_type, CodeListType::ICD10);
+
+        Ok(())
+    }
 }
+
+// * `CodeListError::CodeNotFound` - If the code is not found in json array
+    // * `CodeListError::TermNotFound` - If the term is not found in json array
+    // * `CodeListError::EmptyCode` - If the code is an empty string
+    // * `CodeListError::EmptyTerm` - If the term is an empty string
+    // * `CodeListError::InvalidInput` - If the json is not an array of objects
