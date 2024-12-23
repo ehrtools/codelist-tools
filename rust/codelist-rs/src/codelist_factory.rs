@@ -1,8 +1,11 @@
 use crate::errors::CodeListError;
 use crate::codelist::CodeList;
 use crate::codelist::CodeListOptions;
-use crate::metadata::Metadata;
+use crate::metadata::{Metadata, MetadataSource};
 use crate::types::CodeListType;
+use csv::Reader;
+use std::fs::File;
+use serde::Deserialize;
 
 /// Struct to represent a codelist factory, which is used to load codelists from a directory and make sure all codelists are created following the same rules
 ///
@@ -25,34 +28,75 @@ impl CodeListFactory {
     /// * `codelist_type` - The type of codelist
     pub fn new(codelist_options: CodeListOptions, metadata: Metadata, codelist_type: CodeListType) -> Self {
         CodeListFactory {
-            codelist_options,
-            metadata,
-            codelist_type,
+            codelist_options: codelist_options.clone(),
+            metadata: metadata.clone(),
+            codelist_type: codelist_type.clone(),
         }
     }
+
+    pub fn load_codelist_from_csv_file(&self, file_path: String) {
+
+    }
+
+    pub fn load_codelist_from_json_file(&self, file_path: String) {
+
+    }
+
+    pub fn load_codelists_from_folder(&self, folder_path: String) {
+        // calls load_codelist_from_file in a loop
+    }
+
+    pub fn load_codelists_directly(&self, codelists: Vec<CodeList>) {
+
+    }
+
+    pub fn load_codelists(&self, codelists: Option<Vec<CodeList>>, path: Option<String>) {
+        // which would do some sort of logic that if it received a path, would call load_all_codelists_from_folder, and if it received Vec<Codelists>) it would just load them
+    }
+
+    pub fn process_codelists(&self) {
+        println!("We will process the codelists here.")
+    }
+
+    pub fn save_codelists(&self, path: String) {
+
+    }
+
 }
-
-// function wise- 
-
-// i think lets separate them:
-// •⁠  ⁠load_codelist_from_file
-// •⁠  ⁠⁠load_all_codelists_from_folder (whcih calls load_codelist_from_file in a loop)
-// •⁠  ⁠⁠load_codelist_directly
-// •⁠  ⁠⁠load_codelists (which would do some sort of logic that if it received a path, woudl call load_all_codelists_from_folder, and if it received Vec<Codelists>) it would just laod them
-// hen we want process codelists (one method)
-// then saving fns
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    // Helper function to create test metadata
+    fn create_test_metadata() -> Metadata {
+        Metadata {
+            source: MetadataSource::ManuallyCreated,
+            authors: Some(vec!["Caroline Morton".to_string()]),
+            version: Some("2024-12-19".to_string()),
+            description: Some("A test codelist".to_string()),
+        }
+    }
+
     #[test]
+    fn test_new_codelist_factory() {
+        let metadata = create_test_metadata();
+        let codelist_type = CodeListType::ICD10;
+        let codelist_options = CodeListOptions::default();
+        let codelist_factory = CodeListFactory::new(codelist_options, metadata, codelist_type);
+    
+        assert_eq!(codelist_factory.codelist_options.allow_duplicates, false);
+        assert_eq!(codelist_factory.codelist_options.truncate_to_3_digits, false);
+        assert_eq!(codelist_factory.codelist_options.add_x_codes, false);
+        assert_eq!(codelist_factory.codelist_options.code_column_name, "code".to_string());
+        assert_eq!(codelist_factory.codelist_options.term_column_name, "term".to_string());
+
+        assert_eq!(codelist_factory.metadata.source, MetadataSource::ManuallyCreated);
+        assert_eq!(codelist_factory.metadata.authors, Some(vec!["Caroline Morton".to_string()]));
+        assert_eq!(codelist_factory.metadata.version, Some("2024-12-19".to_string()));
+        assert_eq!(codelist_factory.metadata.description, Some("A test codelist".to_string()));
+        assert_eq!(codelist_factory.codelist_type, CodeListType::ICD10);
+    }
 }
 
-// python flow
-// options =  {“allow_duplicates”: False, code_column_name: “code”, code_column_term “term”}
-// metadata={“authors”: [“Caroline”, “Emma”]}
-// factory = CodelistFactory(options=options, metadata=metadata)
-// factory.load_codelists(path=‘a_path’)
-// factory.process()
-// factory.output_codelists(path=‘a_path’)
+
