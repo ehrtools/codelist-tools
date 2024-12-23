@@ -34,31 +34,72 @@ impl CodeListFactory {
         }
     }
 
-    pub fn load_codelist_from_csv_file(&self, file_path: String) {
-
+    /// Load a codelist from a csv file
+    ///
+    /// # Arguments
+    /// * `file_path` - The path to the csv file
+    /// 
+    /// # Returns
+    /// * `Result<CodeList, CodeListError>` - The codelist or an error
+    /// 
+    /// # Errors
+    /// * `CodeListError::InvalidFilePath` - If the file path is not a valid file
+    pub fn load_codelist_from_csv_file(&self, file_path: &str) -> Result<CodeList, CodeListError> {
+        let codelist = CodeList::new(self.codelist_type.clone(), self.metadata.clone(), Some(self.codelist_options.clone()));
+        Ok(codelist)
     }
 
-    pub fn load_codelist_from_json_file(&self, file_path: String) {
-
+    pub fn load_codelist_from_json_file(&self, file_path: &str) -> Result<CodeList, CodeListError> {
+        let codelist = CodeList::new(self.codelist_type.clone(), self.metadata.clone(), Some(self.codelist_options.clone()));
+        Ok(codelist)
     }
 
-    pub fn load_codelists_from_folder(&self, folder_path: String) {
-        // calls load_codelist_from_file in a loop
+    pub fn load_codelist_from_file(&self, file_path: &str) -> Result<CodeList, CodeListError> {
+        match std::path::Path::new(file_path).extension() {
+            Some(ext) if ext == "csv" => self.load_codelist_from_csv_file(file_path),
+            Some(ext) if ext == "json" => self.load_codelist_from_json_file(file_path),
+            _ => Err(CodeListError::InvalidFilePath),
+        }
     }
 
-    pub fn load_codelists_directly(&self, codelists: Vec<CodeList>) {
+    pub fn load_codelists_from_folder(&self, folder_path: String) -> Result<Vec<CodeList>, CodeListError> {
+        let dir = std::fs::read_dir(folder_path)?;
+        let mut codelists: Vec<CodeList> = Vec::new();
 
+        for entry in dir {
+            let entry = entry?;
+            let path = entry.path();
+            if let Some(path_str) = path.to_str() {
+                if let Ok(codelist) = self.load_codelist_from_file(path_str) {
+                    codelists.push(codelist);
+                }
+            }
+        }
+        Ok(codelists)
     }
 
-    pub fn load_codelists(&self, codelists: Option<Vec<CodeList>>, path: Option<String>) {
-        // which would do some sort of logic that if it received a path, would call load_all_codelists_from_folder, and if it received Vec<Codelists>) it would just load them
+    pub fn load_codelists(&self, codelists: Option<Vec<CodeList>>, path: Option<String>) -> Result<Vec<CodeList>, CodeListError> {
+        match (codelists, path) {
+            (Some(list), None) => Ok(list),  // Direct loading of provided codelists
+            (None, Some(folder_path)) => self.load_codelists_from_folder(folder_path),
+            (None, None) => Ok(Vec::new()),
+            (Some(_), Some(_)) => Err(CodeListError::InvalidInput("Both codelist vector and path cannot be provided".to_string())),
+        }
     }
 
     pub fn process_codelists(&self) {
         println!("We will process the codelists here.")
     }
 
-    pub fn save_codelists(&self, path: String) {
+    pub fn save_codelists_to_json(&self, path: String) {
+
+    }
+
+    pub fn save_codelists_to_csv(&self, path: String) {
+
+    }
+
+    pub fn save_codelists_to_folder(&self, path: String) {
 
     }
 

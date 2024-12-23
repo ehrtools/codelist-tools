@@ -21,6 +21,7 @@ pub enum CodeListError {
     EmptyCode,
     EmptyTerm,
     InvalidFilePath,
+    InvalidInput(String),
 }
 
 impl From<io::Error> for CodeListError {
@@ -52,6 +53,7 @@ impl fmt::Display for CodeListError {
             Self::EmptyCode => write!(f, "Code is an empty string"),
             Self::EmptyTerm => write!(f, "Term is an empty string"),
             Self::InvalidFilePath => write!(f, "Invalid file path"),
+            Self::InvalidInput(err) => write!(f, "Invalid input: {}", err),
         }
     }
 }
