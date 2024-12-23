@@ -207,6 +207,8 @@ impl CodeListFactory {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
+    use tempfile::tempdir;
 
     // Helper function to create test metadata
     fn create_test_metadata() -> Metadata {
@@ -216,6 +218,13 @@ mod tests {
             version: Some("2024-12-19".to_string()),
             description: Some("A test codelist".to_string()),
         }
+    }
+
+    fn create_test_codelist_factory() -> CodeListFactory {
+        let metadata = create_test_metadata();
+        let codelist_type = CodeListType::ICD10;
+        let codelist_options = CodeListOptions::default();
+        CodeListFactory::new(codelist_options, metadata, codelist_type)
     }
 
     #[test]
@@ -230,13 +239,187 @@ mod tests {
         assert_eq!(codelist_factory.codelist_options.add_x_codes, false);
         assert_eq!(codelist_factory.codelist_options.code_column_name, "code".to_string());
         assert_eq!(codelist_factory.codelist_options.term_column_name, "term".to_string());
-
         assert_eq!(codelist_factory.metadata.source, MetadataSource::ManuallyCreated);
         assert_eq!(codelist_factory.metadata.authors, Some(vec!["Caroline Morton".to_string()]));
         assert_eq!(codelist_factory.metadata.version, Some("2024-12-19".to_string()));
         assert_eq!(codelist_factory.metadata.description, Some("A test codelist".to_string()));
         assert_eq!(codelist_factory.codelist_type, CodeListType::ICD10);
     }
+
+    #[test]
+    fn test_load_codelist_from_csv_file() -> Result<(), CodeListError> {
+        let temp_dir = tempdir()?;
+        let file_path = temp_dir.path().join("test_codelist.csv");
+        let file_path_str = file_path.to_str()
+            .ok_or_else(|| CodeListError::InvalidFilePath)?;
+
+        // Create test CSV content
+        let csv_content = "\
+code,term,description
+A01,Test Disease 1,Description 1
+B02,Test Disease 2,Description 2
+C03,Test Disease 3,Description 3";
+
+        fs::write(&file_path, csv_content)?;
+        let factory = create_test_codelist_factory();
+        
+        let result = factory.load_codelist_from_csv_file(file_path_str);
+        assert!(result.is_ok());
+        let codelist = result?;
+        assert_eq!(codelist.entries.len(), 3);
+        
+        // Test individual entries exist
+        assert_eq!(codelist.entries.iter().find(|e| e.code == "A01" && e.term == "Test Disease 1").is_some(), true);
+        assert_eq!(codelist.entries.iter().find(|e| e.code == "B02" && e.term == "Test Disease 2").is_some(), true);
+        assert_eq!(codelist.entries.iter().find(|e| e.code == "C03" && e.term == "Test Disease 3").is_some(), true);
+        
+        assert_eq!(codelist.codelist_options.allow_duplicates, false);
+        assert_eq!(codelist.codelist_options.truncate_to_3_digits, false);
+        assert_eq!(codelist.codelist_options.add_x_codes, false);
+        assert_eq!(codelist.codelist_options.code_column_name, "code".to_string());
+        assert_eq!(codelist.codelist_options.term_column_name, "term".to_string());
+        assert_eq!(codelist.metadata.source, MetadataSource::ManuallyCreated);
+        assert_eq!(codelist.metadata.authors, Some(vec!["Caroline Morton".to_string()]));
+        assert_eq!(codelist.metadata.version, Some("2024-12-19".to_string()));
+        assert_eq!(codelist.metadata.description, Some("A test codelist".to_string()));
+        assert_eq!(codelist.codelist_type, CodeListType::ICD10);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_load_codelist_from_csv_file_invalid_term_column_name() -> Result<(), CodeListError> {
+        let temp_dir = tempdir()?;
+        let file_path = temp_dir.path().join("test_codelist.json");
+        let file_path_str = file_path.to_str()
+            .ok_or_else(|| CodeListError::InvalidFilePath)?;
+
+        // Create test CSV content
+        let csv_content = "\
+code,term_test,description_test
+A01,Test Disease 1,Description 1
+B02,Test Disease 2,Description 2
+C03,Test Disease 3,Description 3";
+
+        fs::write(&file_path, csv_content)?;
+        let factory = create_test_codelist_factory();
+        
+        let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
+
+        assert!(matches!(error, CodeListError::InvalidTermColumnName(msg) if msg == format!("Column not found with the header: {}", factory.codelist_options.term_column_name)));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_load_codelist_from_csv_file_invalid_code_column_name() -> Result<(), CodeListError> {
+        let temp_dir = tempdir()?;
+        let file_path = temp_dir.path().join("test_codelist.json");
+        let file_path_str = file_path.to_str()
+            .ok_or_else(|| CodeListError::InvalidFilePath)?;
+
+        // Create test CSV content
+        let csv_content = "\
+code_test,term,description_test
+A01,Test Disease 1,Description 1
+B02,Test Disease 2,Description 2
+C03,Test Disease 3,Description 3";
+
+        fs::write(&file_path, csv_content)?;
+        let factory = create_test_codelist_factory();
+        
+        let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
+
+        assert!(matches!(error, CodeListError::InvalidCodeColumnName(msg) if msg == format!("Column not found with the header: {}", factory.codelist_options.code_column_name)));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_load_codelist_from_csv_file_empty_code() -> Result<(), CodeListError> {
+        let temp_dir = tempdir()?;
+        let file_path = temp_dir.path().join("test_codelist.csv");
+        let file_path_str = file_path.to_str()
+            .ok_or_else(|| CodeListError::InvalidFilePath)?;
+
+        // Create CSV with empty code
+        let csv_content = "\
+code,term,description
+,Test Disease 1,Description 1
+B02,Test Disease 2,Description 2";
+
+        fs::write(&file_path, csv_content)?;
+        let factory = create_test_codelist_factory();
+        
+        let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
+        assert!(matches!(error, CodeListError::CodeNotFound(msg) if msg.contains("Empty code field in row: 1")));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_load_codelist_from_csv_file_empty_term() -> Result<(), CodeListError> {
+        let temp_dir = tempdir()?;
+        let file_path = temp_dir.path().join("test_codelist.csv");
+        let file_path_str = file_path.to_str()
+            .ok_or_else(|| CodeListError::InvalidFilePath)?;
+
+        // Create CSV with empty term
+        let csv_content = "\
+code,term,description
+A01,,Description 1
+B02,Test Disease 2,Description 2";
+
+        fs::write(&file_path, csv_content)?;
+        let factory = create_test_codelist_factory();
+        
+        let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
+        assert!(matches!(error, CodeListError::TermNotFound(msg) if msg.contains("Empty term field in row: 1")));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_load_codelist_from_csv_file_missing_code() -> Result<(), CodeListError> {
+        let temp_dir = tempdir()?;
+        let file_path = temp_dir.path().join("test_codelist.csv");
+        let file_path_str = file_path.to_str()
+            .ok_or_else(|| CodeListError::InvalidFilePath)?;
+
+        // Create CSV with missing code column
+        let csv_content = "\
+term,description
+Test Disease 1,Description 1
+Test Disease 2,Description 2";
+
+        fs::write(&file_path, csv_content)?;
+        let factory = create_test_codelist_factory();
+        
+        let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
+        assert!(matches!(error, CodeListError::InvalidCodeColumnName(msg) if msg.contains("Column not found with the header: code")));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_load_codelist_from_csv_file_missing_term() -> Result<(), CodeListError> {
+        let temp_dir = tempdir()?;
+        let file_path = temp_dir.path().join("test_codelist.csv");
+        let file_path_str = file_path.to_str()
+            .ok_or_else(|| CodeListError::InvalidFilePath)?;
+
+        // Create CSV with missing term column
+        let csv_content = "\
+code,description
+A01,Description 1
+B02,Description 2";
+
+        fs::write(&file_path, csv_content)?;
+        let factory = create_test_codelist_factory();
+        
+        let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
+        assert!(matches!(error, CodeListError::InvalidTermColumnName(msg) if msg.contains("Column not found with the header: term")));
+
+        Ok(())
+    }
 }
-
-
