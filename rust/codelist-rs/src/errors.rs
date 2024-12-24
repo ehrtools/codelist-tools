@@ -20,7 +20,6 @@ pub enum CodeListError {
     CSVError(csv::Error),
     InvalidFilePath,
     InvalidInput(String),
-
     InvalidCodeField(String),
     InvalidTermField(String),
     EmptyCode(String),

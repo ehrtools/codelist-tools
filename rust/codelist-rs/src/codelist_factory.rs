@@ -178,6 +178,16 @@ impl CodeListFactory {
         Ok(codelist)
     }
 
+    /// Load a codelist from a file
+    ///
+    /// # Arguments
+    /// * `file_path` - The path to the file
+    /// 
+    /// # Returns
+    /// * `Result<CodeList, CodeListError>` - The codelist or an error
+    /// 
+    /// # Errors
+    /// * `CodeListError::InvalidFilePath` - If the file path is not a csv or json file
     pub fn load_codelist_from_file(&self, file_path: &str) -> Result<CodeList, CodeListError> {
         match std::path::Path::new(file_path).extension() {
             Some(ext) if ext == "csv" => self.load_codelist_from_csv_file(file_path),
@@ -186,52 +196,118 @@ impl CodeListFactory {
         }
     }
 
-    pub fn load_codelists_from_folder(&self, folder_path: String) -> Result<Vec<CodeList>, CodeListError> {
+    /// Load codelists from a folder
+    ///
+    /// # Arguments
+    /// * `folder_path` - The path to the folder
+    /// 
+    /// # Returns
+    /// * `Result<Vec<CodeList>, CodeListError>` - The codelists or an error
+    /// 
+    /// # Errors
+    /// * `CodeListError::IOError` - If there is an error reading the folder
+    pub fn load_codelists_from_folder(&self, folder_path: &str) -> Result<Vec<CodeList>, CodeListError> {
         let dir = std::fs::read_dir(folder_path)?;
         let mut codelists: Vec<CodeList> = Vec::new();
 
         for entry in dir {
             let entry = entry?;
             let path = entry.path();
-            let path_str = path.to_str()
-                .ok_or_else(|| CodeListError::InvalidFilePath)?;
-            let codelist = self.load_codelist_from_file(path_str)?;
-            codelists.push(codelist);
+
+            // Skips if not csv/json
+            if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
+                if ext == "csv" || ext == "json" {
+                    if let Some(path_str) = path.to_str() {
+                        if let Ok(codelist) = self.load_codelist_from_file(path_str) {
+                            codelists.push(codelist);
+                        }
+                    }
+                }
+            }
         }
         Ok(codelists)
     }
 
-    pub fn load_codelists(&self, codelists: Option<Vec<CodeList>>, path: Option<String>) -> Result<Vec<CodeList>, CodeListError> {
+    /// Load codelists from a folder or a vector of codelists
+    ///
+    /// # Arguments
+    /// * `codelists` - The vector of codelists
+    /// * `path` - The path to the folder
+    /// 
+    /// # Returns
+    /// * `Result<Vec<CodeList>, CodeListError>` - The codelists or an error
+    /// 
+    /// # Errors
+    /// * `CodeListError::InvalidInput` - If the codelist vector and path are both provided, or neither are provided
+    pub fn load_codelists(&self, codelists: Option<Vec<CodeList>>, path: Option<&str>) -> Result<Vec<CodeList>, CodeListError> {
         match (codelists, path) {
             (Some(codelist), None) => Ok(codelist),
             (None, Some(folder_path)) => self.load_codelists_from_folder(folder_path),
             (None, None) => Err(CodeListError::InvalidInput("Codelist vector or path must be provided".to_string())),
-            (Some(_), Some(_)) => Err(CodeListError::InvalidInput("Both codelist vector and path cannot be provided".to_string())),
+            (Some(_), Some(_)) => Err(CodeListError::InvalidInput("Either codelist vector or path must be provided, not both".to_string())),
         }
     }
 
-    pub fn process_codelists(&self) {
+    /// Process the codelists
+    /// 
+    /// # Arguments
+    /// * `codelists` - The vector of codelists
+    /// 
+    /// # Returns
+    /// * `Result<Vec<CodeList>, CodeListError>` - The codelists or an error
+    /// 
+    /// * To be developed in the future
+    pub fn process_codelists(&self, codelists: Vec<CodeList>) {
         println!("We will process the codelists here.")
     }
 
-    // currently saving files as numbers
+    /// Save the codelists to a json file
+    /// 
+    /// # Arguments
+    /// * `folder_path` - The path to the folder
+    /// * `codelists` - The vector of codelists
+    /// 
+    /// # Returns
+    /// * `Result<(), CodeListError>` - The result of the operation
+    /// 
+    /// # Errors
+    /// * `CodeListError::InvalidInput` - If the file path contains invalid unicode characters
+    /// 
+    /// * Currently saving files as numbers
     pub fn save_codelists_to_json(&self, folder_path: &str, codelists: Vec<CodeList>) -> Result<(), CodeListError> {
         for (index, codelist) in codelists.iter().enumerate() {
             let filename = format!("{}.json", index + 1);
             let full_path = std::path::Path::new(folder_path).join(filename);
             let path_str = full_path.to_str()
-                .ok_or_else(|| CodeListError::InvalidFilePath)?;
+                .ok_or_else(|| CodeListError::InvalidInput(
+                    "Path contains invalid Unicode characters".to_string()
+                ))?;
             codelist.save_to_json(path_str)?;
         }
         Ok(())
     }
 
+    /// Save the codelists to a csv file
+    /// 
+    /// # Arguments
+    /// * `folder_path` - The path to the folder
+    /// * `codelists` - The vector of codelists
+    /// 
+    /// # Returns
+    /// * `Result<(), CodeListError>` - The result of the operation
+    /// 
+    /// # Errors
+    /// * `CodeListError::InvalidInput` - If the file path contains invalid unicode characters
+    /// 
+    /// * Currently saving files as numbers
     pub fn save_codelists_to_csv(&self, folder_path: &str, codelists: Vec<CodeList>) -> Result<(), CodeListError> {
         for (index, codelist) in codelists.iter().enumerate() {
             let filename = format!("{}.csv", index + 1);
             let full_path = std::path::Path::new(folder_path).join(filename);
             let path_str = full_path.to_str()
-                .ok_or_else(|| CodeListError::InvalidFilePath)?;
+                .ok_or_else(|| CodeListError::InvalidInput(
+                    "Path contains invalid Unicode characters".to_string()
+                ))?;
             codelist.save_to_csv(path_str)?;
         }
         Ok(())
@@ -262,6 +338,13 @@ mod tests {
         CodeListFactory::new(codelist_options, metadata, codelist_type)
     }
 
+    fn create_test_codelists(factory: &CodeListFactory) -> Result<Vec<CodeList>, CodeListError> {
+        let codelist1 = CodeList::new(CodeListType::ICD10, factory.metadata.clone(), Some(factory.codelist_options.clone()));
+        let codelist2 = CodeList::new(CodeListType::ICD10, factory.metadata.clone(), Some(factory.codelist_options.clone()));
+        let codelists = factory.load_codelists(Some(vec![codelist1, codelist2]), None)?;
+        Ok(codelists)
+    }
+
     #[test]
     fn test_new_codelist_factory() {
         let metadata = create_test_metadata();
@@ -286,7 +369,9 @@ mod tests {
         let temp_dir = tempdir()?;
         let file_path = temp_dir.path().join("test_codelist.csv");
         let file_path_str = file_path.to_str()
-            .ok_or_else(|| CodeListError::InvalidFilePath)?;
+            .ok_or_else(|| CodeListError::InvalidInput(
+                "Path contains invalid Unicode characters".to_string()
+            ))?;
 
         // Create test CSV content
         let csv_content = "\
@@ -648,6 +733,187 @@ A01";  // Missing columns
         println!("Error: {}", error);
         assert!(matches!(error, CodeListError::InvalidInput(msg) if msg.contains("JSON must be an array of objects")));
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_load_codelist_from_file_invalid_file_path() -> Result<(), CodeListError> {
+        let factory = create_test_codelist_factory();
+        let error = factory.load_codelist_from_file("invalid_file_path").unwrap_err();
+        assert!(matches!(error, CodeListError::InvalidFilePath));
+        Ok(())
+    }
+
+    #[test]
+    fn test_load_codelist_from_file() -> Result<(), CodeListError> {
+        let temp_dir = tempdir()?;
+        let file_path = temp_dir.path().join("test_codelist.csv");
+        let file_path_str = file_path.to_str()
+            .ok_or_else(|| CodeListError::InvalidFilePath)?;
+
+        // Create test CSV content
+        let csv_content = "\
+code,term,description
+A01,Test Disease 1,Description 1
+B02,Test Disease 2,Description 2";
+
+        fs::write(&file_path, csv_content)?;
+        let factory = create_test_codelist_factory();
+        
+        let result = factory.load_codelist_from_file(file_path_str);
+        assert!(result.is_ok());
+        let codelist = result?;
+        assert_eq!(codelist.entries.len(), 2);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_load_codelists_from_folder() -> Result<(), CodeListError> {
+        let factory = create_test_codelist_factory();
+        let temp_dir = tempdir()?;
+        let temp_dir_path = temp_dir.path();
+        let temp_dir_str = temp_dir_path.to_str()
+            .ok_or_else(|| CodeListError::InvalidFilePath)?;
+
+        // Create test CSV content
+        let csv_content = "\
+code,term,description
+A01,Test Disease 1,Description 1
+B02,Test Disease 2,Description 2";
+
+        let csv_path = temp_dir_path.join("test_codelist.csv");
+        fs::write(&csv_path, csv_content)?;
+
+        // Create test JSON content
+        let json_content = r#"[
+            {"code": "A01", "term": "Test Disease 1"},
+            {"code": "B02", "term": "Test Disease 2"}
+        ]"#;
+        let json_path = temp_dir_path.join("test_codelist.json");
+        fs::write(&json_path, json_content)?;
+
+        let codelists = factory.load_codelists_from_folder(temp_dir_str)?;
+        assert_eq!(codelists.len(), 2);
+        Ok(())
+    }
+
+    #[test]
+    fn test_load_codelists_with_codelists() -> Result<(), CodeListError> {
+        let factory = create_test_codelist_factory();
+        let codelists = create_test_codelists(&factory)?;
+        assert_eq!(codelists.len(), 2);
+        Ok(())
+    }
+
+    #[test]
+    fn test_load_codelists_with_folder() -> Result<(), CodeListError> {
+        let factory = create_test_codelist_factory();
+        let temp_dir = tempdir()?;
+        let temp_dir_path = temp_dir.path();
+        
+        let temp_dir_str = temp_dir_path.to_str()
+            .ok_or_else(|| CodeListError::InvalidFilePath)?;
+
+        // Create test CSV content
+        let csv_content = "\
+code,term,description
+A01,Test Disease 1,Description 1
+B02,Test Disease 2,Description 2";
+
+        let csv_path = temp_dir_path.join("test_codelist.csv");
+        fs::write(&csv_path, csv_content)?;
+
+        // Create test JSON content
+        let json_content = r#"[
+            {"code": "A01", "term": "Test Disease 1"},
+            {"code": "B02", "term": "Test Disease 2"}
+        ]"#;
+        let json_path = temp_dir_path.join("test_codelist.json");
+        fs::write(&json_path, json_content)?;
+
+        let codelists = factory.load_codelists(None, Some(temp_dir_str))?;
+        assert_eq!(codelists.len(), 2);
+        Ok(())
+    }
+
+    #[test]
+    fn test_load_codelists_no_input() -> Result<(), CodeListError> {
+        let factory = create_test_codelist_factory();
+        let error = factory.load_codelists(None, None).unwrap_err();
+        assert!(matches!(error, CodeListError::InvalidInput(msg) if msg.contains("Codelist vector or path must be provided")));
+        Ok(())
+    }
+
+    #[test]
+    fn test_load_codelists_both_input() -> Result<(), CodeListError> {
+        // Create test folder
+        let factory = create_test_codelist_factory();
+        let temp_dir = tempdir()?;
+        let temp_dir_path = temp_dir.path();
+        
+        let temp_dir_str = temp_dir_path.to_str()
+            .ok_or_else(|| CodeListError::InvalidFilePath)?;
+
+        // Create test CSV content
+        let csv_content = "\
+code,term,description
+A01,Test Disease 1,Description 1
+B02,Test Disease 2,Description 2";
+
+        let csv_path = temp_dir_path.join("test_codelist.csv");
+        fs::write(&csv_path, csv_content)?;
+
+        // Create test JSON content
+        let json_content = r#"[
+            {"code": "A01", "term": "Test Disease 1"},
+            {"code": "B02", "term": "Test Disease 2"}
+        ]"#;
+        let json_path = temp_dir_path.join("test_codelist.json");
+        fs::write(&json_path, json_content)?;
+
+        // create test codelists
+        let codelist1 = CodeList::new(CodeListType::ICD10, factory.metadata.clone(), Some(factory.codelist_options.clone()));
+        let codelist2 = CodeList::new(CodeListType::ICD10, factory.metadata.clone(), Some(factory.codelist_options.clone()));
+        let codelists = factory.load_codelists(Some(vec![codelist1, codelist2]), None)?;
+
+        // load codelists from folder
+        let codelists = factory.load_codelists(Some(codelists), Some(temp_dir_str)).unwrap_err();
+        assert!(matches!(codelists, CodeListError::InvalidInput(msg) if msg.contains("Either codelist vector or path must be provided, not both")));
+        Ok(())
+    }
+
+    #[test]
+    fn test_save_codelists_to_csv() -> Result<(), CodeListError> {
+        let factory = create_test_codelist_factory();
+        let codelists = create_test_codelists(&factory)?;
+        let temp_dir = tempdir()?;
+        let temp_dir_path = temp_dir.path();
+        let temp_dir_str = temp_dir_path.to_str()
+            .ok_or_else(|| CodeListError::InvalidFilePath)?;
+        let csv_path1 = temp_dir_path.join("1.csv");
+        let csv_path2 = temp_dir_path.join("2.csv");
+        let result = factory.save_codelists_to_csv(temp_dir_str, codelists);
+        assert!(result.is_ok());
+        assert!(csv_path1.exists());
+        assert!(csv_path2.exists());
+        Ok(())
+    }
+
+    #[test]
+    fn test_save_codelists_to_json() -> Result<(), CodeListError> {
+        let factory = create_test_codelist_factory();
+        let codelists = create_test_codelists(&factory)?;
+        let temp_dir = tempdir()?;
+        let temp_dir_path = temp_dir.path();
+        let temp_dir_str = temp_dir_path.to_str()
+            .ok_or_else(|| CodeListError::InvalidFilePath)?;
+        let json_path1 = temp_dir_path.join("1.json");
+        let json_path2 = temp_dir_path.join("2.json");
+        let result = factory.save_codelists_to_json(temp_dir_str, codelists);
+        assert!(result.is_ok());
+        assert!(json_path1.exists());
+        assert!(json_path2.exists());
         Ok(())
     }
 }
