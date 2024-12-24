@@ -273,7 +273,7 @@ impl CodeListFactory {
     /// * `Result<(), CodeListError>` - The result of the operation
     /// 
     /// # Errors
-    /// * `CodeListError::InvalidInput` - If the file path contains invalid unicode characters
+    /// * `CodeListError::InvalidFilePath` - If the file path contains invalid unicode characters
     /// 
     /// * Currently saving files as numbers
     pub fn save_codelists_to_json(&self, folder_path: &str, codelists: Vec<CodeList>) -> Result<(), CodeListError> {
@@ -281,7 +281,7 @@ impl CodeListFactory {
             let filename = format!("{}.json", index + 1);
             let full_path = std::path::Path::new(folder_path).join(filename);
             let path_str = full_path.to_str()
-                .ok_or_else(|| CodeListError::InvalidInput(
+                .ok_or_else(|| CodeListError::InvalidFilePath(
                     "Path contains invalid Unicode characters".to_string()
                 ))?;
             codelist.save_to_json(path_str)?;
@@ -299,7 +299,7 @@ impl CodeListFactory {
     /// * `Result<(), CodeListError>` - The result of the operation
     /// 
     /// # Errors
-    /// * `CodeListError::InvalidInput` - If the file path contains invalid unicode characters
+    /// * `CodeListError::InvalidFilePath` - If the file path contains invalid unicode characters
     /// 
     /// * Currently saving files as numbers
     pub fn save_codelists_to_csv(&self, folder_path: &str, codelists: Vec<CodeList>) -> Result<(), CodeListError> {
@@ -307,9 +307,7 @@ impl CodeListFactory {
             let filename = format!("{}.csv", index + 1);
             let full_path = std::path::Path::new(folder_path).join(filename);
             let path_str = full_path.to_str()
-                .ok_or_else(|| CodeListError::InvalidInput(
-                    "Path contains invalid Unicode characters".to_string()
-                ))?;
+                .ok_or_else(|| CodeListError::InvalidFilePath(format!("Path contains invalid Unicode characters")))?;
             codelist.save_to_csv(path_str)?;
         }
         Ok(())
@@ -371,7 +369,7 @@ mod tests {
         let temp_dir = tempdir()?;
         let file_path = temp_dir.path().join("test_codelist.csv");
         let file_path_str = file_path.to_str()
-            .ok_or_else(|| CodeListError::InvalidInput(
+            .ok_or_else(|| CodeListError::InvalidFilePath(
                 "Path contains invalid Unicode characters".to_string()
             ))?;
 
