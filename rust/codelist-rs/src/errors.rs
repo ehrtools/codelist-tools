@@ -25,9 +25,9 @@ pub enum CodeListError {
     InvalidTermField(String),
     EmptyCode(String),
     EmptyTerm(String),
-    InvalidCode(String),
-    InvalidTerm(String),
     ColumnIndexOutOfBounds(String),
+    InvalidCodeType(String),
+    InvalidTermType(String),
 }
 
 impl From<io::Error> for CodeListError {
@@ -62,9 +62,9 @@ impl fmt::Display for CodeListError {
             Self::InvalidInput(err) => write!(f, "Invalid input: {}", err),
             Self::InvalidCodeField(err) => write!(f, "Invalid column field: {}", err),
             Self::InvalidTermField(err) => write!(f, "Invalid term field: {}", err),
-            Self::InvalidCode(err) => write!(f, "Invalid code: {}", err),
-            Self::InvalidTerm(err) => write!(f, "Invalid term: {}", err),
             Self::ColumnIndexOutOfBounds(err) => write!(f, "Column index out of bounds: {}", err),
+            Self::InvalidCodeType(err) => write!(f, "Invalid code type: {}", err),
+            Self::InvalidTermType(err) => write!(f, "Invalid term type: {}", err),
         }
     }
 }

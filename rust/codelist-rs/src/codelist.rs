@@ -24,9 +24,12 @@ use crate::errors::CodeListError;
 pub struct CodeListOptions {
     pub allow_duplicates: bool,
     pub truncate_to_3_digits: bool,  // ICD10 specific only
-    pub add_x_codes: bool,           // ICD10 specific only
-    pub code_column_name: String,
-    pub term_column_name: String,
+    pub add_x_codes: bool,
+    pub code_column_name: String, // for csv files
+    pub term_column_name: String, // for csv files          
+    pub code_field_name: String, // for json files
+    pub term_field_name: String, // for json files
+
 }
 
 impl Default for CodeListOptions {
@@ -41,6 +44,8 @@ impl Default for CodeListOptions {
             add_x_codes: false,
             code_column_name: "code".to_string(),
             term_column_name: "term".to_string(),
+            code_field_name: "code".to_string(),
+            term_field_name: "term".to_string(),
         }
     }
 }
@@ -137,7 +142,7 @@ impl CodeList {
     pub fn save_to_csv(&self, file_path: &str) -> std::result::Result<(), CodeListError> {
         let mut wtr = Writer::from_path(file_path)?;
         // use column names from options
-        wtr.write_record(&[&self.codelist_options.code_column_name, &self.codelist_options.term_column_name])?;
+        wtr.write_record(&[&self.codelist_options.code_field_name, &self.codelist_options.term_field_name])?;
         for entry in self.entries.iter() {
             wtr.write_record(&[&entry.code, &entry.term])?;
         }
@@ -243,6 +248,8 @@ mod tests {
             add_x_codes: true,
             code_column_name: "test_code".to_string(),
             term_column_name: "test_term".to_string(),
+            code_field_name: "test_code".to_string(),
+            term_field_name: "test_term".to_string(),
         };
         
         let codelist = CodeList::new(CodeListType::ICD10, metadata, Some(codelist_options));
@@ -250,6 +257,8 @@ mod tests {
         assert_eq!(codelist.codelist_options.allow_duplicates, true);
         assert_eq!(codelist.codelist_options.truncate_to_3_digits, true);
         assert_eq!(codelist.codelist_options.add_x_codes, true);
+        assert_eq!(codelist.codelist_options.code_field_name, "test_code".to_string());
+        assert_eq!(codelist.codelist_options.term_field_name, "test_term".to_string());
         assert_eq!(codelist.codelist_options.code_column_name, "test_code".to_string());
         assert_eq!(codelist.codelist_options.term_column_name, "test_term".to_string());
 
