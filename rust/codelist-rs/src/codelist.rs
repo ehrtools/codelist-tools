@@ -346,7 +346,7 @@ mod tests {
     fn test_save_to_csv() -> Result<(), CodeListError> {
         let temp_dir = TempDir::new()?;
         let file_path = temp_dir.path().join("test.csv");
-        let file_path_str = file_path.to_str().ok_or(CodeListError::InvalidFilePath)?;
+        let file_path_str = file_path.to_str().ok_or(CodeListError::InvalidFilePath(format!("Path contains invalid Unicode characters")))?;
         let codelist = create_test_codelist()?;
         codelist.save_to_csv(file_path_str)?;
         let content = std::fs::read_to_string(file_path_str)?;
@@ -364,7 +364,7 @@ mod tests {
     fn test_save_to_json() -> Result<(), CodeListError> {
         let temp_dir = TempDir::new()?;
         let file_path = temp_dir.path().join("test_codelist.json");
-        let file_path_str = file_path.to_str().ok_or(CodeListError::InvalidFilePath)?;
+        let file_path_str = file_path.to_str().ok_or(CodeListError::InvalidFilePath(format!("Path contains invalid Unicode characters")))?;
 
         let original_codelist = create_test_codelist()?;
         original_codelist.save_to_json(file_path_str)?;
@@ -391,7 +391,7 @@ mod tests {
     fn test_save_log() -> Result<(), CodeListError> {
         let temp_dir = TempDir::new()?;
         let file_path = temp_dir.path().join("test.log");
-        let file_path_str = file_path.to_str().ok_or(CodeListError::InvalidFilePath)?;
+        let file_path_str = file_path.to_str().ok_or(CodeListError::InvalidFilePath(format!("Path contains invalid Unicode characters")))?;
 
         let mut codelist = create_test_codelist()?;
         codelist.add_log("Test log message".to_string());
