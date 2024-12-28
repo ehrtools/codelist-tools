@@ -43,10 +43,10 @@ impl CodeEntry {
         let code = code.into();
 
         if code.trim().is_empty() {
-            return Err(CodeListError::EmptyCode("Empty code supplied".to_string()));
+            return Err(CodeListError::empty_code("Empty code supplied"));
         }
         if term.trim().is_empty() {
-            return Err(CodeListError::EmptyTerm("Empty term supplied".to_string()));
+            return Err(CodeListError::empty_term("Empty term supplied"));
         }
 
         Ok(CodeEntry {
@@ -72,28 +72,28 @@ mod tests {
     #[test]
     fn test_empty_code_returns_error() -> Result<(), CodeListError> {
         let error = CodeEntry::new("".to_string(), "Severe sepsis".to_string()).unwrap_err();
-        assert!(matches!(error, CodeListError::EmptyCode(msg) if msg == "Empty code supplied"));
+        assert!(matches!(error, CodeListError::EmptyCode { msg } if msg == "Empty code supplied"));
         Ok(())
     }
 
     #[test]
     fn test_empty_term_returns_error() -> Result<(), CodeListError> {
         let error = CodeEntry::new("R65.2".to_string(), "".to_string()).unwrap_err();
-        assert!(matches!(error, CodeListError::EmptyTerm(msg) if msg == "Empty term supplied"));
+        assert!(matches!(error, CodeListError::EmptyTerm { msg } if msg == "Empty term supplied"));
         Ok(())
     }
 
     #[test]
     fn test_whitespace_only_code_returns_error() -> Result<(), CodeListError> {
         let error = CodeEntry::new("   ".to_string(), "Some term".to_string()).unwrap_err();
-        assert!(matches!(error, CodeListError::EmptyCode(msg) if msg == "Empty code supplied"));
+        assert!(matches!(error, CodeListError::EmptyCode { msg } if msg == "Empty code supplied"));
         Ok(())
     }
 
     #[test]
     fn test_whitespace_only_term_returns_error() -> Result<(), CodeListError> {
         let error = CodeEntry::new("R65.2".to_string(), "  \n\t  ".to_string()).unwrap_err();
-        assert!(matches!(error, CodeListError::EmptyTerm(msg) if msg == "Empty term supplied"));
+        assert!(matches!(error, CodeListError::EmptyTerm { msg } if msg == "Empty term supplied"));
         Ok(())
     }
 

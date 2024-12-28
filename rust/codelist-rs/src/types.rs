@@ -39,7 +39,7 @@ impl FromStr for CodeListType {
             "icd10" => Ok(CodeListType::ICD10),
             "snomed" => Ok(CodeListType::SNOMED),
             "opcs" => Ok(CodeListType::OPCS),
-            invalid_string => Err(CodeListError::InvalidCodeListType(invalid_string.to_string())),
+            invalid_string => Err(CodeListError::invalid_code_list_type(invalid_string)),
         }
     }
 }
@@ -67,7 +67,8 @@ mod tests {
         assert!(matches!(CodeListType::from_str("icd10"), Ok(CodeListType::ICD10)));
         assert!(matches!(CodeListType::from_str("snomed"), Ok(CodeListType::SNOMED)));
         assert!(matches!(CodeListType::from_str("opcs"), Ok(CodeListType::OPCS)));
-        assert!(matches!(CodeListType::from_str("invalid"), Err(CodeListError::InvalidCodeListType(_))));
+        assert!(matches!(CodeListType::from_str("invalid"), 
+            Err(CodeListError::InvalidCodeListType { name }) if name == "invalid"));
     }
 
     #[test]

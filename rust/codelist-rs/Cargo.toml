@@ -10,3 +10,5 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 csv = "1.0"
 tempfile = "3.0"
+thiserror = "2.0.9"
+thiserror-ext = "0.2.1"

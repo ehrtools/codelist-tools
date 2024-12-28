@@ -63,37 +63,37 @@ impl CodeListFactory {
             .collect();
         
         if code_column.len() > 1 {
-            return Err(CodeListError::InvalidCodeField(format!("Multiple columns found with the header: {}", self.codelist_options.code_field_name)));
+            return Err(CodeListError::invalid_code_field(format!("Multiple columns found with the header: {}", self.codelist_options.code_field_name)));
         }
         if term_column.len() > 1 {
-            return Err(CodeListError::InvalidTermField(format!("Multiple columns found with the header: {}", self.codelist_options.term_field_name)));
+            return Err(CodeListError::invalid_term_field(format!("Multiple columns found with the header: {}", self.codelist_options.term_field_name)));
         }
 
         let code_idx = code_column.first()
             .map(|(idx, _)| *idx)
-            .ok_or_else(|| CodeListError::InvalidCodeField(format!("Column not found with the header: {}", self.codelist_options.code_field_name)))?;
+            .ok_or_else(|| CodeListError::invalid_code_field(format!("Column not found with the header: {}", self.codelist_options.code_field_name)))?;
 
         let term_idx = term_column.first()
             .map(|(idx, _)| *idx)
-            .ok_or_else(|| CodeListError::InvalidTermField(format!("Column not found with the header: {}", self.codelist_options.term_field_name)))?;
+            .ok_or_else(|| CodeListError::invalid_term_field(format!("Column not found with the header: {}", self.codelist_options.term_field_name)))?;
 
         for (row_num, result) in rdr.records().enumerate() {
             let record = result?;
             let code = record.get(code_idx)
-                .ok_or_else(|| CodeListError::ColumnIndexOutOfBounds(
+                .ok_or_else(|| CodeListError::column_index_out_of_bounds(
                     format!("Row {}: Cannot access column at index {}.", row_num + 2, code_idx)
                 ))?
                 .trim();
             if code.is_empty() {
-                return Err(CodeListError::EmptyCode(format!("Empty code field in row: {}", row_num + 2)));
+                return Err(CodeListError::empty_code(format!("Empty code field in row: {}", row_num + 2)));
             }
             let term = record.get(term_idx)
-                .ok_or_else(|| CodeListError::ColumnIndexOutOfBounds(
+                .ok_or_else(|| CodeListError::column_index_out_of_bounds(
                     format!("Row {}: Cannot access column at index {}.", row_num + 2, term_idx)
                 ))?
                 .trim();
             if term.is_empty() {
-                return Err(CodeListError::EmptyTerm(format!("Empty term field in row: {}", row_num + 2)));
+                return Err(CodeListError::empty_term(format!("Empty term field in row: {}", row_num + 2)));
             }
             codelist.add_entry(code.to_string(), term.to_string())?;
         }
@@ -132,7 +132,7 @@ impl CodeListFactory {
             for (index, entry) in entries.iter().enumerate() {
 
                 let code_value = entry.get("code")
-                    .ok_or_else(|| CodeListError::InvalidCodeField(
+                    .ok_or_else(|| CodeListError::invalid_code_field(
                         format!("No {} field found in json file at index: {}", self.codelist_options.code_field_name, index)
                     ))?;
 
@@ -140,42 +140,42 @@ impl CodeListFactory {
                     code_value.to_string().trim().to_string()
                 } else if code_value.is_string() {
                     let code_str = code_value.as_str()
-                        .ok_or_else(|| CodeListError::InvalidCodeType(format!("Expected string value for code at index {}, but found invalid UTF-8 string", index))
+                        .ok_or_else(|| CodeListError::invalid_code_type(format!("Expected string value for code at index {}, but found invalid UTF-8 string", index))
                         )?
                         .trim();
                     
                     if code_str.is_empty() {
-                        return Err(CodeListError::EmptyCode(format!("Empty code at index: {}", index)));
+                        return Err(CodeListError::empty_code(format!("Empty code at index: {}", index)));
                     }
                     
                     code_str.to_string()
                 } else {
-                    return Err(CodeListError::InvalidCodeType(format!("Code at index {} must be a string or number", index)));
+                    return Err(CodeListError::invalid_code_type(format!("Code at index {} must be a string or number", index)));
                 };
 
                 let term_value = entry.get("term")
-                    .ok_or_else(|| CodeListError::InvalidTermField(
+                    .ok_or_else(|| CodeListError::invalid_term_field(
                         format!("No {} field found in json file at index: {}", self.codelist_options.term_field_name, index)
                     ))?;
 
                 let term = if term_value.is_string() {
                     let term_str = term_value.as_str()
-                        .ok_or_else(|| CodeListError::InvalidTermType(format!("Expected string value for term at index {}, but found invalid UTF-8 string", index)))?
+                        .ok_or_else(|| CodeListError::invalid_term_type(format!("Expected string value for term at index {}, but found invalid UTF-8 string", index)))?
                         .trim();
                     
                     if term_str.is_empty() {
-                        return Err(CodeListError::EmptyTerm(format!("Empty term at index: {}", index)));
+                        return Err(CodeListError::empty_term(format!("Empty term at index: {}", index)));
                     }
                     
                     term_str.to_string()
                 } else {
-                    return Err(CodeListError::InvalidTermType(format!("Term at index {} must be a string", index)));
+                    return Err(CodeListError::invalid_term_type(format!("Term at index {} must be a string", index)));
                 };
 
                 codelist.add_entry(code, term)?;
             }
         } else {
-            return Err(CodeListError::InvalidInput("JSON must be an array of objects".to_string()));
+            return Err(CodeListError::invalid_input("JSON must be an array of objects".to_string()));
         }
         Ok(codelist)
     }
@@ -194,7 +194,7 @@ impl CodeListFactory {
         match std::path::Path::new(file_path).extension() {
             Some(ext) if ext == "csv" => self.load_codelist_from_csv_file(file_path),
             Some(ext) if ext == "json" => self.load_codelist_from_json_file(file_path),
-            _ => Err(CodeListError::InvalidFilePath(format!("File path {} is not a csv or json file", file_path))),
+            _ => Err(CodeListError::invalid_file_path(format!("File path {} is not a csv or json file", file_path))),
         }
     }
 
@@ -245,8 +245,8 @@ impl CodeListFactory {
         match (codelists, path) {
             (Some(codelist), None) => Ok(codelist),
             (None, Some(folder_path)) => self.load_codelists_from_folder(folder_path),
-            (None, None) => Err(CodeListError::InvalidInput("Codelist vector or path must be provided".to_string())),
-            (Some(_), Some(_)) => Err(CodeListError::InvalidInput("Either codelist vector or path must be provided, not both".to_string())),
+            (None, None) => Err(CodeListError::invalid_input("Codelist vector or path must be provided")),
+            (Some(_), Some(_)) => Err(CodeListError::invalid_input("Either codelist vector or path must be provided, not both")),
         }
     }
 
@@ -281,9 +281,7 @@ impl CodeListFactory {
             let filename = format!("{}.json", index + 1);
             let full_path = std::path::Path::new(folder_path).join(filename);
             let path_str = full_path.to_str()
-                .ok_or_else(|| CodeListError::InvalidFilePath(
-                    "Path contains invalid Unicode characters".to_string()
-                ))?;
+                .ok_or_else(|| CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
             codelist.save_to_json(path_str)?;
         }
         Ok(())
@@ -307,7 +305,7 @@ impl CodeListFactory {
             let filename = format!("{}.csv", index + 1);
             let full_path = std::path::Path::new(folder_path).join(filename);
             let path_str = full_path.to_str()
-                .ok_or_else(|| CodeListError::InvalidFilePath(format!("Path contains invalid Unicode characters")))?;
+                .ok_or_else(|| CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
             codelist.save_to_csv(path_str)?;
         }
         Ok(())
@@ -369,9 +367,7 @@ mod tests {
         let temp_dir = tempdir()?;
         let file_path = temp_dir.path().join("test_codelist.csv");
         let file_path_str = file_path.to_str()
-            .ok_or_else(|| CodeListError::InvalidFilePath(
-                "Path contains invalid Unicode characters".to_string()
-            ))?;
+            .ok_or_else(|| CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
 
         // Create test CSV content
         let csv_content = "\
@@ -412,7 +408,7 @@ C03,Test Disease 3,Description 3";
         let temp_dir = tempdir()?;
         let file_path = temp_dir.path().join("test_codelist.json");
         let file_path_str = file_path.to_str()
-            .ok_or_else(|| CodeListError::InvalidFilePath(format!("Path contains invalid Unicode characters")))?;
+            .ok_or_else(|| CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
 
         // Create test CSV content
         let csv_content = "\
@@ -426,7 +422,7 @@ C03,Test Disease 3,Description 3";
         
         let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
 
-        assert!(matches!(error, CodeListError::InvalidTermField(msg) if msg == format!("Column not found with the header: {}", factory.codelist_options.term_column_name)));
+        assert!(matches!(error, CodeListError::InvalidTermField { msg } if msg == format!("Column not found with the header: {}", factory.codelist_options.term_column_name)));
 
         Ok(())
     }
@@ -436,7 +432,7 @@ C03,Test Disease 3,Description 3";
         let temp_dir = tempdir()?;
         let file_path = temp_dir.path().join("test_codelist.json");
         let file_path_str = file_path.to_str()
-            .ok_or_else(|| CodeListError::InvalidFilePath(format!("Path contains invalid Unicode characters")))?;
+            .ok_or_else(|| CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
 
         // Create test CSV content
         let csv_content = "\
@@ -450,7 +446,7 @@ C03,Test Disease 3,Description 3";
         
         let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
 
-        assert!(matches!(error, CodeListError::InvalidCodeField(msg) if msg == format!("Column not found with the header: {}", factory.codelist_options.code_column_name)));
+        assert!(matches!(error, CodeListError::InvalidCodeField { msg } if msg == format!("Column not found with the header: {}", factory.codelist_options.code_column_name)));
 
         Ok(())
     }
@@ -460,7 +456,7 @@ C03,Test Disease 3,Description 3";
         let temp_dir = tempdir()?;
         let file_path = temp_dir.path().join("test_codelist.csv");
         let file_path_str = file_path.to_str()
-            .ok_or_else(|| CodeListError::InvalidFilePath(format!("Path contains invalid Unicode characters")))?;
+            .ok_or_else(|| CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
 
         // Create CSV with empty code
         let csv_content = "\
@@ -472,7 +468,7 @@ B02,Test Disease 2,Description 2";
         let factory = create_test_codelist_factory();
         
         let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
-        assert!(matches!(error, CodeListError::EmptyCode(msg) if msg.contains("Empty code field in row: 2")));
+    assert!(matches!(error, CodeListError::EmptyCode { msg } if msg.contains("Empty code field in row: 2")));
 
         Ok(())
     }
@@ -482,7 +478,7 @@ B02,Test Disease 2,Description 2";
         let temp_dir = tempdir()?;
         let file_path = temp_dir.path().join("test_codelist.csv");
         let file_path_str = file_path.to_str()
-            .ok_or_else(|| CodeListError::InvalidFilePath(format!("Path contains invalid Unicode characters")))?;
+            .ok_or_else(|| CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
 
         // Create CSV with empty term
         let csv_content = "\
@@ -494,7 +490,7 @@ B02,Test Disease 2,Description 2";
         let factory = create_test_codelist_factory();
         
         let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
-        assert!(matches!(error, CodeListError::EmptyTerm(msg) if msg.contains("Empty term field in row: 2")));
+        assert!(matches!(error, CodeListError::EmptyTerm { msg } if msg.contains("Empty term field in row: 2")));
 
         Ok(())
     }
@@ -504,7 +500,7 @@ B02,Test Disease 2,Description 2";
         let temp_dir = tempdir()?;
         let file_path = temp_dir.path().join("test_codelist.csv");
         let file_path_str = file_path.to_str()
-            .ok_or_else(|| CodeListError::InvalidFilePath(format!("Path contains invalid Unicode characters")))?;
+            .ok_or_else(|| CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
 
         // CSV with duplicate code columns
         let csv_content = "\
@@ -515,7 +511,7 @@ A01,A01,Test Disease 1";
         let factory = create_test_codelist_factory();
         
         let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
-        assert!(matches!(error, CodeListError::InvalidCodeField(msg) if msg.contains("Multiple columns found with the header: code")));
+        assert!(matches!(error, CodeListError::InvalidCodeField { msg } if msg.contains("Multiple columns found with the header: code")));
 
         Ok(())
     }
@@ -525,7 +521,7 @@ A01,A01,Test Disease 1";
         let temp_dir = tempdir()?;
         let file_path = temp_dir.path().join("test_codelist.csv");
         let file_path_str = file_path.to_str()
-            .ok_or_else(|| CodeListError::InvalidFilePath(format!("Path contains invalid Unicode characters")))?;
+            .ok_or_else(|| CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
 
         // CSV with duplicate term columns
         let csv_content = "\
@@ -536,7 +532,7 @@ A01,Test Disease 1,Test Disease 1";
         let factory = create_test_codelist_factory();
         
         let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
-        assert!(matches!(error, CodeListError::InvalidTermField(msg) if msg.contains("Multiple columns found with the header: term")));
+        assert!(matches!(error, CodeListError::InvalidTermField { msg } if msg.contains("Multiple columns found with the header: term")));
 
         Ok(())
     }
@@ -546,7 +542,7 @@ A01,Test Disease 1,Test Disease 1";
         let temp_dir = tempdir()?;
         let file_path = temp_dir.path().join("test_codelist.csv");
         let file_path_str = file_path.to_str()
-            .ok_or_else(|| CodeListError::InvalidFilePath(format!("Path contains invalid Unicode characters")))?;
+            .ok_or_else(|| CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
 
         // CSV with a row that has fewer columns than the header
         let csv_content = "\
@@ -567,7 +563,7 @@ A01";  // Missing columns
         let temp_dir = tempdir()?;
         let file_path = temp_dir.path().join("test_codelist.json");
         let file_path_str = file_path.to_str()
-            .ok_or_else(|| CodeListError::InvalidFilePath(format!("Path contains invalid Unicode characters"))  )?;
+            .ok_or_else(|| CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
 
         // Create JSON with valid data
         let json_content = r#"[
@@ -616,7 +612,7 @@ A01";  // Missing columns
         fs::write(&file_path, json_content)?;
         
         let error = factory.load_codelist_from_json_file(file_path_str).unwrap_err();
-        assert!(matches!(error, CodeListError::InvalidCodeField(msg) if msg.contains(format!("No {} field found in json file at index: 0", factory.codelist_options.code_field_name).as_str())));
+        assert!(matches!(error, CodeListError::InvalidCodeField { msg } if msg.contains(format!("No {} field found in json file at index: 0", factory.codelist_options.code_field_name).as_str())));
 
         Ok(())
     }
@@ -634,7 +630,7 @@ A01";  // Missing columns
         fs::write(&file_path, json_content)?;
 
         let error = factory.load_codelist_from_json_file(file_path_str).unwrap_err();
-        assert!(matches!(error, CodeListError::InvalidTermField(msg) if msg.contains(format!("No {} field found in json file at index: 0", factory.codelist_options.term_field_name).as_str())));
+        assert!(matches!(error, CodeListError::InvalidTermField { msg } if msg.contains(format!("No {} field found in json file at index: 0", factory.codelist_options.term_field_name).as_str())));
 
         Ok(())
     }    
@@ -654,7 +650,7 @@ A01";  // Missing columns
         fs::write(&file_path, json_content)?;
 
         let error = factory.load_codelist_from_json_file(file_path_str).unwrap_err();
-        assert!(matches!(error, CodeListError::EmptyCode(msg) if msg.contains("Empty code at index: 0")));
+        assert!(matches!(error, CodeListError::EmptyCode { msg } if msg.contains("Empty code at index: 0")));
 
         Ok(())
     }    
@@ -674,7 +670,7 @@ A01";  // Missing columns
         fs::write(&file_path, json_content)?;
 
         let error = factory.load_codelist_from_json_file(file_path_str).unwrap_err();
-        assert!(matches!(error, CodeListError::EmptyTerm(msg) if msg.contains("Empty term at index: 0")));
+        assert!(matches!(error, CodeListError::EmptyTerm { msg } if msg.contains("Empty term at index: 0")));
 
         Ok(())
     }    
@@ -694,7 +690,7 @@ A01";  // Missing columns
         fs::write(&file_path, json_content)?;
 
         let error = factory.load_codelist_from_json_file(file_path_str).unwrap_err();
-        assert!(matches!(error, CodeListError::InvalidCodeType(msg) if msg.contains("Code at index 0 must be a string or number")));
+        assert!(matches!(error, CodeListError::InvalidCodeType { msg } if msg.contains("Code at index 0 must be a string or number")));
 
         Ok(())
     }
@@ -714,7 +710,7 @@ A01";  // Missing columns
         fs::write(&file_path, json_content)?;
 
         let error = factory.load_codelist_from_json_file(file_path_str).unwrap_err();
-        assert!(matches!(error, CodeListError::InvalidTermType(msg) if msg.contains("Term at index 0 must be a string")));
+        assert!(matches!(error, CodeListError::InvalidTermType { msg } if msg.contains("Term at index 0 must be a string")));
 
         Ok(())
     }
@@ -731,7 +727,7 @@ A01";  // Missing columns
 
         let error = factory.load_codelist_from_json_file(file_path_str).unwrap_err();
         println!("Error: {}", error);
-        assert!(matches!(error, CodeListError::InvalidInput(msg) if msg.contains("JSON must be an array of objects")));
+        assert!(matches!(error, CodeListError::InvalidInput { msg } if msg.contains("JSON must be an array of objects")));
 
         Ok(())
     }
@@ -740,7 +736,7 @@ A01";  // Missing columns
     fn test_load_codelist_from_file_invalid_file_path() -> Result<(), CodeListError> {
         let factory = create_test_codelist_factory();
         let error = factory.load_codelist_from_file("invalid_file_path").unwrap_err();
-        assert!(matches!(error, CodeListError::InvalidFilePath(msg) if msg.contains("File path invalid_file_path is not a csv or json file")));
+        assert!(matches!(error, CodeListError::InvalidFilePath { msg } if msg.contains("File path invalid_file_path is not a csv or json file")));
         Ok(())
     }
 
@@ -749,7 +745,7 @@ A01";  // Missing columns
         let temp_dir = tempdir()?;
         let file_path = temp_dir.path().join("test_codelist.csv");
         let file_path_str = file_path.to_str()
-            .ok_or_else(|| CodeListError::InvalidFilePath(format!("Path contains invalid Unicode characters")))?;
+            .ok_or_else(|| CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
 
         // Create test CSV content
         let csv_content = "\
@@ -774,9 +770,7 @@ B02,Test Disease 2,Description 2";
         let temp_dir = tempdir()?;
         let temp_dir_path = temp_dir.path();
         let temp_dir_str = temp_dir_path.to_str()
-            .ok_or(CodeListError::InvalidFilePath(
-                "Path contains invalid Unicode characters".to_string()
-            ))?;
+            .ok_or(CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
 
         // Create test CSV content
         let csv_content = "\
@@ -815,9 +809,7 @@ B02,Test Disease 2,Description 2";
         let temp_dir_path = temp_dir.path();
         
         let temp_dir_str = temp_dir_path.to_str()
-            .ok_or(CodeListError::InvalidFilePath(
-                "Path contains invalid Unicode characters".to_string()
-            ))?;
+            .ok_or(CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
 
         // Create test CSV content
         let csv_content = "\
@@ -845,7 +837,7 @@ B02,Test Disease 2,Description 2";
     fn test_load_codelists_no_input() -> Result<(), CodeListError> {
         let factory = create_test_codelist_factory();
         let error = factory.load_codelists(None, None).unwrap_err();
-        assert!(matches!(error, CodeListError::InvalidInput(msg) if msg.contains("Codelist vector or path must be provided")));
+        assert!(matches!(error, CodeListError::InvalidInput { msg } if msg.contains("Codelist vector or path must be provided")));
         Ok(())
     }
 
@@ -857,9 +849,7 @@ B02,Test Disease 2,Description 2";
         let temp_dir_path = temp_dir.path();
         
         let temp_dir_str = temp_dir_path.to_str()
-            .ok_or(CodeListError::InvalidFilePath(
-                "Path contains invalid Unicode characters".to_string()
-            ))?;
+            .ok_or(CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
 
         // Create test CSV content
         let csv_content = "\
@@ -884,8 +874,8 @@ B02,Test Disease 2,Description 2";
         let codelists = factory.load_codelists(Some(vec![codelist1, codelist2]), None)?;
 
         // load codelists from folder
-        let codelists = factory.load_codelists(Some(codelists), Some(temp_dir_str)).unwrap_err();
-        assert!(matches!(codelists, CodeListError::InvalidInput(msg) if msg.contains("Either codelist vector or path must be provided, not both")));
+        let error = factory.load_codelists(Some(codelists), Some(temp_dir_str)).unwrap_err();
+        assert!(matches!(error, CodeListError::InvalidInput { msg } if msg.contains("Either codelist vector or path must be provided, not both")));
         Ok(())
     }
 
@@ -896,9 +886,7 @@ B02,Test Disease 2,Description 2";
         let temp_dir = tempdir()?;
         let temp_dir_path = temp_dir.path();
         let temp_dir_str = temp_dir_path.to_str()
-            .ok_or(CodeListError::InvalidFilePath(
-                "Path contains invalid Unicode characters".to_string()
-            ))?;
+            .ok_or(CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
         let csv_path1 = temp_dir_path.join("1.csv");
         let csv_path2 = temp_dir_path.join("2.csv");
         let result = factory.save_codelists_to_csv(temp_dir_str, codelists);
@@ -915,9 +903,7 @@ B02,Test Disease 2,Description 2";
         let temp_dir = tempdir()?;
         let temp_dir_path = temp_dir.path();
         let temp_dir_str = temp_dir_path.to_str()
-            .ok_or(CodeListError::InvalidFilePath(
-                "Path contains invalid Unicode characters".to_string()
-            ))?;
+            .ok_or(CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
         let json_path1 = temp_dir_path.join("1.json");
         let json_path2 = temp_dir_path.join("2.json");
         let result = factory.save_codelists_to_json(temp_dir_str, codelists);
