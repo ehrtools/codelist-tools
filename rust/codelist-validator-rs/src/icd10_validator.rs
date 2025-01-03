@@ -4,7 +4,6 @@ use std::sync::LazyLock;
 use crate::errors::CodeListValidatorError;
 
 /// ICD10 code regex pattern
-
 static REGEX: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"^[A-Z]\d{2}(X|(\.\d{1,3})?|\d{1,4})?$").expect("Unable to create regex")
 });
@@ -20,7 +19,16 @@ pub trait ICD10Validator {
 
 /// Implementation of ICD10Validator trait for the CodeList struct
 impl ICD10Validator for CodeList {
-    /// Validate a single ICD10 code
+    /// Validate the form of a single ICD10 code
+    ///
+    /// The rules are:
+    ///        - The code must be 7 characters or less
+    ///        - The first character must be a letter
+    ///        - The second and third characters must be numbers
+    ///        - The fourth character must be a dot, or a number or X
+    ///        - If the fourth character is a dot, there must be at least 1 number after the dot
+    ///        - If the fourth character is a X, there are no further characters
+    ///        - The fifth to seventh characters must be numbers if present
     /// 
     /// # Arguments
     /// 
@@ -74,7 +82,8 @@ impl ICD10Validator for CodeList {
 mod tests {
     use super::*;
     use codelist_rs::metadata::{ Metadata, MetadataSource };
-    use codelist_rs::codelist::{ CodeList, CodeListType };
+    use codelist_rs::codelist::CodeList;
+    use codelist_rs::types::CodeListType;
     use codelist_rs::errors::CodeListError;
 
     // Helper function to create test metadata
@@ -89,29 +98,87 @@ mod tests {
 
     // Helper function to create a test codelist with two entries, default options and test metadata
     fn create_test_codelist() -> Result<CodeList, CodeListError> {
-        let mut codelist = CodeList::new(CodeListType::ICD10, create_test_metadata(), None);
-        codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string())?;
-        codelist.add_entry("A48.51".to_string(), "Infant botulism".to_string())?;
-        
+        let codelist = CodeList::new(CodeListType::ICD10, create_test_metadata(), None);
         Ok(codelist)
     }
 
-
     #[test]
-    fn test_validate_code_with_valid_code() {;
-
+    fn test_validate_code_with_valid_code() -> Result<(), CodeListError> {;
+        let codelist = create_test_codelist()?;
+        let code = "A009";
+        assert!(codelist.validate_code(code).is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_validate_code_with_invalid_code_length() {;
-
+    fn test_validate_code_with_invalid_code_length() -> Result<(), CodeListError> {
+        let codelist = create_test_codelist()?;
+        let code = "A009000000";
+        let error = codelist.validate_code(code).unwrap_err();
+        assert!(matches!(error, CodeListValidatorError::InvalidCodeLength{code: c, reason: r} if c == code && r == "ICD10 code is not greater than 7 characters in length"));
+        Ok(())
     }
 
     #[test]
-    fn test_validate_code_with_invalid_code_content() {;
-
+    fn test_validate_invalid_code_first_character_not_a_letter() -> Result<(), CodeListError> {
+        let codelist = create_test_codelist()?;
+        let code = "1009";
+        let error = codelist.validate_code(code).unwrap_err();
+        assert!(matches!(error, CodeListValidatorError::InvalidCodeContents{code: c, reason: r} if c == code && r == "ICD10 code 1009 does not match the expected format"));
+        Ok(())
     }
 
     #[test]
-    fn test_validate_all_code_valid_codelist() {}
+    fn test_validate_invalid_code_second_character_not_a_number() -> Result<(), CodeListError> {
+        let codelist = create_test_codelist()?;
+        let code = "AA09";
+        let error = codelist.validate_code(code).unwrap_err();
+        assert!(matches!(error, CodeListValidatorError::InvalidCodeContents{code: c, reason: r} if c == code && r == "ICD10 code AA09 does not match the expected format"));
+        Ok(())
+    }
+
+    #[test]
+    fn test_validate_invalid_code_third_character_not_a_number() -> Result<(), CodeListError> {
+        let codelist = create_test_codelist()?;
+        let code = "A0A9";
+        let error = codelist.validate_code(code).unwrap_err();
+        assert!(matches!(error, CodeListValidatorError::InvalidCodeContents{code: c, reason: r} if c == code && r == "ICD10 code A0A9 does not match the expected format"));
+        Ok(())
+    }
+
+    #[test]
+    fn test_validate_invalid_code_fourth_character_not_a_dot_number_or_x() -> Result<(), CodeListError> {
+        let codelist = create_test_codelist()?;
+        let code = "A00A";
+        let error = codelist.validate_code(code).unwrap_err();
+        assert!(matches!(error, CodeListValidatorError::InvalidCodeContents{code: c, reason: r} if c == code && r == "ICD10 code A00A does not match the expected format"));
+        Ok(())
+    }
+
+    #[test]
+    fn test_validate_invalid_code_no_number_after_fourth_character_dot() -> Result<(), CodeListError> {
+        let codelist = create_test_codelist()?;
+        let code = "A00.A";
+        let error = codelist.validate_code(code).unwrap_err();
+        assert!(matches!(error, CodeListValidatorError::InvalidCodeContents{code: c, reason: r} if c == code && r == "ICD10 code A00.A does not match the expected format"));
+        Ok(())
+    }
+
+    #[test]
+    fn test_validate_invalid_code_characters_after_fourth_character_x() -> Result<(), CodeListError> {
+        let codelist = create_test_codelist()?;
+        let code = "A00X12";
+        let error = codelist.validate_code(code).unwrap_err();
+        assert!(matches!(error, CodeListValidatorError::InvalidCodeContents{code: c, reason: r} if c == code && r == "ICD10 code A00X12 does not match the expected format"));
+        Ok(())
+    }
+
+    #[test]
+    fn test_validate_invalid_code_fifth_to_seventh_characters_not_numbers() -> Result<(), CodeListError> {
+        let codelist = create_test_codelist()?;
+        let code = "A00.4AA";
+        let error = codelist.validate_code(code).unwrap_err();
+        assert!(matches!(error, CodeListValidatorError::InvalidCodeContents{code: c, reason: r} if c == code && r == "ICD10 code A00.4AA does not match the expected format"));
+        Ok(())
+    }
 }
