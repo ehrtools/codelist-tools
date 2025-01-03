@@ -1,11 +1,10 @@
 use codelist_rs::codelist::CodeList;
 use regex::Regex;
 use std::sync::LazyLock;
-use std::ops::Deref;
 use crate::errors::CodeListValidatorError;
 
 static REGEX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^[A-Z]\d{2}(X|(\.\d{1,3})?|\d{1,4})?$").expect("Unable to create regex")
+    Regex::new(r"^[A-Z]\d{2}(\.\d{1,2}|\d{1,2})?$").expect("Unable to create regex")
 });
 
 pub trait OPCSValidator {
@@ -16,10 +15,10 @@ pub trait OPCSValidator {
 // Implement the `OPCSValidator` trait for `CodeList`
 impl OPCSValidator for CodeList {
     fn validate_code(&self, code: &str) -> Result<(), CodeListValidatorError> {
-        if code.len() > 7 {
-            return Err(CodeListValidatorError::invalid_code_length(code, "OPCS code is not greater than 7 in length"))
+        if code.len() > 5 {
+            return Err(CodeListValidatorError::invalid_code_length(code, "OPCS code is not greater than 5 in length"))
         }
-        
+
         let re = &REGEX;
 
         if !re.is_match(code) {
@@ -30,7 +29,7 @@ impl OPCSValidator for CodeList {
         }
         Ok(())
     }
-    
+
     fn validate_all_code(&self) -> Result<(), CodeListValidatorError> {
         for code_entry in self.entries.iter() {
             let code = &code_entry.code;
@@ -39,34 +38,3 @@ impl OPCSValidator for CodeList {
         Ok(())
     }
 }
-
-// def validate_icd10_code(code: str) -> bool:
-// """
-//         Validate the form of an ICD-10 code.
-//
-//         The rules are:
-//         - The code must be 7 characters or less
-//         - The first character must be a letter
-//         - The second and third characters must be numbers
-//         - The fourth character must be a dot, or a number or X
-//         - If the fourth character is a dot, there must be at least 1 number after the dot
-//         - If the fourth character is a X, there are no further characters
-//         - The fifth to seventh characters must be numbers if present
-//
-//         Args:
-//             code (str): The code to validate.
-//
-//         Returns:
-//             bool: True if the code is valid, False otherwise.
-//         """
-
-
-//TODO: tests
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//
-//     #[test]
-//
-// }
-//
