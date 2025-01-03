@@ -5,8 +5,8 @@ use core::num;
 
 #[derive(Debug, thiserror::Error, thiserror_ext::Construct)]
 pub enum CodeListValidatorError {
-    #[error("Invalid SNOMED code: {code}")]
-    InvalidSnomedCode { code: String, reason: String },
+    #[error("SNOMED code {} is an invalid length: {code}")]
+    InvalidSnomedCodeLength { code: String },
 
     #[error("Code is not numerical: {0}")]
     #[construct(skip)]
