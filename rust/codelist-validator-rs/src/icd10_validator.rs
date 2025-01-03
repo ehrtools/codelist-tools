@@ -181,4 +181,66 @@ mod tests {
         assert!(matches!(error, CodeListValidatorError::InvalidCodeContents{code: c, reason: r} if c == code && r == "ICD10 code A00.4AA does not match the expected format"));
         Ok(())
     }
+
+    #[test]
+    fn test_validate_codelist_with_valid_codes() -> Result<(), CodeListError> {
+        let mut codelist = create_test_codelist()?;
+        codelist.add_entry("A54".to_string(), "Gonorrhoea".to_string())?;
+        codelist.add_entry("A37".to_string(), "Pertussis".to_string())?;
+        codelist.add_entry("A05".to_string(), "Measles".to_string())?;
+        codelist.add_entry("B74.0".to_string(), "Lymphatic filariasis".to_string())?;
+        codelist.add_entry("N40".to_string(), "Benign prostatic hypertrophy".to_string())?;
+        codelist.add_entry("M10".to_string(), "Gout".to_string())?;
+        codelist.add_entry("Q90".to_string(), "Down Syndrome".to_string())?;
+        codelist.add_entry("K02".to_string(), "Dental caries".to_string())?;
+        assert!(codelist.validate_all_code().is_ok());
+        Ok(())
+    }
+
+    #[test]
+    fn test_validate_codelist_with_all_invalid_codes() -> Result<(), CodeListError> {
+        let mut codelist = create_test_codelist()?;
+        codelist.add_entry("A009000000".to_string(), "Gonorrhoea".to_string())?;
+        codelist.add_entry("1009".to_string(), "Pertussis".to_string())?;
+        codelist.add_entry("AA09".to_string(), "Measles".to_string())?;
+        codelist.add_entry("A0A9".to_string(), "Lymphatic filariasis".to_string())?;
+        codelist.add_entry("A00A".to_string(), "Benign prostatic hypertrophy".to_string())?;
+        codelist.add_entry("A00.A".to_string(), "Gout".to_string())?;
+        codelist.add_entry("A00X12".to_string(), "Down Syndrome".to_string())?;
+        codelist.add_entry("A00.4AA".to_string(), "Dental caries".to_string())?;
+        let error = codelist.validate_all_code().unwrap_err();
+        let error_reason = format!("{}", error);
+        
+        assert!(error_reason.contains("A009000000") && error_reason.contains("Code A009000000 is an invalid length"));
+        assert!(error_reason.contains("1009") && error_reason.contains("Code 1009 contents is invalid"));
+        assert!(error_reason.contains("AA09") && error_reason.contains("Code AA09 contents is invalid")); 
+        assert!(error_reason.contains("A0A9") && error_reason.contains("Code A0A9 contents is invalid"));
+        assert!(error_reason.contains("A00A") && error_reason.contains("Code A00A contents is invalid"));
+        assert!(error_reason.contains("A00.A") && error_reason.contains("Code A00.A contents is invalid"));
+        assert!(error_reason.contains("A00X12") && error_reason.contains("Code A00X12 contents is invalid"));
+        assert!(matches!(error, CodeListValidatorError::InvalidCodelist { reasons } if reasons.len() == 8));
+        Ok(())
+    }
+    
+    fn test_validate_codelist_with_mixed_invalid_and_valid_codes() -> Result<(), CodeListError> {
+        let mut codelist = create_test_codelist()?;
+        codelist.add_entry("A54".to_string(), "Gonorrhoea".to_string())?;
+        codelist.add_entry("1009".to_string(), "Pertussis".to_string())?;
+        codelist.add_entry("A05".to_string(), "Measles".to_string())?;
+        codelist.add_entry("A0A9".to_string(), "Lymphatic filariasis".to_string())?;
+        codelist.add_entry("N40".to_string(), "Benign prostatic hypertrophy".to_string())?;
+        codelist.add_entry("A00.A".to_string(), "Gout".to_string())?;
+        codelist.add_entry("Q90".to_string(), "Down Syndrome".to_string())?;
+        codelist.add_entry("A00.4AA".to_string(), "Dental caries".to_string())?;
+        let error = codelist.validate_all_code().unwrap_err();
+        let error_reason = format!("{}", error);
+
+       assert!(error_reason.contains("1009") && error_reason.contains("Code 1009 contents is invalid"));
+       assert!(error_reason.contains("A0A9") && error_reason.contains("Code A0A9 contents is invalid"));
+       assert!(error_reason.contains("A00.A") && error_reason.contains("Code A00.A contents is invalid"));
+       assert!(error_reason.contains("A00.4AA") && error_reason.contains("Code A00.4AA contents is invalid"));
+       assert!(matches!(error, CodeListValidatorError::InvalidCodelist { reasons } if reasons.len() == 4));
+       Ok(())
+    }
 }
+
