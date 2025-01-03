@@ -1,4 +1,4 @@
-use crate::codelist::CodeList;
+use codelist_rs::codelist::CodeList;
 
 pub trait ICD10Validator {
     fn validate_code(&self, code: &str) -> bool; // for 1 code

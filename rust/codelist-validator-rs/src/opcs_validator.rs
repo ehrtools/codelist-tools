@@ -1,4 +1,4 @@
-use crate::codelist::CodeList;
+use codelist_rs::codelist::CodeList;
 
 pub trait OPCSValidator {
     fn validate_code(&self, code: &str) -> bool; // for 1 code
@@ -16,4 +16,11 @@ impl OPCSValidator for CodeList {
     }
 }
 
-//TODO: tests
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+
+}
