@@ -17,7 +17,6 @@ pub trait ICD10Validator {
     fn validate_all_code(&self) -> Result<(), CodeListValidatorError>;
 }
 
-/// Implementation of ICD10Validator trait for the CodeList struct
 impl ICD10Validator for CodeList {
     /// Validate the form of a single ICD10 code
     ///
@@ -36,13 +35,13 @@ impl ICD10Validator for CodeList {
     /// 
     /// # Returns
     /// 
-    /// * `Result<(), String>`: unit type if the code is valid, otherwise an error containing the code and the reason the code is invalid
+    /// * `Result<(), CodeListValidatorError>`: unit type if the code is valid, otherwise an error containing the code and the reason the code is invalid
     fn validate_code(&self, code: &str) -> Result<(), CodeListValidatorError> {
         if code.len() > 7 {
-            return Err(CodeListValidatorError::invalid_code_length(code, "ICD10 code is not greater than 7 characters in length"));
+            return Err(CodeListValidatorError::invalid_code_length(code, "ICD10 code is greater than 7 characters in length"));
         }
 
-        let re = &*REGEX;
+        let re = &REGEX;
 
         if !re.is_match(code) {
             return Err(CodeListValidatorError::invalid_code_contents(
@@ -50,7 +49,6 @@ impl ICD10Validator for CodeList {
                 format!("ICD10 code {} does not match the expected format", code), // Corrected string interpolation
             ));
         }
-
         Ok(())
     }
 
@@ -115,7 +113,7 @@ mod tests {
         let codelist = create_test_codelist()?;
         let code = "A009000000";
         let error = codelist.validate_code(code).unwrap_err();
-        assert!(matches!(error, CodeListValidatorError::InvalidCodeLength{code: c, reason: r} if c == code && r == "ICD10 code is not greater than 7 characters in length"));
+        assert!(matches!(error, CodeListValidatorError::InvalidCodeLength{code: c, reason: r} if c == code && r == "ICD10 code is greater than 7 characters in length"));
         Ok(())
     }
 
@@ -211,17 +209,43 @@ mod tests {
         let error = codelist.validate_all_code().unwrap_err();
         let error_reason = format!("{}", error);
         
-        assert!(error_reason.contains("A009000000") && error_reason.contains("Code A009000000 is an invalid length"));
-        assert!(error_reason.contains("1009") && error_reason.contains("Code 1009 contents is invalid"));
-        assert!(error_reason.contains("AA09") && error_reason.contains("Code AA09 contents is invalid")); 
-        assert!(error_reason.contains("A0A9") && error_reason.contains("Code A0A9 contents is invalid"));
-        assert!(error_reason.contains("A00A") && error_reason.contains("Code A00A contents is invalid"));
-        assert!(error_reason.contains("A00.A") && error_reason.contains("Code A00.A contents is invalid"));
-        assert!(error_reason.contains("A00X12") && error_reason.contains("Code A00X12 contents is invalid"));
+        assert!(error_reason.contains("A009000000") && 
+                error_reason.contains("Code A009000000 is an invalid length") &&
+                error_reason.contains("ICD10 code is greater than 7 characters in length"));
+
+        assert!(error_reason.contains("1009") && 
+                error_reason.contains("Code 1009 contents is invalid") &&
+                error_reason.contains("ICD10 code 1009 does not match the expected format"));
+
+        assert!(error_reason.contains("AA09") && 
+                error_reason.contains("Code AA09 contents is invalid") &&
+                error_reason.contains("ICD10 code AA09 does not match the expected format")); 
+
+        assert!(error_reason.contains("A0A9") && 
+                error_reason.contains("Code A0A9 contents is invalid") &&
+                error_reason.contains("ICD10 code A0A9 does not match the expected format"));
+
+        assert!(error_reason.contains("A00A") && 
+                error_reason.contains("Code A00A contents is invalid") &&
+                error_reason.contains("ICD10 code A00A does not match the expected format"));
+
+        assert!(error_reason.contains("A00.A") && 
+                error_reason.contains("Code A00.A contents is invalid") &&
+                error_reason.contains("ICD10 code A00.A does not match the expected format"));
+
+        assert!(error_reason.contains("A00X12") && 
+                error_reason.contains("Code A00X12 contents is invalid") &&
+                error_reason.contains("ICD10 code A00X12 does not match the expected format"));
+
+        assert!(error_reason.contains("A00.4AA") && 
+                error_reason.contains("Code A00.4AA contents is invalid") &&
+                error_reason.contains("ICD10 code A00.4AA does not match the expected format"));
+
         assert!(matches!(error, CodeListValidatorError::InvalidCodelist { reasons } if reasons.len() == 8));
         Ok(())
     }
-    
+
+    #[test]
     fn test_validate_codelist_with_mixed_invalid_and_valid_codes() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist()?;
         codelist.add_entry("A54".to_string(), "Gonorrhoea".to_string())?;
@@ -235,10 +259,22 @@ mod tests {
         let error = codelist.validate_all_code().unwrap_err();
         let error_reason = format!("{}", error);
 
-       assert!(error_reason.contains("1009") && error_reason.contains("Code 1009 contents is invalid"));
-       assert!(error_reason.contains("A0A9") && error_reason.contains("Code A0A9 contents is invalid"));
-       assert!(error_reason.contains("A00.A") && error_reason.contains("Code A00.A contents is invalid"));
-       assert!(error_reason.contains("A00.4AA") && error_reason.contains("Code A00.4AA contents is invalid"));
+       assert!(error_reason.contains("1009") && 
+               error_reason.contains("Code 1009 contents is invalid") &&
+               error_reason.contains("ICD10 code 1009 does not match the expected format"));
+
+       assert!(error_reason.contains("A0A9") && 
+               error_reason.contains("Code A0A9 contents is invalid") &&
+               error_reason.contains("ICD10 code A0A9 does not match the expected format"));
+
+       assert!(error_reason.contains("A00.A") && 
+               error_reason.contains("Code A00.A contents is invalid") &&
+               error_reason.contains("ICD10 code A00.A does not match the expected format"));
+
+       assert!(error_reason.contains("A00.4AA") && 
+               error_reason.contains("Code A00.4AA contents is invalid") &&
+               error_reason.contains("ICD10 code A00.4AA does not match the expected format"));
+
        assert!(matches!(error, CodeListValidatorError::InvalidCodelist { reasons } if reasons.len() == 4));
        Ok(())
     }
