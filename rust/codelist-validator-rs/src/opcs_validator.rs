@@ -58,7 +58,7 @@ impl OPCSValidator for CodeList {
     /// 
     /// # Returns
     /// 
-    /// * `Result<(), CodeListValidatorError>`: unit type if all codes are valid in the codelist, otherwise an error containing all invalid codes and the reason for being invalid
+    /// * `Result<(), CodeListValidatorError>`: unit type if all codes are valid in the codelist, otherwise an error containing a vector of all invalid codes and the reason for being invalid
     fn validate_all_code(&self) -> Result<(), CodeListValidatorError> {
         let mut invalid_codes = Vec::new();
 
@@ -98,7 +98,7 @@ mod tests {
 
     // Helper function to create a test codelist with two entries, default options and test metadata
     fn create_test_codelist() -> Result<CodeList, CodeListError> {
-        let codelist = CodeList::new(CodeListType::ICD10, create_test_metadata(), None);
+        let codelist = CodeList::new(CodeListType::OPCS, create_test_metadata(), None);
         Ok(codelist)
     }
 
@@ -210,7 +210,6 @@ mod tests {
         codelist.add_entry("A010A".to_string(), "Insertion Artery Coeliac Stent Transluminal Percutaneous".to_string())?;
         let error = codelist.validate_all_code().unwrap_err();
         let error_reason = format!("{}", error);
-        println!("{}", error_reason);
 
         assert!(error_reason.contains("A0") && error_reason.contains("Code A0 is an invalid length") &&
                 error_reason.contains("OPCS code A0 is less than 3 characters in length"));

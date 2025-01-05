@@ -11,9 +11,12 @@ pub enum CodeListValidatorError {
     #[error("Code {code} is an invalid length. Reason: {reason}")]
     InvalidCodeLength { code: String, reason: String },
 
-    #[error("Code is not composed of numerical characters: {0}")]
+    #[error("Code {code} is not composed of all numerical characters: {reason}")]
     #[construct(skip)]
-    ParseIntError(#[from] num::ParseIntError),
+    ParseIntError {
+        code: String,
+        reason: String,
+    },
 
     #[error("Code {code} contents is invalid. Reason: {reason}")]
     InvalidCodeContents { code: String, reason: String },
