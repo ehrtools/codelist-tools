@@ -36,20 +36,17 @@ impl OPCSValidator for CodeList {
     /// * `Result<(), >`: unit type if the code is valid, otherwise an error containing the code and the reason the code is invalid
     fn validate_code(&self, code: &str) -> Result<(), CodeListValidatorError> {
         if code.len() > 5 {
-            return Err(CodeListValidatorError::invalid_code_length(code, format!("OPCS code {} is greater than 5 characters in length", code)))
+            return Err(CodeListValidatorError::invalid_code_length(code, "Code is greater than 5 characters in length", self.codelist_type.to_string()))
         }
 
         if code.len() < 3 {
-            return Err(CodeListValidatorError::invalid_code_length(code, format!("OPCS code {} is less than 3 characters in length", code)))
+            return Err(CodeListValidatorError::invalid_code_length(code, "Code is less than 3 characters in length", self.codelist_type.to_string()))
         }
 
         let re = &REGEX;
 
         if !re.is_match(code) {
-            return Err(CodeListValidatorError::invalid_code_contents(
-                code,
-                format!("OPCS code {} does not match the expected format", code), // Corrected string interpolation
-            ));
+            return Err(CodeListValidatorError::invalid_code_contents(code, "Code does not match the expected format", self.codelist_type.to_string()))
         }
         Ok(())
     }
@@ -60,20 +57,20 @@ impl OPCSValidator for CodeList {
     /// 
     /// * `Result<(), CodeListValidatorError>`: unit type if all codes are valid in the codelist, otherwise an error containing a vector of all invalid codes and the reason for being invalid
     fn validate_all_code(&self) -> Result<(), CodeListValidatorError> {
-        let mut invalid_codes = Vec::new();
+        let mut reasons  = Vec::new();
 
         for code_entry in self.entries.iter() {
             let code = &code_entry.code;
             if let Err(err) = self.validate_code(code) {
-                let error_reason = format!("{}", err);
-                invalid_codes.push((code.clone(), error_reason));
+                let error_reason = err.to_string();
+                reasons.push(error_reason);
             }
         }
 
-        if invalid_codes.is_empty() {
+        if reasons.is_empty() {
             Ok(())
         } else {
-            Err(CodeListValidatorError::invalid_codelist(invalid_codes))
+            Err(CodeListValidatorError::invalid_codelist(reasons))
         }
     }
 }
@@ -115,16 +112,19 @@ mod tests {
         let codelist = create_test_codelist()?;
         let code = "A0";
         let error = codelist.validate_code(code).unwrap_err();
-        assert!(matches!(error, CodeListValidatorError::InvalidCodeLength{code: c, reason: r} if c == code && r == "OPCS code A0 is less than 3 characters in length"));
+        let error_string = error.to_string();
+        assert_eq!(error_string, "Code A0 is an invalid length for type OPCS. Reason: Code is less than 3 characters in length");
         Ok(())
     }
+
 
     #[test]
     fn test_validate_code_with_invalid_code_length_greater_than_5_characters() -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
-        let code = "A01000";
+        let code = "A01000";    
         let error = codelist.validate_code(code).unwrap_err();
-        assert!(matches!(error, CodeListValidatorError::InvalidCodeLength{code: c, reason: r} if c == code && r == "OPCS code A01000 is greater than 5 characters in length"));
+        let error_string = error.to_string();
+        assert_eq!(error_string, "Code A01000 is an invalid length for type OPCS. Reason: Code is greater than 5 characters in length");
         Ok(())
     }
 
@@ -133,7 +133,8 @@ mod tests {
         let codelist = create_test_codelist()?;
         let code = "101";
         let error = codelist.validate_code(code).unwrap_err();
-        assert!(matches!(error, CodeListValidatorError::InvalidCodeContents{code: c, reason: r} if c == code && r == "OPCS code 101 does not match the expected format"));
+        let error_string = error.to_string();
+        assert_eq!(error_string, "Code 101 contents is invalid for type OPCS. Reason: Code does not match the expected format");
         Ok(())
     }
 
@@ -142,7 +143,8 @@ mod tests {
         let codelist = create_test_codelist()?;
         let code = "AA1";
         let error = codelist.validate_code(code).unwrap_err();
-        assert!(matches!(error, CodeListValidatorError::InvalidCodeContents{code: c, reason: r} if c == code && r == "OPCS code AA1 does not match the expected format"));
+        let error_string = error.to_string();
+        assert_eq!(error_string, "Code AA1 contents is invalid for type OPCS. Reason: Code does not match the expected format");
         Ok(())
     }
 
@@ -151,7 +153,8 @@ mod tests {
         let codelist = create_test_codelist()?;
         let code = "A0A";
         let error = codelist.validate_code(code).unwrap_err();
-        assert!(matches!(error, CodeListValidatorError::InvalidCodeContents{code: c, reason: r} if c == code && r == "OPCS code A0A does not match the expected format"));
+        let error_string = error.to_string();
+        assert_eq!(error_string, "Code A0A contents is invalid for type OPCS. Reason: Code does not match the expected format");
         Ok(())
     }
 
@@ -160,7 +163,8 @@ mod tests {
         let codelist = create_test_codelist()?;
         let code = "A01.";
         let error = codelist.validate_code(code).unwrap_err();
-        assert!(matches!(error, CodeListValidatorError::InvalidCodeContents{code: c, reason: r} if c == code && r == "OPCS code A01. does not match the expected format"));
+        let error_string = error.to_string();
+        assert_eq!(error_string, "Code A01. contents is invalid for type OPCS. Reason: Code does not match the expected format");
         Ok(())
     }
 
@@ -169,7 +173,8 @@ mod tests {
         let codelist = create_test_codelist()?;
         let code = "A01.A";
         let error = codelist.validate_code(code).unwrap_err();
-        assert!(matches!(error, CodeListValidatorError::InvalidCodeContents{code: c, reason: r} if c == code && r == "OPCS code A01.A does not match the expected format"));
+        let error_string = error.to_string();
+        assert_eq!(error_string, "Code A01.A contents is invalid for type OPCS. Reason: Code does not match the expected format");
         Ok(())
     }
 
@@ -178,7 +183,8 @@ mod tests {
         let codelist = create_test_codelist()?;
         let code = "A010A";
         let error = codelist.validate_code(code).unwrap_err();
-        assert!(matches!(error, CodeListValidatorError::InvalidCodeContents{code: c, reason: r} if c == code && r == "OPCS code A010A does not match the expected format"));
+        let error_string = error.to_string();
+        assert_eq!(error_string, "Code A010A contents is invalid for type OPCS. Reason: Code does not match the expected format");
         Ok(())
     }
 
@@ -209,31 +215,17 @@ mod tests {
         codelist.add_entry("A01.A".to_string(), "Insertion Artery Cerebral Stent Transluminal Percutaneous".to_string())?;
         codelist.add_entry("A010A".to_string(), "Insertion Artery Coeliac Stent Transluminal Percutaneous".to_string())?;
         let error = codelist.validate_all_code().unwrap_err();
-        let error_reason = format!("{}", error);
+        let error_string = error.to_string();
 
-        assert!(error_reason.contains("A0") && error_reason.contains("Code A0 is an invalid length") &&
-                error_reason.contains("OPCS code A0 is less than 3 characters in length"));
-
-        assert!(error_reason.contains("A01000") && error_reason.contains("Code A01000 is an invalid length") &&
-                error_reason.contains("OPCS code A01000 is greater than 5 characters in length"));
-
-        assert!(error_reason.contains("101") && error_reason.contains("Code 101 contents is invalid") &&
-                error_reason.contains("OPCS code 101 does not match the expected format"));
-
-        assert!(error_reason.contains("AA1") && error_reason.contains("Code AA1 contents is invalid") &&
-                error_reason.contains("OPCS code AA1 does not match the expected format"));
-
-        assert!(error_reason.contains("A0A") && error_reason.contains("Code A0A contents is invalid") &&
-                error_reason.contains("OPCS code A0A does not match the expected format"));
-
-        assert!(error_reason.contains("A01.") && error_reason.contains("Code A01. contents is invalid") &&
-                error_reason.contains("OPCS code A01. does not match the expected format"));
-
-        assert!(error_reason.contains("A01.A") && error_reason.contains("Code A01.A contents is invalid") &&
-                error_reason.contains("OPCS code A01.A does not match the expected format"));
-
-        assert!(error_reason.contains("A010A") && error_reason.contains("Code A010A contents is invalid") &&
-                error_reason.contains("OPCS code A010A does not match the expected format"));
+        assert!(error_string.contains("Some codes in the list are invalid. Details:"));
+        assert!(error_string.contains("Code A0 is an invalid length for type OPCS. Reason: Code is less than 3 characters in length"));
+        assert!(error_string.contains("Code A01000 is an invalid length for type OPCS. Reason: Code is greater than 5 characters in length"));
+        assert!(error_string.contains("Code 101 contents is invalid for type OPCS. Reason: Code does not match the expected format"));
+        assert!(error_string.contains("Code AA1 contents is invalid for type OPCS. Reason: Code does not match the expected format"));
+        assert!(error_string.contains("Code A0A contents is invalid for type OPCS. Reason: Code does not match the expected format"));
+        assert!(error_string.contains("Code A01. contents is invalid for type OPCS. Reason: Code does not match the expected format"));
+        assert!(error_string.contains("Code A01.A contents is invalid for type OPCS. Reason: Code does not match the expected format"));
+        assert!(error_string.contains("Code A010A contents is invalid for type OPCS. Reason: Code does not match the expected format"));
 
         assert!(matches!(error, CodeListValidatorError::InvalidCodelist { reasons } if reasons.len() == 8));
         Ok(())
@@ -251,20 +243,13 @@ mod tests {
         codelist.add_entry("L35.3".to_string(), "Insertion Artery Cerebral Stent Transluminal Percutaneous".to_string())?;
         codelist.add_entry("A010A".to_string(), "Insertion Artery Coeliac Stent Transluminal Percutaneous".to_string())?;
         let error = codelist.validate_all_code().unwrap_err();
-        let error_reason = format!("{}", error);
-        println!("{}", error_reason);
+        let error_string = error.to_string();
 
-        assert!(error_reason.contains("A01000") && error_reason.contains("Code A01000 is an invalid length") &&
-                error_reason.contains("OPCS code A01000 is greater than 5 characters in length"));
-
-        assert!(error_reason.contains("AA1") && error_reason.contains("Code AA1 contents is invalid") &&
-                error_reason.contains("OPCS code AA1 does not match the expected format"));
-
-        assert!(error_reason.contains("A01.") && error_reason.contains("Code A01. contents is invalid") &&
-                error_reason.contains("OPCS code A01. does not match the expected format"));
-
-        assert!(error_reason.contains("A010A") && error_reason.contains("Code A010A contents is invalid") &&
-                error_reason.contains("OPCS code A010A does not match the expected format"));
+        assert!(error_string.contains("Some codes in the list are invalid. Details:"));
+        assert!(error_string.contains("Code A01000 is an invalid length for type OPCS. Reason: Code is greater than 5 characters in length"));
+        assert!(error_string.contains("Code AA1 contents is invalid for type OPCS. Reason: Code does not match the expected format"));
+        assert!(error_string.contains("Code A01. contents is invalid for type OPCS. Reason: Code does not match the expected format"));
+        assert!(error_string.contains("Code A010A contents is invalid for type OPCS. Reason: Code does not match the expected format"));
 
         assert!(matches!(error, CodeListValidatorError::InvalidCodelist { reasons } if reasons.len() == 4));
         Ok(())
