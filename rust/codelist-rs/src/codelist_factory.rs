@@ -1,6 +1,6 @@
-use crate::errors::CodeListError;
+
 use crate::codelist::CodeList;
-use crate::codelist::CodeListOptions;
+use crate::codelist_options::CodeListOptions;
 use crate::metadata::{Metadata, MetadataSource};
 use crate::types::CodeListType;
 

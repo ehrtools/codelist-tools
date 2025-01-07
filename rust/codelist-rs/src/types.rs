@@ -51,9 +51,9 @@ impl ToString for CodeListType {
     /// * `String` - The string representation of the CodeListType
     fn to_string(&self) -> String {
         match self {
-            CodeListType::ICD10 => "icd10".to_string(),
-            CodeListType::SNOMED => "snomed".to_string(),
-            CodeListType::OPCS => "opcs".to_string(),
+            CodeListType::ICD10 => "ICD10".to_string(),
+            CodeListType::SNOMED => "SNOMED".to_string(),
+            CodeListType::OPCS => "OPCS".to_string(),
         }
     }
 }
