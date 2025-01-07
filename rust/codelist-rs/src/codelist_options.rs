@@ -37,3 +37,20 @@ impl Default for CodeListOptions {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_default() {
+        let options = CodeListOptions::default();
+        assert_eq!(options.allow_duplicates, false);
+        assert_eq!(options.truncate_to_3_digits, false);
+        assert_eq!(options.add_x_codes, false);
+        assert_eq!(options.code_column_name, "code");
+        assert_eq!(options.term_column_name, "term");
+        assert_eq!(options.code_field_name, "code");
+        assert_eq!(options.term_field_name, "term");
+    }
+}
