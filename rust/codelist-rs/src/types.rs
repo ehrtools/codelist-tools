@@ -80,9 +80,9 @@ mod tests {
 
     #[test]
     fn test_to_string() {
-        assert_eq!(CodeListType::ICD10.to_string(), "icd10");
-        assert_eq!(CodeListType::SNOMED.to_string(), "snomed");
-        assert_eq!(CodeListType::OPCS.to_string(), "opcs");
+        assert_eq!(CodeListType::ICD10.to_string(), "ICD10");
+        assert_eq!(CodeListType::SNOMED.to_string(), "SNOMED");
+        assert_eq!(CodeListType::OPCS.to_string(), "OPCS");
     }
 }
 
