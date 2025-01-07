@@ -1,4 +1,4 @@
-/// This module defines the different types of codelists that can be used
+//! This file defines the different types of codelists that can be used
 
 /// External imports
 use std::str::FromStr;

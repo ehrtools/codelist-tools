@@ -1,3 +1,5 @@
+//! This file contains custom errors for the codelist library
+
 use std::io;
 use serde_json;
 use csv;

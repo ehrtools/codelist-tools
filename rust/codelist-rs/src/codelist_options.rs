@@ -1,3 +1,5 @@
+//! This file contains the codelist options for the codelist
+
 use serde::{Serialize, Deserialize};
 
 /// Struct to represent a codelist options
