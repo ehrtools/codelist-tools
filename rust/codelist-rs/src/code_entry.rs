@@ -60,6 +60,16 @@ impl CodeEntry {
         })
     }
 
+    /// Add a comment to the code entry
+    ///
+    /// # Arguments
+    /// * `comment` - The comment to add
+    ///
+    /// # Returns
+    /// * `Result<(), CodeListError>`
+    ///
+    /// # Errors
+    /// * `CodeListError::CodeEntryCommentAlreadyExists` - If the comment already exists
     pub fn add_comment(&mut self, comment: String) -> Result<(), CodeListError> {
         if self.comment.is_none() {
             self.comment = Some(comment);
@@ -69,6 +79,16 @@ impl CodeEntry {
         }
     }
 
+    /// Update the comment for the code entry
+    ///
+    /// # Arguments
+    /// * `comment` - The comment to update
+    ///
+    /// # Returns
+    /// * `Result<(), CodeListError>`
+    ///
+    /// # Errors
+    /// * `CodeListError::CodeEntryCommentDoesNotExist` - If the comment does not exist
     pub fn update_comment(&mut self, comment: String) -> Result<(), CodeListError> {
         if let Some(_x) = &self.comment {
             self.comment = Some(comment);
@@ -78,6 +98,13 @@ impl CodeEntry {
         }
     }
 
+    /// Remove the comment for the code entry
+    ///
+    /// # Returns
+    /// * `Result<(), CodeListError>`
+    ///
+    /// # Errors
+    /// * `CodeListError::CodeEntryCommentDoesNotExist` - If the comment does not exist
     pub fn remove_comment(&mut self) -> Result<(), CodeListError> {
         if let Some(_x) = &self.comment {
             self.comment = None;
@@ -152,12 +179,52 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    fn test_add_comment_when_comment_already_exists() -> Result<(), CodeListError> {
+        let mut entry = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string(), Some("test".to_string()))?;
+        let comment = "Test comment";
+        let error = entry.add_comment(comment.to_string()).unwrap_err();
+        let error_string = error.to_string();
+        assert_eq!(error_string, "Comment for CodeEntry with code R65.2 and term Severe sepsis already exists. Please update comment instead.");
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_update_comment_when_comment_already_exists() -> Result<(), CodeListError> {
+        let mut entry = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string(), Some("test".to_string()))?;
+        let comment = "Test comment";
+        let result = entry.update_comment(comment.to_string());
+        assert!(result.is_ok());
+        assert_eq!(entry.comment, Some("Test comment".to_string()));
+        Ok(())
+    }
+
+    #[test]
+    fn test_update_comment_when_comment_does_not_already_exist() -> Result<(), CodeListError> {
+        let mut entry = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
+        let comment = "Test comment";
+        let error = entry.update_comment(comment.to_string()).unwrap_err();
+        let error_string = error.to_string();
+        assert_eq!(error_string, "Comment for CodeEntry with code R65.2 and term Severe sepsis does not exist. Please use add comment instead if you are trying to add a comment.");
+        Ok(())
+    }
+
+    #[test]
+    fn test_remove_comment_when_comment_exists() -> Result<(), CodeListError> {
+        let mut entry = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string(), Some("test".to_string()))?;
+        let result = entry.remove_comment();
+        assert!(result.is_ok());
+        assert_eq!(entry.comment, None);
+        Ok(())
+    }
+
+    #[test]
+    fn test_remove_comment_when_comment_does_not_already_exist() -> Result<(), CodeListError> {
+        let mut entry = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
+        let error = entry.remove_comment().unwrap_err();
+        let error_string = error.to_string();
+        assert_eq!(error_string, "Comment for CodeEntry with code R65.2 and term Severe sepsis does not exist. Please use add comment instead if you are trying to add a comment.");
+        Ok(())
+    }
 }
-
-// test error when add comment when comment already exists
-// test update comment went comment exists
-// tests error when update comment when comment does not already exist
-// test remove comment when comment exists
-// test err when remove comment when comment does not exist
-
-// add docs for new fns
