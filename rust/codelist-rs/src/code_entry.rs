@@ -148,13 +148,12 @@ mod tests {
         let mut entry = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
         let comment = "Test comment";
         assert!(entry.add_comment(comment.to_string()).is_ok());
-        assert_eq!(entry.add_comment(comment.to_stri;
+        assert_eq!(entry.comment, Some("Test comment".to_string()));
         Ok(())
     }
 
 }
 
-// test add comment went comment is none
 // test error when add comment when comment already exists
 // test update comment went comment exists
 // tests error when update comment when comment does not already exist
