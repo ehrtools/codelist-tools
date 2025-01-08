@@ -4,6 +4,7 @@
 //! is the ICD-10 code and the term is the description of the code. like 'B29.0' and
 //! 'Acute viral hepatitis C'.
 
+use csv::DeserializeErrorKind::ParseFloat;
 // External imports
 use serde::{Deserialize, Serialize};
 
@@ -46,10 +47,10 @@ impl CodeEntry {
         let code = code.into();
 
         if code.trim().is_empty() {
-            return Err(CodeListError::empty_code("Empty code supplied"));
+            return Err(CodeListError::empty_code());
         }
         if term.trim().is_empty() {
-            return Err(CodeListError::empty_term("Empty term supplied"));
+            return Err(CodeListError::empty_term());
         }
 
         Ok(CodeEntry {
@@ -58,8 +59,34 @@ impl CodeEntry {
             comment,
         })
     }
-}
 
+    pub fn add_comment(&mut self, comment: String) -> Result<(), CodeListError> {
+        if self.comment.is_none() {
+            self.comment = Some(comment);
+            Ok(())
+        } else {
+            Err(CodeListError::code_entry_comment_already_exists(&self.code, &self.term))
+        }
+    }
+
+    pub fn update_comment(&mut self, comment: String) -> Result<(), CodeListError> {
+        if let Some(_x) = &self.comment {
+            self.comment = Some(comment);
+            Ok(())
+        } else {
+            Err(CodeListError::code_entry_comment_does_not_exist(&self.code, &self.term))
+        }
+    }
+
+    pub fn remove_comment(&mut self) -> Result<(), CodeListError> {
+        if let Some(_x) = &self.comment {
+            self.comment = None;
+            Ok(())
+        } else {
+            Err(CodeListError::code_entry_comment_does_not_exist(&self.code, &self.term))
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -87,38 +114,35 @@ mod tests {
     #[test]
     fn test_empty_code_returns_error() -> Result<(), CodeListError> {
         let error = CodeEntry::new("".to_string(), "Severe sepsis".to_string(), None).unwrap_err();
-        assert!(matches!(error, CodeListError::EmptyCode { msg } if msg == "Empty code supplied"));
+        let error_string = error.to_string();
+        assert_eq!(&error_string, "Empty code supplied");
         Ok(())
     }
 
     #[test]
     fn test_empty_term_returns_error() -> Result<(), CodeListError> {
         let error = CodeEntry::new("R65.2".to_string(), "".to_string(), None).unwrap_err();
-        assert!(matches!(error, CodeListError::EmptyTerm { msg } if msg == "Empty term supplied"));
+        let error_string = error.to_string();
+        assert_eq!(&error_string, "Empty term supplied");
         Ok(())
     }
 
     #[test]
     fn test_whitespace_only_code_returns_error() -> Result<(), CodeListError> {
         let error = CodeEntry::new("   ".to_string(), "Some term".to_string(), None).unwrap_err();
-        assert!(matches!(error, CodeListError::EmptyCode { msg } if msg == "Empty code supplied"));
+        let error_string = error.to_string();
+        assert_eq!(&error_string, "Empty code supplied");
         Ok(())
     }
 
     #[test]
     fn test_whitespace_only_term_returns_error() -> Result<(), CodeListError> {
         let error = CodeEntry::new("R65.2".to_string(), "  \n\t  ".to_string(), None).unwrap_err();
-        assert!(matches!(error, CodeListError::EmptyTerm { msg } if msg == "Empty term supplied"));
+        let error_string = error.to_string();
+        assert_eq!(&error_string, "Empty term supplied");
         Ok(())
     }
 
 }
 
-
-// fn add_comment or update_comment or remove_comment
-
-// then we could have a Codelist function”
-//
-// -  codes_only
-// •code_entries
-// •full_entries
+// tests for add/update/remove comment

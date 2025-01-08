@@ -32,11 +32,11 @@ pub enum CodeListError {
     #[error("Invalid term field: {msg}")]
     InvalidTermField { msg: String },
     
-    #[error("Empty code: {msg}")]
-    EmptyCode { msg: String },
+    #[error("Empty code supplied")]
+    EmptyCode,
     
-    #[error("Empty term: {msg}")]
-    EmptyTerm { msg: String },
+    #[error("Empty term supplied")]
+    EmptyTerm,
     
     #[error("Column index out of bounds: {msg}")]
     ColumnIndexOutOfBounds { msg: String },
@@ -46,6 +46,12 @@ pub enum CodeListError {
     
     #[error("Invalid term type: {msg}")]
     InvalidTermType { msg: String },
+
+    #[error("Comment for CodeEntry with code {code} and term {term} already exists. Please update comment instead.")]
+    CodeEntryCommentAlreadyExists { code: String, term: String },
+
+    #[error("Comment for CodeEntry with code {code} and term {term} does not exist. Please use add comment instead if you are trying to add a comment.")]
+    CodeEntryCommentDoesNotExist { code: String, term: String },
 
     #[error("JSON error: {0}")]
     #[construct(skip)]

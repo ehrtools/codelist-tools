@@ -13,6 +13,12 @@ use crate::metadata::Metadata;
 use crate::errors::CodeListError;
 use crate::codelist_options::CodeListOptions;
 
+// then we could have a Codelist function”
+//
+// -  codes_only
+// •code_entries
+// •full_entries
+
 /// Struct to represent a codelist
 ///
 /// # Fields
@@ -64,8 +70,8 @@ impl CodeList {
     /// # Arguments
     /// * `code` - The code to add
     /// * `term` - The term to add
-    pub fn add_entry(&mut self, code: String, term: String) -> Result<(), CodeListError> {
-        let entry = CodeEntry::new(code, term)?;
+    pub fn add_entry(&mut self, code: String, term: String, ) -> Result<(), CodeListError> {
+        let entry = CodeEntry::new(code, term, None)?;
         self.entries.insert(entry);
         Ok(())
     }
@@ -79,7 +85,7 @@ impl CodeList {
     /// # Errors
     /// * `CodeListError::EntryNotFound` - If the entry to be removed is not found
     pub fn remove_entry(&mut self, code: &str, term: &str) -> Result<(), CodeListError> {
-        let removed = self.entries.remove(&CodeEntry::new(code.to_string(), term.to_string())?);
+        let removed = self.entries.remove(&CodeEntry::new(code.to_string(), term.to_string(), None)?);
         if removed {
             Ok(())
         } else {
