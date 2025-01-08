@@ -145,4 +145,11 @@ mod tests {
 
 }
 
-// tests for add/update/remove comment
+// test add comment went comment is none
+// test error when add comment when comment already exists
+// test update comment went comment exists
+// tests error when update comment when comment does not already exist
+// test remove comment when comment exists
+// test err when remove comment when comment does not exist
+
+// add docs for new fns
