@@ -143,6 +143,15 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    fn test_add_comment_when_comment_does_not_exist() -> Result<(), CodeListError> {
+        let mut entry = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
+        let comment = "Test comment";
+        assert!(entry.add_comment(comment.to_string()).is_ok());
+        assert_eq!(entry.add_comment(comment.to_stri;
+        Ok(())
+    }
+
 }
 
 // test add comment went comment is none
