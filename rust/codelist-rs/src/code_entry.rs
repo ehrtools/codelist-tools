@@ -4,7 +4,6 @@
 //! is the ICD-10 code and the term is the description of the code. like 'B29.0' and
 //! 'Acute viral hepatitis C'.
 
-use csv::DeserializeErrorKind::ParseFloat;
 // External imports
 use serde::{Deserialize, Serialize};
 
@@ -27,7 +26,6 @@ pub struct CodeEntry {
     pub comment: Option<String>,
 }
 
-
 impl CodeEntry {
     /// Create a new code entry
     ///
@@ -47,10 +45,10 @@ impl CodeEntry {
         let code = code.into();
 
         if code.trim().is_empty() {
-            return Err(CodeListError::empty_code());
+            return Err(CodeListError::empty_code("Empty code supplied"));
         }
         if term.trim().is_empty() {
-            return Err(CodeListError::empty_term());
+            return Err(CodeListError::empty_term("Empty term supplied"));
         }
 
         Ok(CodeEntry {
@@ -142,7 +140,7 @@ mod tests {
     fn test_empty_code_returns_error() -> Result<(), CodeListError> {
         let error = CodeEntry::new("".to_string(), "Severe sepsis".to_string(), None).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(&error_string, "Empty code supplied");
+        assert_eq!(&error_string, "Empty code: Empty code supplied");
         Ok(())
     }
 
@@ -150,7 +148,7 @@ mod tests {
     fn test_empty_term_returns_error() -> Result<(), CodeListError> {
         let error = CodeEntry::new("R65.2".to_string(), "".to_string(), None).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(&error_string, "Empty term supplied");
+        assert_eq!(&error_string, "Empty term: Empty term supplied");
         Ok(())
     }
 
@@ -158,7 +156,7 @@ mod tests {
     fn test_whitespace_only_code_returns_error() -> Result<(), CodeListError> {
         let error = CodeEntry::new("   ".to_string(), "Some term".to_string(), None).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(&error_string, "Empty code supplied");
+        assert_eq!(&error_string, "Empty code: Empty code supplied");
         Ok(())
     }
 
@@ -166,7 +164,7 @@ mod tests {
     fn test_whitespace_only_term_returns_error() -> Result<(), CodeListError> {
         let error = CodeEntry::new("R65.2".to_string(), "  \n\t  ".to_string(), None).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(&error_string, "Empty term supplied");
+        assert_eq!(&error_string, "Empty term: Empty term supplied");
         Ok(())
     }
 

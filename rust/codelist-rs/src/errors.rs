@@ -32,11 +32,11 @@ pub enum CodeListError {
     #[error("Invalid term field: {msg}")]
     InvalidTermField { msg: String },
     
-    #[error("Empty code supplied")]
-    EmptyCode,
+    #[error("Empty code: {msg}")]
+    EmptyCode { msg: String },
     
-    #[error("Empty term supplied")]
-    EmptyTerm,
+    #[error("Empty term: {msg}")]
+    EmptyTerm { msg: String },
     
     #[error("Column index out of bounds: {msg}")]
     ColumnIndexOutOfBounds { msg: String },
