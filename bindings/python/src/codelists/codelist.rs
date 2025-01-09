@@ -70,7 +70,7 @@ impl PyCodeList {
 
     /// Get all entries in the codelist
     fn entries(&self) -> Vec<(String, String)> {
-        self.inner.full_entries()
+        self.inner.code_term_entries()
             .iter()
             .map(|entry| (entry.code.clone(), entry.term.clone()))
             .collect()
