@@ -12,6 +12,7 @@ use codelists::codelist::PyCodeList;
 /// Python module for the codelist-rs library
 #[pymodule]
 fn codelist(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_class::<CodeList>()?;
+    m.add_class::<PyCodeList>()?;
     Ok(())
 }
+ 
