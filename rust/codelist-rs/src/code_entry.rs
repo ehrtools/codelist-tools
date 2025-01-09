@@ -96,13 +96,13 @@ impl CodeEntry {
         }
     }
 
-    /// Remove the comment for the code entry
+    /// Remove the comment from the code entry
     ///
     /// # Returns
     /// * `Result<(), CodeListError>`
     ///
     /// # Errors
-    /// * `CodeListError::CodeEntryCommentDoesNotExist` - If the comment does not exist
+    /// * `CodeListError::CodeEntryCommentDoesNotExist` - If there is no comment to remove
     pub fn remove_comment(&mut self) -> Result<(), CodeListError> {
         if let Some(_x) = &self.comment {
             self.comment = None;
@@ -189,7 +189,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_comment_when_comment_already_exists() -> Result<(), CodeListError> {
+    fn test_update_comment_when_comment_exists() -> Result<(), CodeListError> {
         let mut entry = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string(), Some("test".to_string()))?;
         let comment = "Test comment";
         let result = entry.update_comment(comment.to_string());

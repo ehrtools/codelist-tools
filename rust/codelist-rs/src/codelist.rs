@@ -328,6 +328,33 @@ mod tests {
     }
 
     #[test]
+    fn test_get_code_term_entries() -> Result<(), CodeListError> {
+        let codelist = create_test_codelist()?;
+        let entries = codelist.code_term_entries();
+        
+        let test_entry_1 = (&"R65.2".to_string(), &"Severe sepsis".to_string());
+        let test_entry_2 = (&"A48.51".to_string(), &"Infant botulism".to_string());
+
+        assert_eq!(entries.len(), 2);
+        assert!(entries.contains(&test_entry_1));
+        assert!(entries.contains(&test_entry_2));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_codes() -> Result<(), CodeListError> {
+        let codelist = create_test_codelist()?;
+        let codes = codelist.codes();
+
+        assert_eq!(codes.len(), 2);
+        assert!(codes.contains(&"R65.2".to_string()));
+        assert!(codes.contains(&"A48.51".to_string()));
+
+        Ok(())
+    }
+
+    #[test]
     fn test_save_to_csv() -> Result<(), CodeListError> {
         let temp_dir = TempDir::new()?;
         let file_path = temp_dir.path().join("test.csv");
