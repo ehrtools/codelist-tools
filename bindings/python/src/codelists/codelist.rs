@@ -47,7 +47,7 @@ impl PyCodeList {
 
         // Create metadata
         let metadata = Metadata::new(
-            MetadataSource::ManuallyCreated,
+            MetadataSource::from(source),
             authors,
             version,
             description,
