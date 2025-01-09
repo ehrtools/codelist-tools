@@ -22,8 +22,8 @@ fn main() -> Result<(), CodeListError> {
         None,
     );
 
-    codelist.add_entry("A00".to_string(), "Cholera".to_string())?;
-    codelist.add_entry("A01".to_string(), "Typhoid and paratyphoid fevers".to_string())?;
+    codelist.add_entry("A00".to_string(), "Cholera".to_string(), None)?;
+    codelist.add_entry("A01".to_string(), "Typhoid and paratyphoid fevers".to_string(), None)?;
 
     println!("{:?}", codelist);
 

@@ -96,7 +96,7 @@ impl CodeListFactory {
             if term.is_empty() {
                 return Err(CodeListError::empty_term(format!("Empty term field in row: {}", row_num + 2)));
             }
-            codelist.add_entry(code.to_string(), term.to_string())?;
+            codelist.add_entry(code.to_string(), term.to_string(), None)?;
         }
         
         Ok(codelist)
@@ -173,7 +173,7 @@ impl CodeListFactory {
                     return Err(CodeListError::invalid_term_type(format!("Term at index {} must be a string", index)));
                 };
 
-                codelist.add_entry(code, term)?;
+                codelist.add_entry(code, term, None)?;
             }
         } else {
             return Err(CodeListError::invalid_input("JSON must be an array of objects".to_string()));
