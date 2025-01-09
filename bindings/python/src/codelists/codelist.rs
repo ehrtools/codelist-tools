@@ -64,7 +64,7 @@ impl PyCodeList {
     /// Add an entry to the codelist
     #[pyo3(text_signature = "($self, code, term, comment=None)")]
     fn add_entry(&mut self, code: String, term: String, comment: Option<String>) -> PyResult<()> {
-        self.inner.add_entry(code, term, comment)?;
+        self.inner.add_entry(code, term, comment);
         Ok(())
     }
 
