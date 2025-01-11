@@ -7,7 +7,8 @@ use pyo3::{PyResult, PyErr};
 use pyo3::types::PyDict;
 
 // Internal imports
-use codelist_rs::codelist::{CodeList, CodeListOptions};
+use codelist_rs::codelist::CodeList;
+use codelist_rs::codelist_options::CodeListOptions;
 use codelist_rs::types::CodeListType;
 use codelist_rs::metadata::{Metadata, MetadataSource};
 

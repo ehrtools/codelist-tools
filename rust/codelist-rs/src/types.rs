@@ -1,4 +1,4 @@
-/// This module defines the different types of codelists that can be used
+//! This file defines the different types of codelists that can be used
 
 /// External imports
 use std::str::FromStr;
@@ -51,9 +51,9 @@ impl ToString for CodeListType {
     /// * `String` - The string representation of the CodeListType
     fn to_string(&self) -> String {
         match self {
-            CodeListType::ICD10 => "icd10".to_string(),
-            CodeListType::SNOMED => "snomed".to_string(),
-            CodeListType::OPCS => "opcs".to_string(),
+            CodeListType::ICD10 => "ICD10".to_string(),
+            CodeListType::SNOMED => "SNOMED".to_string(),
+            CodeListType::OPCS => "OPCS".to_string(),
         }
     }
 }
@@ -80,9 +80,9 @@ mod tests {
 
     #[test]
     fn test_to_string() {
-        assert_eq!(CodeListType::ICD10.to_string(), "icd10");
-        assert_eq!(CodeListType::SNOMED.to_string(), "snomed");
-        assert_eq!(CodeListType::OPCS.to_string(), "opcs");
+        assert_eq!(CodeListType::ICD10.to_string(), "ICD10");
+        assert_eq!(CodeListType::SNOMED.to_string(), "SNOMED");
+        assert_eq!(CodeListType::OPCS.to_string(), "OPCS");
     }
 }
 
