@@ -62,15 +62,16 @@ impl PyCodeList {
     }
 
     /// Add an entry to the codelist
-    #[pyo3(text_signature = "($self, code, term)")]
-    fn add_entry(&mut self, code: String, term: String) -> PyResult<()> {
-        self.inner.add_entry(code, term);
+    #[pyo3(text_signature = "($self, code, term, comment=None)")]
+    fn add_entry(&mut self, code: String, term: String, comment: Option<String>) -> PyResult<()> {
+        self.inner.add_entry(code, term, comment);
         Ok(())
     }
 
     /// Get all entries in the codelist
     fn entries(&self) -> Vec<(String, String)> {
-        self.inner.entries()
+        self.inner
+            .full_entries()
             .iter()
             .map(|entry| (entry.code.clone(), entry.term.clone()))
             .collect()

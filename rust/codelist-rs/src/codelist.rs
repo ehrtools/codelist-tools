@@ -64,8 +64,8 @@ impl CodeList {
     /// # Arguments
     /// * `code` - The code to add
     /// * `term` - The term to add
-    pub fn add_entry(&mut self, code: String, term: String) -> Result<(), CodeListError> {
-        let entry = CodeEntry::new(code, term)?;
+    pub fn add_entry(&mut self, code: String, term: String, comment: Option<String>) -> Result<(), CodeListError> {
+        let entry = CodeEntry::new(code, term, comment)?;
         self.entries.insert(entry);
         Ok(())
     }
@@ -79,7 +79,7 @@ impl CodeList {
     /// # Errors
     /// * `CodeListError::EntryNotFound` - If the entry to be removed is not found
     pub fn remove_entry(&mut self, code: &str, term: &str) -> Result<(), CodeListError> {
-        let removed = self.entries.remove(&CodeEntry::new(code.to_string(), term.to_string())?);
+        let removed = self.entries.remove(&CodeEntry::new(code.to_string(), term.to_string(), None)?);
         if removed {
             Ok(())
         } else {
@@ -87,12 +87,34 @@ impl CodeList {
         }
     }
 
-    /// Get the entries of the codelist
+    /// Get the full entries of the codelist, including code, term and optional comment
     ///
     /// # Returns
     /// * `&HashSet<CodeEntry>` - The entries of the codelist
-    pub fn entries(&self) -> &HashSet<CodeEntry> {
+    pub fn full_entries(&self) -> &HashSet<CodeEntry> {
         &self.entries
+    }
+
+    /// Get the code and term of the codelist
+    ///
+    /// # Returns
+    /// * `HashSet<(&String, &String)>` - The codes and terms of the codelist
+    pub fn code_term_entries(&self) -> HashSet<(&String, &String)> {
+        self.entries
+            .iter()
+            .map(|entry| (&entry.code, &entry.term))
+            .collect()
+    }
+
+    /// Get the codes of the codelist
+    ///
+    /// # Returns
+    /// * `HashSet<&String>` - The codes of the codelist
+    pub fn codes(&self) -> HashSet<&String> {
+        self.entries
+            .iter()
+            .map(|entry| &entry.code)
+            .collect()
     }
 
     /// Save the codelist entries to a CSV file
@@ -179,8 +201,8 @@ mod tests {
     // Helper function to create a test codelist with two entries, default options and test metadata
     fn create_test_codelist() -> Result<CodeList, CodeListError> {
         let mut codelist = CodeList::new(CodeListType::ICD10, create_test_metadata(), None);
-        codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string())?;
-        codelist.add_entry("A48.51".to_string(), "Infant botulism".to_string())?;
+        codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
+        codelist.add_entry("A48.51".to_string(), "Infant botulism".to_string(), Some("test comment".to_string()))?;
         
         Ok(codelist)
     }
@@ -194,7 +216,7 @@ mod tests {
         assert_eq!(codelist.metadata().version, Some("2024-12-19".to_string()));
         assert_eq!(codelist.metadata().description, Some("A test codelist".to_string()));
         assert_eq!(codelist.codelist_type(), &CodeListType::ICD10);
-        assert_eq!(codelist.entries().len(), 2);
+        assert_eq!(codelist.full_entries().len(), 2);
         assert_eq!(codelist.logs.len(), 0);
         assert_eq!(&codelist.codelist_options, &CodeListOptions::default());
 
@@ -230,7 +252,7 @@ mod tests {
         assert_eq!(codelist.metadata().version, Some("2024-12-19".to_string()));
         assert_eq!(codelist.metadata().description, Some("A test codelist".to_string()));
         assert_eq!(codelist.codelist_type(), &CodeListType::ICD10);
-        assert_eq!(codelist.entries().len(), 0);
+        assert_eq!(codelist.full_entries().len(), 0);
         assert_eq!(codelist.logs.len(), 0);
 
     }
@@ -238,10 +260,10 @@ mod tests {
     #[test]
     fn test_duplicate_entries() -> Result<(), CodeListError> {
         let mut codelist = CodeList::new(CodeListType::ICD10, create_test_metadata(), None);
-        codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string())?;
-        codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string())?;
+            codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
+            codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
 
-        assert_eq!(codelist.entries().len(), 1);
+        assert_eq!(codelist.full_entries().len(), 1);
 
         Ok(())
     }
@@ -258,12 +280,12 @@ mod tests {
     #[test]
     fn test_add_entry() -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
-        let entry1 = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string())?;
-        let entry2 = CodeEntry::new("A48.51".to_string(), "Infant botulism".to_string())?;
+        let entry1 = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
+        let entry2 = CodeEntry::new("A48.51".to_string(), "Infant botulism".to_string(), Some("test comment".to_string()))?;
     
-        assert_eq!(codelist.entries().len(), 2);
-        assert!(codelist.entries().contains(&entry1));
-        assert!(codelist.entries().contains(&entry2));
+        assert_eq!(codelist.full_entries().len(), 2);
+        assert!(codelist.full_entries().contains(&entry1));
+        assert!(codelist.full_entries().contains(&entry2));
 
         Ok(())
     }
@@ -272,10 +294,10 @@ mod tests {
     fn test_remove_entry_that_exists() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist()?;
         codelist.remove_entry("R65.2", "Severe sepsis")?;
-        let entry = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string())?;
+        let entry = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
 
-        assert_eq!(codelist.entries().len(), 1);
-        assert!(!codelist.entries().contains(&entry));
+        assert_eq!(codelist.full_entries().len(), 1);
+        assert!(!codelist.full_entries().contains(&entry));
 
         Ok(())
     }
@@ -286,21 +308,51 @@ mod tests {
         let error = codelist.remove_entry("A48.52", "Infant botulism").unwrap_err();
 
         assert!(matches!(error, CodeListError::EntryNotFound { code } if code == "A48.52"));
-        assert_eq!(codelist.entries().len(), 2);
+        assert_eq!(codelist.full_entries().len(), 2);
 
         Ok(())
     }
 
     #[test]
-    fn test_get_entries() -> Result<(), CodeListError> {
+    fn test_get_full_entries() -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
-        let entries = codelist.entries();
-        let test_entry_1 = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string())?;
-        let test_entry_2 = CodeEntry::new("A48.51".to_string(), "Infant botulism".to_string())?;
+        let entries = codelist.full_entries();
+        let test_entry_1 = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
+        let test_entry_2 = CodeEntry::new("A48.51".to_string(), "Infant botulism".to_string(), Some("test comment".to_string()))?;
 
         assert_eq!(entries.len(), 2);
         assert!(entries.contains(&test_entry_1));
         assert!(entries.contains(&test_entry_2));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_code_term_entries() -> Result<(), CodeListError> {
+        let codelist = create_test_codelist()?;
+        let entries = codelist.code_term_entries();
+        
+        let test_entry_1 = (&"R65.2".to_string(), &"Severe sepsis".to_string());
+        let test_entry_2 = (&"A48.51".to_string(), &"Infant botulism".to_string());
+
+        assert_eq!(entries.len(), 2);
+        assert!(entries.contains(&test_entry_1));
+        assert!(entries.contains(&test_entry_2));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_codes() -> Result<(), CodeListError> {
+        let codelist = create_test_codelist()?;
+        let codes = codelist.codes();
+        
+        let test_code_1 = "R65.2".to_string();
+        let test_code_2 = "A48.51".to_string();
+
+        assert_eq!(codes.len(), 2);
+        assert!(codes.contains(&test_code_1));
+        assert!(codes.contains(&test_code_2));
 
         Ok(())
     }
@@ -374,5 +426,7 @@ mod tests {
         assert_eq!(codelist.metadata(), &metadata);
     }
 }
+
+// add tests for get code, get code term entries
 
 

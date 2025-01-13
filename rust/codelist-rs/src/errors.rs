@@ -47,6 +47,12 @@ pub enum CodeListError {
     #[error("Invalid term type: {msg}")]
     InvalidTermType { msg: String },
 
+    #[error("Comment for CodeEntry with code {code} and term {term} already exists. Please update comment instead.")]
+    CodeEntryCommentAlreadyExists { code: String, term: String },
+
+    #[error("Comment for CodeEntry with code {code} and term {term} does not exist. Please use add comment instead if you are trying to add a comment.")]
+    CodeEntryCommentDoesNotExist { code: String, term: String },
+
     #[error("JSON error: {0}")]
     #[construct(skip)]
     JSONError(#[from] serde_json::Error),
