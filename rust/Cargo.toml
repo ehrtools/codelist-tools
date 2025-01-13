@@ -1,6 +1,4 @@
-[
-workspace
-]
+[workspace]
 members = [
     "codelist-rs",
     "codelist-validator-rs",
