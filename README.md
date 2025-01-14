@@ -1,6 +1,6 @@
 ## Codelist Tools
 
-This is a Rust library for working with medical codelists (SNOMED, ICD10, OPCS). It provides fast and memory-efficient operations on medical codelists. There is a python and R interface that researchers can access.
+This is a Rust library for working with medical codelists (SNOMED, ICD10, OPCS). It provides fast and memory-efficient operations on medical codelists. There is a python and R interface that researchers can use.
 
 ### Structure of Project
 The project is divided into two main components:
