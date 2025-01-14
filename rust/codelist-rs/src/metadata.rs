@@ -26,6 +26,33 @@ impl MetadataSource {
     }
 }
 
+pub struct Provenance {
+    pub source: MetadataSource,          
+    pub created_date: Option<String>,    
+    pub last_modified_date: Option<String>, 
+    pub contributors: Option<Vec<String>>, 
+    pub license: Option<String>
+}
+
+pub struct PurposeAndContext {
+    pub purpose: Option<String>,
+    pub target_audience: Option<Vec<String>>,
+    pub use_context: Option<Vec<String>>,
+}
+
+pub struct ValidationAndReview {
+    pub reviewed: Option<bool>,
+    pub reviewer: Option<String>,
+    pub review_date: Option<String>,
+    pub status: Option<String>,
+    pub validation_notes: Option<String>,
+}
+
+pub struct CategorisationAndUsage {
+    pub tags: Option<Vec<String>>,
+    pub license: Option<String>,
+    pub usage: Option<Vec<String>>,
+}
 
 /// Struct to represent the metadata of a codelist
 ///
