@@ -2,6 +2,7 @@
 
 // External imports
 use serde::{Deserialize, Serialize};
+use chrono::Utc;
 
 
 /// Metadata Source Enum
@@ -28,16 +29,16 @@ impl MetadataSource {
 
 pub struct Provenance {
     pub source: MetadataSource,          
-    pub created_date: Option<String>,    
-    pub last_modified_date: Option<String>, 
+    pub created_date: chrono::DateTime<Utc>,
+    pub last_modified_date: chrono::DateTime<Utc>,
     pub contributors: Option<Vec<String>>, 
     pub license: Option<String>
 }
 
 pub struct PurposeAndContext {
     pub purpose: Option<String>,
-    pub target_audience: Option<Vec<String>>,
-    pub use_context: Option<Vec<String>>,
+    pub target_audience: String,
+    pub use_context: String,
 }
 
 pub struct ValidationAndReview {
@@ -242,35 +243,3 @@ mod tests {
 
 
 }
-
-
-
-//TODO:
-// Edit metadata in codelist-rs to add:
-// created date
-// last modified date
-// purpose
-// target audience e.g. adults, hospitalised in patients, children
-// use context - e.g. hospital/secondary care, primary care, other
-// reviewed - bool - has the codelist been reviewed?
-// Reviewer
-// Review date
-// Status - validated, editing/in progress/draft, finished but unvalidated
-// valdation notes
-// tags - liek diabetes
-// license
-// usage - list of papers/or publications where usd
-// contrubitor list
-
-// I have excluded concepts covered as i think this should be in purpose and descritpion.
-// I suggest we split metadata so that we have something like:
-
-// pub struct Provenance {
-// pub source: MetadataSource,          
-// pub created_date: Option<String>,    
-// pub last_modified_date: Option<String>, 
-// pub contributors: Option<Vec<String>>, 
-// pub license: OPtion<String>
-// }
-
-// and addition structs for PurposeAndContext, ValidationAndReview, and CategorisationAndUsage
