@@ -60,6 +60,24 @@ pub enum CodeListError {
     #[error("Invalid metadata source: {source_string}")]
     InvalidMetadataSource { source_string: String },
 
+    #[error("Purpose already exists. Please use update purpose instead.")]
+    PurposeAlreadyExists,
+
+    #[error("Purpose does not exist. Please use add purpose instead.")]
+    PurposeDoesNotExist,
+
+    #[error("Target audience already exists. Please use update target audience instead.")]
+    TargetAudienceAlreadyExists,
+
+    #[error("Target audience does not exist. Please use add target audience instead.")]
+    TargetAudienceDoesNotExist,
+
+    #[error("Use context already exists. Please use update use context instead.")]
+    UseContextAlreadyExists,
+
+    #[error("Use context does not exist. Please use add use context instead.")]
+    UseContextDoesNotExist,
+
     #[error("JSON error: {0}")]
     #[construct(skip)]
     JSONError(#[from] serde_json::Error),
