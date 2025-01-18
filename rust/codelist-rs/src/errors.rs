@@ -3,6 +3,7 @@
 use std::io;
 use serde_json;
 use csv;
+use std::error::Error as StdError;
 
 /// Enum to represent the different types of errors that can occur in the codelist library
 /// 
@@ -52,6 +53,12 @@ pub enum CodeListError {
 
     #[error("Comment for CodeEntry with code {code} and term {term} does not exist. Please use add comment instead if you are trying to add a comment.")]
     CodeEntryCommentDoesNotExist { code: String, term: String },
+
+    #[error("Contributor {contributor} not found")]
+    ContributorNotFound { contributor: String },
+
+    #[error("Invalid metadata source: {source_string}")]
+    InvalidMetadataSource { source_string: String },
 
     #[error("JSON error: {0}")]
     #[construct(skip)]
