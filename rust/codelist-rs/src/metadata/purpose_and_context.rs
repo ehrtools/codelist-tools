@@ -38,7 +38,7 @@ impl PurposeAndContext {
         if self.purpose.is_none() {
             self.purpose = Some(purpose);
         } else {
-            return Err(CodeListError::purpose_already_exists());
+            return Err(CodeListError::purpose_already_exists("Unable to add purpose. Please use update purpose instead."));
         }
         Ok(())
     }
@@ -54,7 +54,20 @@ impl PurposeAndContext {
         if self.purpose.is_some() {
             self.purpose = Some(purpose);
         } else {
-            return Err(CodeListError::purpose_does_not_exist());
+            return Err(CodeListError::purpose_does_not_exist("Unable to update purpose. Please use add purpose instead."));
+        }
+        Ok(())
+    }
+
+    /// Remove the purpose of the PurposeAndContext
+    ///
+    /// # Returns
+    /// * `Result<(), CodeListError>` - unit type if successful or error if purpose does not exist
+    pub fn remove_purpose(&mut self) -> Result<(), CodeListError> {
+        if self.purpose.is_some() {
+            self.purpose = None;
+        } else {
+            return Err(CodeListError::purpose_does_not_exist("Unable to remove purpose."));
         }
         Ok(())
     }
@@ -70,7 +83,7 @@ impl PurposeAndContext {
         if self.target_audience.is_none() {
             self.target_audience = Some(target_audience);
         } else {
-            return Err(CodeListError::target_audience_already_exists());
+            return Err(CodeListError::target_audience_already_exists("Unable to add target audience. Please use update target audience instead."));
         }
         Ok(())
     }
@@ -86,7 +99,20 @@ impl PurposeAndContext {
         if self.target_audience.is_some() {
             self.target_audience = Some(target_audience);
         } else {
-            return Err(CodeListError::target_audience_does_not_exist());
+            return Err(CodeListError::target_audience_does_not_exist("Unable to update target audience. Please use add target audience instead."));
+        }
+        Ok(())
+    }
+
+    /// Remove the target audience of the PurposeAndContext
+    ///
+    /// # Returns
+    /// * `Result<(), CodeListError>` - unit type if successful or error if target audience does not exist
+    pub fn remove_target_audience(&mut self) -> Result<(), CodeListError> {
+        if self.target_audience.is_some() {
+            self.target_audience = None;
+        } else {
+            return Err(CodeListError::target_audience_does_not_exist("Unable to remove target audience."));
         }
         Ok(())
     }
@@ -102,7 +128,7 @@ impl PurposeAndContext {
         if self.use_context.is_none() {
             self.use_context = Some(use_context);
         } else {
-            return Err(CodeListError::use_context_already_exists());
+            return Err(CodeListError::use_context_already_exists("Unable to add use context. Please use update use context instead."));
         }
         Ok(())
     }
@@ -118,16 +144,24 @@ impl PurposeAndContext {
         if self.use_context.is_some() {
             self.use_context = Some(use_context);
         } else {
-            return Err(CodeListError::use_context_does_not_exist());
+            return Err(CodeListError::use_context_does_not_exist("Unable to update use context. Please use add use context instead."));
+        }
+        Ok(())
+    }
+
+    /// Remove the use context of the PurposeAndContext
+    ///
+    /// # Returns
+    /// * `Result<(), CodeListError>` - unit type if successful or error if use context does not exist
+    pub fn remove_use_context(&mut self) -> Result<(), CodeListError> {
+        if self.use_context.is_some() {
+            self.use_context = None;
+        } else {
+            return Err(CodeListError::use_context_does_not_exist("Unable to remove use context."));
         }
         Ok(())
     }
 }
-
-// add target audience
-// update target audience
-// add use context
-// update use context
 
 #[cfg(test)]
 mod tests {
@@ -154,7 +188,7 @@ mod tests {
         let mut purpose_and_context = PurposeAndContext::new(Some("Purpose".to_string()), None, None);
         let error = purpose_and_context.add_purpose("Purpose".to_string()).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Purpose already exists. Please use update purpose instead.");
+        assert_eq!(error_string, "Purpose already exists: Unable to add purpose. Please use update purpose instead.");
         Ok(())
     }
 
@@ -171,7 +205,25 @@ mod tests {
         let mut purpose_and_context = PurposeAndContext::new(None, None, None);
         let error = purpose_and_context.update_purpose("Purpose".to_string()).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Purpose does not exist. Please use add purpose instead.");
+        assert_eq!(error_string, "Purpose does not exist: Unable to update purpose. Please use add purpose instead.");
+        Ok(())
+    }
+
+
+    #[test]
+    fn test_remove_purpose() -> Result<(), CodeListError> {
+        let mut purpose_and_context = PurposeAndContext::new(Some("Purpose".to_string()), None, None);
+        purpose_and_context.remove_purpose()?;
+        assert_eq!(purpose_and_context.purpose, None);
+        Ok(())
+    }
+
+    #[test]
+    fn test_remove_purpose_does_not_exist() -> Result<(), CodeListError> {
+        let mut purpose_and_context = PurposeAndContext::new(None, None, None);
+        let error = purpose_and_context.remove_purpose().unwrap_err();
+        let error_string = error.to_string();
+        assert_eq!(error_string, "Purpose does not exist: Unable to remove purpose.");
         Ok(())
     }
 
@@ -188,7 +240,7 @@ mod tests {
         let mut purpose_and_context = PurposeAndContext::new(None, Some("Target Audience".to_string()), None);
         let error = purpose_and_context.add_target_audience("Target Audience".to_string()).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Target audience already exists. Please use update target audience instead.");
+        assert_eq!(error_string, "Target audience already exists: Unable to add target audience. Please use update target audience instead.");
         Ok(())
     }
 
@@ -205,7 +257,24 @@ mod tests {
         let mut purpose_and_context = PurposeAndContext::new(None, None, None);
         let error = purpose_and_context.update_target_audience("Target Audience".to_string()).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Target audience does not exist. Please use add target audience instead.");
+        assert_eq!(error_string, "Target audience does not exist: Unable to update target audience. Please use add target audience instead.");
+        Ok(())
+    }
+
+    #[test]
+    fn test_remove_target_audience() -> Result<(), CodeListError> {
+        let mut purpose_and_context = PurposeAndContext::new(None, Some("Target Audience".to_string()), None);
+        purpose_and_context.remove_target_audience()?;
+        assert_eq!(purpose_and_context.target_audience, None);
+        Ok(())
+    }
+
+    #[test]
+    fn test_remove_target_audience_does_not_exist() -> Result<(), CodeListError> {
+        let mut purpose_and_context = PurposeAndContext::new(None, None, None);
+        let error = purpose_and_context.remove_target_audience().unwrap_err();
+        let error_string = error.to_string();
+        assert_eq!(error_string, "Target audience does not exist: Unable to remove target audience.");
         Ok(())
     }
 
@@ -222,7 +291,7 @@ mod tests {
         let mut purpose_and_context = PurposeAndContext::new(None, None, Some("Use Context".to_string()));
         let error = purpose_and_context.add_use_context("Use Context".to_string()).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Use context already exists. Please use update use context instead.");
+        assert_eq!(error_string, "Use context already exists: Unable to add use context. Please use update use context instead.");
         Ok(())
     }
 
@@ -239,7 +308,24 @@ mod tests {
         let mut purpose_and_context = PurposeAndContext::new(None, None, None);
         let error = purpose_and_context.update_use_context("Use Context".to_string()).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Use context does not exist. Please use add use context instead.");
+        assert_eq!(error_string, "Use context does not exist: Unable to update use context. Please use add use context instead.");
+        Ok(())
+    }
+
+    #[test]
+    fn test_remove_use_context() -> Result<(), CodeListError> {
+        let mut purpose_and_context = PurposeAndContext::new(None, None, Some("Use Context".to_string()));
+        purpose_and_context.remove_use_context()?;
+        assert_eq!(purpose_and_context.use_context, None);
+        Ok(())
+    }
+
+    #[test]
+    fn test_remove_use_context_does_not_exist() -> Result<(), CodeListError> {
+        let mut purpose_and_context = PurposeAndContext::new(None, None, None);
+        let error = purpose_and_context.remove_use_context().unwrap_err();
+        let error_string = error.to_string();
+        assert_eq!(error_string, "Use context does not exist: Unable to remove use context.");
         Ok(())
     }
 }
