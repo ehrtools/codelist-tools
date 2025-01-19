@@ -1,16 +1,27 @@
 //! This file contains the categorisation and usage struct and its implementation
 
+// External imports
+use std::collections::HashSet;
+
+// Internal imports
+use crate::errors::CodeListError;
+
 pub struct CategorisationAndUsage {
-    pub tags: Option<Vec<String>>,
-    pub usage: Option<Vec<String>>,
+    pub tags: HashSet<String>,
+    pub usage: HashSet<String>,
     pub license: Option<String>,
 }
 
-// add tag
-// remove tag
-// add license
-// add license
-// remove license
+impl CategorisationAndUsage {
+    pub fn new(tags: Option<HashSet<String>>, usage: Option<HashSet<String>>, license: Option<String>) -> Self {
+        Self {
+            tags: tags.unwrap_or_default(),
+            usage: usage.unwrap_or_default(),
+            license,
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod tests {

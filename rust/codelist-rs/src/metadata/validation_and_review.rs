@@ -27,10 +27,10 @@ impl ValidationAndReview {
     pub fn new(reviewed: Option<bool>, reviewer: Option<String>, review_date: Option<DateTime<Utc>>, status: Option<String>, validation_notes: Option<String>) -> Self {
         Self {
             reviewed: reviewed.unwrap_or(false),
-            reviewer: reviewer,
-            review_date: review_date,
-            status: status,
-            validation_notes: validation_notes,
+            reviewer,
+            review_date,
+            status,
+            validation_notes,
         }
     }
 
