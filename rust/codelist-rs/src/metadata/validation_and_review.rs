@@ -1,9 +1,13 @@
 //! This file contains the validation and review struct and its implementation
 
+// External imports
+use serde::{Deserialize, Serialize};
+
 // Internal imports
 use crate::errors::CodeListError;
 use chrono::{DateTime, Utc};
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ValidationAndReview {
     pub reviewed: bool,
     pub reviewer: Option<String>,

@@ -1,8 +1,18 @@
+//! This file contains the codelist factory struct and its implementation
 
+// External imports
+use std::collections::HashSet;
+
+// Internal imports
 use crate::codelist::CodeList;
 use crate::errors::CodeListError;
 use crate::codelist_options::CodeListOptions;
-use crate::metadata::{Metadata, MetadataSource};
+use crate::metadata::categorisation_and_usage::CategorisationAndUsage;
+use crate::metadata::metadata::Metadata;
+use crate::metadata::purpose_and_context::PurposeAndContext;
+use crate::metadata::provenance::Provenance;
+use crate::metadata::validation_and_review::ValidationAndReview;
+use crate::metadata::metadata_source::MetadataSource;
 use crate::types::CodeListType;
 
 /// Struct to represent a codelist factory, which is used to load codelists from a directory and make sure all codelists are created following the same rules
@@ -323,10 +333,10 @@ mod tests {
     // Helper function to create test metadata
     fn create_test_metadata() -> Metadata {
         Metadata {
-            source: MetadataSource::ManuallyCreated,
-            authors: Some(vec!["Caroline Morton".to_string()]),
-            version: Some("2024-12-19".to_string()),
-            description: Some("A test codelist".to_string()),
+            provenance: Provenance::new(MetadataSource::ManuallyCreated, None),
+            categorisation_and_usage: CategorisationAndUsage::new(None, None, None),
+            purpose_and_context: PurposeAndContext::new(None, None, None),
+            validation_and_review: ValidationAndReview::new(None, None, None, None, None),
         }
     }
 
@@ -349,6 +359,7 @@ mod tests {
         let metadata = create_test_metadata();
         let codelist_type = CodeListType::ICD10;
         let codelist_options = CodeListOptions::default();
+        let metadata_clone = metadata.clone();  // Clone before moving
         let codelist_factory = CodeListFactory::new(codelist_options, metadata, codelist_type);
     
         assert_eq!(codelist_factory.codelist_options.allow_duplicates, false);
@@ -356,10 +367,7 @@ mod tests {
         assert_eq!(codelist_factory.codelist_options.add_x_codes, false);
         assert_eq!(codelist_factory.codelist_options.code_column_name, "code".to_string());
         assert_eq!(codelist_factory.codelist_options.term_column_name, "term".to_string());
-        assert_eq!(codelist_factory.metadata.source, MetadataSource::ManuallyCreated);
-        assert_eq!(codelist_factory.metadata.authors, Some(vec!["Caroline Morton".to_string()]));
-        assert_eq!(codelist_factory.metadata.version, Some("2024-12-19".to_string()));
-        assert_eq!(codelist_factory.metadata.description, Some("A test codelist".to_string()));
+        assert_eq!(codelist_factory.metadata, metadata_clone);
         assert_eq!(codelist_factory.codelist_type, CodeListType::ICD10);
     }
 
@@ -395,10 +403,7 @@ C03,Test Disease 3,Description 3";
         assert_eq!(codelist.codelist_options.add_x_codes, false);
         assert_eq!(codelist.codelist_options.code_column_name, "code".to_string());
         assert_eq!(codelist.codelist_options.term_column_name, "term".to_string());
-        assert_eq!(codelist.metadata.source, MetadataSource::ManuallyCreated);
-        assert_eq!(codelist.metadata.authors, Some(vec!["Caroline Morton".to_string()]));
-        assert_eq!(codelist.metadata.version, Some("2024-12-19".to_string()));
-        assert_eq!(codelist.metadata.description, Some("A test codelist".to_string()));
+        assert_eq!(codelist.metadata, factory.metadata);
         assert_eq!(codelist.codelist_type, CodeListType::ICD10);
 
         Ok(())
@@ -591,10 +596,7 @@ A01";  // Missing columns
         assert_eq!(codelist.codelist_options.add_x_codes, false);
         assert_eq!(codelist.codelist_options.code_column_name, "code".to_string());
         assert_eq!(codelist.codelist_options.term_column_name, "term".to_string());
-        assert_eq!(codelist.metadata.source, MetadataSource::ManuallyCreated);
-        assert_eq!(codelist.metadata.authors, Some(vec!["Caroline Morton".to_string()]));
-        assert_eq!(codelist.metadata.version, Some("2024-12-19".to_string()));
-        assert_eq!(codelist.metadata.description, Some("A test codelist".to_string()));
+        assert_eq!(codelist.metadata, factory.metadata);
         assert_eq!(codelist.codelist_type, CodeListType::ICD10);
 
         Ok(())

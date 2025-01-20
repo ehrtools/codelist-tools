@@ -98,6 +98,18 @@ pub enum CodeListError {
     #[error("Review date is none.")]
     ReviewDateIsNone,
 
+    #[error("Tag does not exist: {msg}")]
+    TagDoesNotExist { msg: String },
+
+    #[error("Usage does not exist: {msg}")]
+    UsageDoesNotExist { msg: String },
+
+    #[error("License already exists: {msg}")]
+    LicenseAlreadyExists { msg: String },
+
+    #[error("License does not exist: {msg}")]
+    LicenseDoesNotExist { msg: String },
+
     #[error("JSON error: {0}")]
     #[construct(skip)]
     JSONError(#[from] serde_json::Error),

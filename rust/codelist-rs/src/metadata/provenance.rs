@@ -3,11 +3,12 @@
 // External imports
 use chrono::Utc;
 use std::collections::HashSet;
-
+use serde::{Deserialize, Serialize};
 // Internal imports
 use crate::metadata::metadata_source::MetadataSource;
 use crate::errors::CodeListError;
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Provenance {
     pub source: MetadataSource,          
     pub created_date: chrono::DateTime<Utc>,
@@ -21,7 +22,7 @@ impl Provenance {
     /// # Arguments
     /// * `source` - The source of the codelist
     pub fn new(source: MetadataSource, contributors: Option<HashSet<String>>) -> Provenance {
-        Provenance {
+        Self {
             source,
             created_date: chrono::Utc::now(),
             last_modified_date: chrono::Utc::now(),

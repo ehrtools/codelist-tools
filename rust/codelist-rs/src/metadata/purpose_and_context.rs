@@ -1,8 +1,12 @@
 //! This file contains the purpose and context struct and its implementation
 
+// External imports
+use serde::{Deserialize, Serialize};
+
 // Internal imports
 use crate::errors::CodeListError;
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PurposeAndContext {
     pub purpose: Option<String>,
     pub target_audience: Option<String>,
@@ -20,7 +24,7 @@ impl PurposeAndContext {
     /// # Returns
     /// * `PurposeAndContext` - The new PurposeAndContext
     pub fn new(purpose: Option<String>, target_audience: Option<String>, use_context: Option<String>) -> Self {
-        PurposeAndContext {
+        Self {
             purpose,
             target_audience,
             use_context,

@@ -5,13 +5,17 @@ use std::collections::HashSet;
 use std::io::Write;
 use serde::{Serialize, Deserialize};
 use csv::Writer;
-
+use chrono::Utc;
 // Internal imports
 use crate::types::CodeListType;
 use crate::code_entry::CodeEntry;
 use crate::metadata::Metadata;
 use crate::errors::CodeListError;
 use crate::codelist_options::CodeListOptions;
+use crate::metadata::provenance::Provenance;
+use crate::metadata::categorisation_and_usage::CategorisationAndUsage;
+use crate::metadata::purpose_and_context::PurposeAndContext;
+use crate::metadata::validation_and_review::ValidationAndReview;
 
 /// Struct to represent a codelist
 ///
@@ -191,10 +195,10 @@ mod tests {
     // Helper function to create test metadata
     fn create_test_metadata() -> Metadata {
         Metadata {
-            source: MetadataSource::ManuallyCreated,
-            authors: Some(vec!["Caroline Morton".to_string()]),
-            version: Some("2024-12-19".to_string()),
-            description: Some("A test codelist".to_string()),
+            provenance: Provenance::new(MetadataSource::ManuallyCreated, None),
+            categorisation_and_usage: CategorisationAndUsage::new(None, None, None),
+            purpose_and_context: PurposeAndContext::new(None, None, None),
+            validation_and_review: ValidationAndReview::new(None, None, None, None, None),
         }
     }
 
@@ -207,24 +211,48 @@ mod tests {
         Ok(codelist)
     }
 
+    // helper function to get the time difference between the current time and the given date
+    fn get_time_difference(date: chrono::DateTime<Utc>) -> i64 {
+        let now = chrono::Utc::now();
+        (date - now).num_milliseconds().abs()
+    }
+
+
     #[test]
     fn test_create_codelist_default_options() -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
 
-        assert_eq!(codelist.metadata().source, MetadataSource::ManuallyCreated);
-        assert_eq!(codelist.metadata().authors, Some(vec!["Caroline Morton".to_string()]));
-        assert_eq!(codelist.metadata().version, Some("2024-12-19".to_string()));
-        assert_eq!(codelist.metadata().description, Some("A test codelist".to_string()));
         assert_eq!(codelist.codelist_type(), &CodeListType::ICD10);
         assert_eq!(codelist.full_entries().len(), 2);
         assert_eq!(codelist.logs.len(), 0);
         assert_eq!(&codelist.codelist_options, &CodeListOptions::default());
 
+        assert_eq!(codelist.metadata().provenance.source, MetadataSource::ManuallyCreated);
+        let time_difference = get_time_difference(codelist.metadata().provenance.created_date);
+        assert!(time_difference < 1000);
+        let time_difference = get_time_difference(codelist.metadata().provenance.last_modified_date);
+        assert!(time_difference < 1000);
+        assert_eq!(codelist.metadata().provenance.contributors, HashSet::new());
+
+        assert_eq!(codelist.metadata().categorisation_and_usage.tags, HashSet::new());
+        assert_eq!(codelist.metadata().categorisation_and_usage.usage, HashSet::new());
+        assert_eq!(codelist.metadata().categorisation_and_usage.license, None);
+
+        assert_eq!(codelist.metadata().purpose_and_context.purpose, None);
+        assert_eq!(codelist.metadata().purpose_and_context.target_audience, None);
+        assert_eq!(codelist.metadata().purpose_and_context.use_context, None);
+
+        assert_eq!(codelist.metadata().validation_and_review.reviewed, false);
+        assert_eq!(codelist.metadata().validation_and_review.reviewer, None);
+        assert_eq!(codelist.metadata().validation_and_review.review_date, None);
+        assert_eq!(codelist.metadata().validation_and_review.status, None);
+        assert_eq!(codelist.metadata().validation_and_review.validation_notes, None);
+
         Ok(())
     }
 
     #[test]
-    fn test_create_codelist_custom_options() {
+    fn test_create_codelist_custom_options() -> Result<(), CodeListError> {
         let metadata = create_test_metadata();
 
         let codelist_options = CodeListOptions {
@@ -247,14 +275,32 @@ mod tests {
         assert_eq!(codelist.codelist_options.code_column_name, "test_code".to_string());
         assert_eq!(codelist.codelist_options.term_column_name, "test_term".to_string());
 
-        assert_eq!(codelist.metadata().source, MetadataSource::ManuallyCreated);
-        assert_eq!(codelist.metadata().authors, Some(vec!["Caroline Morton".to_string()]));
-        assert_eq!(codelist.metadata().version, Some("2024-12-19".to_string()));
-        assert_eq!(codelist.metadata().description, Some("A test codelist".to_string()));
+        assert_eq!(codelist.metadata().provenance.source, MetadataSource::ManuallyCreated);
+        let time_difference = get_time_difference(codelist.metadata().provenance.created_date);
+        assert!(time_difference < 1000);
+        let time_difference = get_time_difference(codelist.metadata().provenance.last_modified_date);
+        assert!(time_difference < 1000);
+        assert_eq!(codelist.metadata().provenance.contributors, HashSet::new());
+
+        assert_eq!(codelist.metadata().categorisation_and_usage.tags, HashSet::new());
+        assert_eq!(codelist.metadata().categorisation_and_usage.usage, HashSet::new());
+        assert_eq!(codelist.metadata().categorisation_and_usage.license, None);
+
+        assert_eq!(codelist.metadata().purpose_and_context.purpose, None);
+        assert_eq!(codelist.metadata().purpose_and_context.target_audience, None);
+        assert_eq!(codelist.metadata().purpose_and_context.use_context, None);
+
+        assert_eq!(codelist.metadata().validation_and_review.reviewed, false);
+        assert_eq!(codelist.metadata().validation_and_review.reviewer, None);
+        assert_eq!(codelist.metadata().validation_and_review.review_date, None);
+        assert_eq!(codelist.metadata().validation_and_review.status, None);
+        assert_eq!(codelist.metadata().validation_and_review.validation_notes, None);
+       
         assert_eq!(codelist.codelist_type(), &CodeListType::ICD10);
         assert_eq!(codelist.full_entries().len(), 0);
         assert_eq!(codelist.logs.len(), 0);
 
+        Ok(())
     }
 
     #[test]
