@@ -228,8 +228,12 @@ mod tests {
     use super::*;
 
     // helper function to create a test validation and review
-    fn test_validation_and_review() -> ValidationAndReview {
-        ValidationAndReview::new(Some(true), None, None, Some("Status".to_string()), Some("Validation Notes".to_string()))
+    fn test_validation_and_review_all_params_are_some_or_true() -> ValidationAndReview {
+        ValidationAndReview::new(Some(true), Some("Reviewer".to_string()), Some(chrono::Utc::now()), Some("Status".to_string()), Some("Validation Notes".to_string()))
+    }
+
+    fn test_validation_and_review_all_params_are_none() -> ValidationAndReview {
+        ValidationAndReview::new(None, None, None, None, None)
     }
 
     // helper function to get the time difference between the current time and the given date
@@ -240,17 +244,18 @@ mod tests {
 
     #[test]
     fn test_new() {
-        let validation_and_review = test_validation_and_review();
+        let validation_and_review = test_validation_and_review_all_params_are_some_or_true();
         assert_eq!(validation_and_review.reviewed, true);
-        assert_eq!(validation_and_review.reviewer, None);
-        assert_eq!(validation_and_review.review_date, None);
+        assert_eq!(validation_and_review.reviewer, Some("Reviewer".to_string()));
+        let time_difference = get_time_difference(validation_and_review.review_date.unwrap());
+        assert!(time_difference < 1000);
         assert_eq!(validation_and_review.status, Some("Status".to_string()));
         assert_eq!(validation_and_review.validation_notes, Some("Validation Notes".to_string()));
     }
 
     #[test]
     fn test_update_reviewed() {
-        let mut validation_and_review = test_validation_and_review();
+        let mut validation_and_review = test_validation_and_review_all_params_are_some_or_true();
         assert_eq!(validation_and_review.reviewed, true);
         validation_and_review.update_reviewed(false);
         assert_eq!(validation_and_review.reviewed, false);
@@ -258,7 +263,7 @@ mod tests {
 
     #[test]
     fn test_add_reviewer() -> Result<(), CodeListError> {
-        let mut validation_and_review = test_validation_and_review();
+        let mut validation_and_review = test_validation_and_review_all_params_are_none();
         assert_eq!(validation_and_review.reviewer, None);
         validation_and_review.add_reviewer("Reviewer".to_string())?;
         assert_eq!(validation_and_review.reviewer, Some("Reviewer".to_string()));
@@ -267,7 +272,7 @@ mod tests {
 
     #[test]
     fn test_add_reviewer_already_exists() -> Result<(), CodeListError> {
-        let mut validation_and_review = ValidationAndReview::new(Some(true), Some("Reviewer".to_string()), Some(chrono::Utc::now()), Some("Status".to_string()), Some("Validation Notes".to_string()));
+        let mut validation_and_review = test_validation_and_review_all_params_are_some_or_true();
         let error = validation_and_review.add_reviewer("Reviewer".to_string()).unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Reviewer already exists: Unable to add reviewer. Please use update reviewer instead.");
@@ -276,7 +281,7 @@ mod tests {
 
     #[test]
     fn test_update_reviewer() -> Result<(), CodeListError> {
-        let mut validation_and_review = ValidationAndReview::new(Some(true), Some("Reviewer".to_string()), Some(chrono::Utc::now()), Some("Status".to_string()), Some("Validation Notes".to_string()));
+        let mut validation_and_review = test_validation_and_review_all_params_are_some_or_true();
         assert_eq!(validation_and_review.reviewer, Some("Reviewer".to_string()));
         validation_and_review.update_reviewer("Reviewer 2".to_string())?;
         assert_eq!(validation_and_review.reviewer, Some("Reviewer 2".to_string()));
@@ -285,7 +290,7 @@ mod tests {
 
     #[test]
     fn test_update_reviewer_does_not_exist() -> Result<(), CodeListError> {
-        let mut validation_and_review = test_validation_and_review();
+        let mut validation_and_review = test_validation_and_review_all_params_are_none();
         let error = validation_and_review.update_reviewer("Reviewer".to_string()).unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Reviewer does not exist: Unable to update reviewer. Please use add reviewer instead.");
@@ -294,8 +299,7 @@ mod tests {
 
     #[test]
     fn test_remove_reviewer() -> Result<(), CodeListError> {
-        let mut validation_and_review = test_validation_and_review();
-        validation_and_review.add_reviewer("Reviewer".to_string())?;
+        let mut validation_and_review = test_validation_and_review_all_params_are_some_or_true();
         assert_eq!(validation_and_review.reviewer, Some("Reviewer".to_string()));
         validation_and_review.remove_reviewer()?;
         assert_eq!(validation_and_review.reviewer, None);
@@ -304,7 +308,7 @@ mod tests {
 
     #[test]
     fn test_remove_reviewer_does_not_exist() -> Result<(), CodeListError> {
-        let mut validation_and_review = test_validation_and_review();
+        let mut validation_and_review = test_validation_and_review_all_params_are_none();
         let error = validation_and_review.remove_reviewer().unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Reviewer does not exist: Unable to remove reviewer.");
@@ -313,7 +317,7 @@ mod tests {
 
     #[test]
     fn test_add_review_date() -> Result<(), CodeListError> {
-        let mut validation_and_review = test_validation_and_review();
+        let mut validation_and_review = test_validation_and_review_all_params_are_none();
         assert_eq!(validation_and_review.review_date, None);
         validation_and_review.add_review_date(chrono::Utc::now())?;
         let time_difference = get_time_difference(
@@ -326,8 +330,7 @@ mod tests {
 
     #[test]
     fn test_add_review_date_already_exists() -> Result<(), CodeListError> {
-        let mut validation_and_review = ValidationAndReview::new(Some(true), Some("Reviewer".to_string()), None, Some("Status".to_string()), Some("Validation Notes".to_string()));
-        validation_and_review.add_review_date(chrono::Utc::now())?;
+        let mut validation_and_review = test_validation_and_review_all_params_are_some_or_true();
         let error = validation_and_review.add_review_date(chrono::Utc::now()).unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Review date already exists: Unable to add review date. Please use update review date instead.");
@@ -336,7 +339,7 @@ mod tests {
 
     #[test]
     fn test_update_review_date() -> Result<(), CodeListError> {
-        let mut validation_and_review = ValidationAndReview::new(Some(true), Some("Reviewer".to_string()), Some(chrono::Utc::now()), Some("Status".to_string()), Some("Validation Notes".to_string()));
+        let mut validation_and_review = test_validation_and_review_all_params_are_some_or_true();
         std::thread::sleep(std::time::Duration::from_secs(10));
         validation_and_review.update_review_date(chrono::Utc::now())?;
         let time_difference = get_time_difference(validation_and_review.review_date.unwrap());
@@ -346,7 +349,7 @@ mod tests {
 
     #[test]
     fn test_update_review_date_does_not_exist() -> Result<(), CodeListError> {
-        let mut validation_and_review = test_validation_and_review();
+        let mut validation_and_review = test_validation_and_review_all_params_are_none();
         let error = validation_and_review.update_review_date(chrono::Utc::now()).unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Review date does not exist: Unable to update review date. Please use add review date instead.");
@@ -355,7 +358,7 @@ mod tests {
 
     #[test]
     fn test_remove_review_date() -> Result<(), CodeListError> {
-        let mut validation_and_review = test_validation_and_review();
+        let mut validation_and_review = test_validation_and_review_all_params_are_none();
         validation_and_review.add_review_date(chrono::Utc::now())?;
         let difference = get_time_difference(validation_and_review.review_date.unwrap());
         assert!(difference < 1000);
@@ -366,7 +369,7 @@ mod tests {
 
     #[test]
     fn test_remove_review_date_does_not_exist() -> Result<(), CodeListError> {
-        let mut validation_and_review = test_validation_and_review();
+        let mut validation_and_review = test_validation_and_review_all_params_are_none();
         let error = validation_and_review.remove_review_date().unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Review date does not exist: Unable to remove review date.");
@@ -375,7 +378,7 @@ mod tests {
 
     #[test]
     fn test_add_status() -> Result<(), CodeListError> {
-        let mut validation_and_review = ValidationAndReview::new(Some(true), Some("Reviewer".to_string()), Some(chrono::Utc::now()), None, Some("Validation Notes".to_string()));
+        let mut validation_and_review = test_validation_and_review_all_params_are_none();
         assert_eq!(validation_and_review.status, None);
         validation_and_review.add_status("Status".to_string())?;
         assert_eq!(validation_and_review.status, Some("Status".to_string()));
@@ -384,7 +387,7 @@ mod tests {
 
     #[test]
     fn test_add_status_already_exists() -> Result<(), CodeListError> {
-        let mut validation_and_review = ValidationAndReview::new(Some(true), Some("Reviewer".to_string()), Some(chrono::Utc::now()), Some("Status".to_string()), Some("Validation Notes".to_string()));
+        let mut validation_and_review = test_validation_and_review_all_params_are_some_or_true();
         let error = validation_and_review.add_status("Status".to_string()).unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Status already exists: Unable to add status. Please use update status instead.");
@@ -393,7 +396,7 @@ mod tests {
 
     #[test]
     fn test_update_status() -> Result<(), CodeListError> {
-        let mut validation_and_review = test_validation_and_review();
+        let mut validation_and_review = test_validation_and_review_all_params_are_some_or_true();
         assert_eq!(validation_and_review.status, Some("Status".to_string()));
         validation_and_review.update_status("Status 2".to_string())?;
         assert_eq!(validation_and_review.status, Some("Status 2".to_string()));
@@ -402,7 +405,7 @@ mod tests {
 
     #[test]
     fn test_update_status_does_not_exist() -> Result<(), CodeListError> {
-        let mut validation_and_review = ValidationAndReview::new(Some(true), Some("Reviewer".to_string()), Some(chrono::Utc::now()), None, Some("Validation Notes".to_string()));
+        let mut validation_and_review = test_validation_and_review_all_params_are_none();
         let error = validation_and_review.update_status("Status".to_string()).unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Status does not exist: Unable to update status. Please use add status instead.");
@@ -411,7 +414,7 @@ mod tests {
 
     #[test]
     fn test_remove_status() -> Result<(), CodeListError> {
-        let mut validation_and_review = test_validation_and_review();
+        let mut validation_and_review = test_validation_and_review_all_params_are_some_or_true();
         assert_eq!(validation_and_review.status, Some("Status".to_string()));
         validation_and_review.remove_status()?;
         assert_eq!(validation_and_review.status, None);
@@ -420,7 +423,7 @@ mod tests {
 
     #[test]
     fn test_remove_status_does_not_exist() -> Result<(), CodeListError> {
-        let mut validation_and_review = ValidationAndReview::new(Some(true), Some("Reviewer".to_string()), Some(chrono::Utc::now()), None, Some("Validation Notes".to_string()));
+        let mut validation_and_review = test_validation_and_review_all_params_are_none();
         let error = validation_and_review.remove_status().unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Status does not exist: Unable to remove status.");
@@ -429,7 +432,7 @@ mod tests {
 
     #[test]
     fn test_add_validation_notes() -> Result<(), CodeListError> {
-        let mut validation_and_review = ValidationAndReview::new(Some(true), Some("Reviewer".to_string()), Some(chrono::Utc::now()), Some("Status".to_string()), None);
+        let mut validation_and_review = test_validation_and_review_all_params_are_none();
         assert_eq!(validation_and_review.validation_notes, None);
         validation_and_review.add_validation_notes("Validation Notes".to_string())?;
         assert_eq!(validation_and_review.validation_notes, Some("Validation Notes".to_string()));
@@ -438,7 +441,7 @@ mod tests {
 
     #[test]
     fn test_add_validation_notes_already_exists() -> Result<(), CodeListError> {
-        let mut validation_and_review = test_validation_and_review();
+        let mut validation_and_review = test_validation_and_review_all_params_are_some_or_true();
         let error = validation_and_review.add_validation_notes("Validation Notes".to_string()).unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Validation notes already exist: Unable to add validation notes. Please use update validation notes instead.");
@@ -447,7 +450,7 @@ mod tests {
 
     #[test]
     fn test_update_validation_notes() -> Result<(), CodeListError> {
-        let mut validation_and_review = test_validation_and_review();
+        let mut validation_and_review = test_validation_and_review_all_params_are_some_or_true();
         assert_eq!(validation_and_review.validation_notes, Some("Validation Notes".to_string()));
         validation_and_review.update_validation_notes("Validation Notes 2".to_string())?;
         assert_eq!(validation_and_review.validation_notes, Some("Validation Notes 2".to_string()));
@@ -456,7 +459,7 @@ mod tests {
 
     #[test]
     fn test_update_validation_notes_does_not_exist() -> Result<(), CodeListError> {
-        let mut validation_and_review = ValidationAndReview::new(Some(true), Some("Reviewer".to_string()), Some(chrono::Utc::now()), Some("Status".to_string()), None);
+        let mut validation_and_review = test_validation_and_review_all_params_are_none();
         let error = validation_and_review.update_validation_notes("Validation Notes".to_string()).unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Validation notes do not exist: Unable to update validation notes. Please use add validation notes instead.");
@@ -465,7 +468,7 @@ mod tests {
 
     #[test]
     fn test_remove_validation_notes() -> Result<(), CodeListError> {
-        let mut validation_and_review = test_validation_and_review();
+        let mut validation_and_review = test_validation_and_review_all_params_are_some_or_true();
         assert_eq!(validation_and_review.validation_notes, Some("Validation Notes".to_string()));
         validation_and_review.remove_validation_notes()?;
         assert_eq!(validation_and_review.validation_notes, None);
@@ -474,7 +477,7 @@ mod tests {
 
     #[test]
     fn test_remove_validation_notes_does_not_exist() -> Result<(), CodeListError> {
-        let mut validation_and_review = ValidationAndReview::new(Some(true), Some("Reviewer".to_string()), Some(chrono::Utc::now()), Some("Status".to_string()), None);
+        let mut validation_and_review = test_validation_and_review_all_params_are_none();
         let error = validation_and_review.remove_validation_notes().unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Validation notes do not exist: Unable to remove validation notes.");

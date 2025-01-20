@@ -70,13 +70,19 @@ mod tests {
         (date - now).num_milliseconds().abs()
     }
 
-    fn create_test_provenance() -> Provenance {
+    fn create_test_provenance_no_contributors() -> Provenance {
         Provenance::new(MetadataSource::LoadedFromFile, None)
+    }
+
+    fn create_test_provenance_with_contributors() -> Provenance {
+        let mut contributors = HashSet::new();
+        contributors.insert("Example Contributor".to_string());
+        Provenance::new(MetadataSource::LoadedFromFile, Some(contributors))
     }
 
     #[test]
     fn test_new_provenance_no_contributors() {
-        let provenance = create_test_provenance();
+        let provenance = create_test_provenance_no_contributors();
         assert_eq!(provenance.source, MetadataSource::LoadedFromFile);
         let time_difference = get_time_difference(provenance.created_date);
         assert!(time_difference < 1000);
@@ -87,7 +93,7 @@ mod tests {
 
     #[test]
     fn test_new_provenance_with_contributors() {
-        let provenance = Provenance::new(MetadataSource::LoadedFromFile, Some(HashSet::from(["Example Contributor".to_string()])));
+        let provenance = create_test_provenance_with_contributors();
         assert_eq!(provenance.source, MetadataSource::LoadedFromFile);
         assert_eq!(provenance.contributors, HashSet::from(["Example Contributor".to_string()]));
         let time_difference = get_time_difference(provenance.created_date);
@@ -98,7 +104,7 @@ mod tests {
 
     #[test]
     fn test_update_last_modified_date() {
-        let mut provenance = create_test_provenance();
+        let mut provenance = create_test_provenance_no_contributors();
         provenance.update_last_modified_date();
         let time_difference = get_time_difference(provenance.last_modified_date);
         assert!(time_difference < 1000);
@@ -106,14 +112,14 @@ mod tests {
 
     #[test]
     fn test_add_contributor() {
-        let mut provenance = create_test_provenance();
+        let mut provenance = create_test_provenance_no_contributors();
         provenance.add_contributor("Example Contributor".to_string());
         assert_eq!(provenance.contributors, HashSet::from(["Example Contributor".to_string()]));
     }
 
     #[test]
     fn test_remove_contributor() -> Result<(), CodeListError> {
-        let mut provenance = create_test_provenance();
+        let mut provenance = create_test_provenance_with_contributors();
         provenance.add_contributor("Example Contributor".to_string());
         provenance.remove_contributor("Example Contributor".to_string())?;
         assert_eq!(provenance.contributors, HashSet::new());
@@ -122,7 +128,7 @@ mod tests {
 
     #[test]
     fn test_remove_contributor_not_found() {
-        let mut provenance = create_test_provenance();
+        let mut provenance = create_test_provenance_no_contributors();
         let error = provenance.remove_contributor("Example Contributor".to_string()).unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Contributor Example Contributor not found");

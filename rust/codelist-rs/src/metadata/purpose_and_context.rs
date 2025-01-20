@@ -167,9 +167,17 @@ impl PurposeAndContext {
 mod tests {
     use super::*;
 
+    fn create_test_purpose_and_context_all_params_are_some() -> PurposeAndContext {
+        PurposeAndContext::new(Some("Purpose".to_string()), Some("Target Audience".to_string()), Some("Use Context".to_string()))
+    }
+
+    fn create_test_purpose_and_context_all_params_are_none() -> PurposeAndContext {
+        PurposeAndContext::new(None, None, None)
+    }
+
     #[test]
     fn test_new() {
-        let purpose_and_context = PurposeAndContext::new(Some("Purpose".to_string()), Some("Target Audience".to_string()), Some("Use Context".to_string()));
+        let purpose_and_context = create_test_purpose_and_context_all_params_are_some();
         assert_eq!(purpose_and_context.purpose, Some("Purpose".to_string()));
         assert_eq!(purpose_and_context.target_audience, Some("Target Audience".to_string()));
         assert_eq!(purpose_and_context.use_context, Some("Use Context".to_string()));
@@ -177,7 +185,7 @@ mod tests {
 
     #[test]
     fn test_add_purpose() -> Result<(), CodeListError> {
-        let mut purpose_and_context = PurposeAndContext::new(None, None, None);
+        let mut purpose_and_context = create_test_purpose_and_context_all_params_are_none();
         purpose_and_context.add_purpose("Purpose".to_string())?;
         assert_eq!(purpose_and_context.purpose, Some("Purpose".to_string()));
         Ok(())
@@ -185,7 +193,7 @@ mod tests {
 
     #[test]
     fn test_add_purpose_already_exists() -> Result<(), CodeListError> {
-        let mut purpose_and_context = PurposeAndContext::new(Some("Purpose".to_string()), None, None);
+        let mut purpose_and_context = create_test_purpose_and_context_all_params_are_some();
         let error = purpose_and_context.add_purpose("Purpose".to_string()).unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Purpose already exists: Unable to add purpose. Please use update purpose instead.");
@@ -194,7 +202,7 @@ mod tests {
 
     #[test]
     fn test_update_purpose() -> Result<(), CodeListError> {
-        let mut purpose_and_context = PurposeAndContext::new(Some("Purpose".to_string()), None, None);
+        let mut purpose_and_context = create_test_purpose_and_context_all_params_are_some();
         purpose_and_context.update_purpose("New Purpose".to_string())?;
         assert_eq!(purpose_and_context.purpose, Some("New Purpose".to_string()));
         Ok(())
@@ -202,7 +210,7 @@ mod tests {
 
     #[test]
     fn test_update_purpose_does_not_exist() -> Result<(), CodeListError> {
-        let mut purpose_and_context = PurposeAndContext::new(None, None, None);
+        let mut purpose_and_context = create_test_purpose_and_context_all_params_are_none();
         let error = purpose_and_context.update_purpose("Purpose".to_string()).unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Purpose does not exist: Unable to update purpose. Please use add purpose instead.");
@@ -212,7 +220,7 @@ mod tests {
 
     #[test]
     fn test_remove_purpose() -> Result<(), CodeListError> {
-        let mut purpose_and_context = PurposeAndContext::new(Some("Purpose".to_string()), None, None);
+        let mut purpose_and_context = create_test_purpose_and_context_all_params_are_some();
         purpose_and_context.remove_purpose()?;
         assert_eq!(purpose_and_context.purpose, None);
         Ok(())
@@ -220,16 +228,16 @@ mod tests {
 
     #[test]
     fn test_remove_purpose_does_not_exist() -> Result<(), CodeListError> {
-        let mut purpose_and_context = PurposeAndContext::new(None, None, None);
+        let mut purpose_and_context = create_test_purpose_and_context_all_params_are_none();
         let error = purpose_and_context.remove_purpose().unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Purpose does not exist: Unable to remove purpose.");
         Ok(())
     }
-
+    
     #[test]
     fn test_add_target_audience() -> Result<(), CodeListError> {
-        let mut purpose_and_context = PurposeAndContext::new(None, None, None);
+        let mut purpose_and_context = create_test_purpose_and_context_all_params_are_none();
         purpose_and_context.add_target_audience("Target Audience".to_string())?;
         assert_eq!(purpose_and_context.target_audience, Some("Target Audience".to_string()));
         Ok(())
@@ -237,7 +245,7 @@ mod tests {
 
     #[test]
     fn test_add_target_audience_already_exists() -> Result<(), CodeListError> {
-        let mut purpose_and_context = PurposeAndContext::new(None, Some("Target Audience".to_string()), None);
+        let mut purpose_and_context = create_test_purpose_and_context_all_params_are_some();
         let error = purpose_and_context.add_target_audience("Target Audience".to_string()).unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Target audience already exists: Unable to add target audience. Please use update target audience instead.");
@@ -246,7 +254,7 @@ mod tests {
 
     #[test]
     fn test_update_target_audience() -> Result<(), CodeListError> {
-        let mut purpose_and_context = PurposeAndContext::new(None, Some("Target Audience".to_string()), None);
+        let mut purpose_and_context = create_test_purpose_and_context_all_params_are_some();
         purpose_and_context.update_target_audience("New Target Audience".to_string())?;
         assert_eq!(purpose_and_context.target_audience, Some("New Target Audience".to_string()));
         Ok(())
@@ -254,7 +262,7 @@ mod tests {
 
     #[test]
     fn test_update_target_audience_does_not_exist() -> Result<(), CodeListError> {
-        let mut purpose_and_context = PurposeAndContext::new(None, None, None);
+        let mut purpose_and_context = create_test_purpose_and_context_all_params_are_none();
         let error = purpose_and_context.update_target_audience("Target Audience".to_string()).unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Target audience does not exist: Unable to update target audience. Please use add target audience instead.");
@@ -263,7 +271,7 @@ mod tests {
 
     #[test]
     fn test_remove_target_audience() -> Result<(), CodeListError> {
-        let mut purpose_and_context = PurposeAndContext::new(None, Some("Target Audience".to_string()), None);
+        let mut purpose_and_context = create_test_purpose_and_context_all_params_are_some();
         purpose_and_context.remove_target_audience()?;
         assert_eq!(purpose_and_context.target_audience, None);
         Ok(())
@@ -271,7 +279,7 @@ mod tests {
 
     #[test]
     fn test_remove_target_audience_does_not_exist() -> Result<(), CodeListError> {
-        let mut purpose_and_context = PurposeAndContext::new(None, None, None);
+        let mut purpose_and_context = create_test_purpose_and_context_all_params_are_none();
         let error = purpose_and_context.remove_target_audience().unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Target audience does not exist: Unable to remove target audience.");
@@ -280,7 +288,7 @@ mod tests {
 
     #[test]
     fn test_add_use_context() -> Result<(), CodeListError> {
-        let mut purpose_and_context = PurposeAndContext::new(None, None, None);
+        let mut purpose_and_context = create_test_purpose_and_context_all_params_are_none();
         purpose_and_context.add_use_context("Use Context".to_string())?;
         assert_eq!(purpose_and_context.use_context, Some("Use Context".to_string()));
         Ok(())
@@ -288,7 +296,7 @@ mod tests {
 
     #[test]
     fn test_add_use_context_already_exists() -> Result<(), CodeListError> {
-        let mut purpose_and_context = PurposeAndContext::new(None, None, Some("Use Context".to_string()));
+        let mut purpose_and_context = create_test_purpose_and_context_all_params_are_some();
         let error = purpose_and_context.add_use_context("Use Context".to_string()).unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Use context already exists: Unable to add use context. Please use update use context instead.");
@@ -297,7 +305,7 @@ mod tests {
 
     #[test]
     fn test_update_use_context() -> Result<(), CodeListError> {
-        let mut purpose_and_context = PurposeAndContext::new(None, None, Some("Use Context".to_string()));
+        let mut purpose_and_context = create_test_purpose_and_context_all_params_are_some();
         purpose_and_context.update_use_context("New Use Context".to_string())?;
         assert_eq!(purpose_and_context.use_context, Some("New Use Context".to_string()));
         Ok(())
@@ -305,7 +313,7 @@ mod tests {
 
     #[test]
     fn test_update_use_context_does_not_exist() -> Result<(), CodeListError> {
-        let mut purpose_and_context = PurposeAndContext::new(None, None, None);
+        let mut purpose_and_context = create_test_purpose_and_context_all_params_are_none();
         let error = purpose_and_context.update_use_context("Use Context".to_string()).unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Use context does not exist: Unable to update use context. Please use add use context instead.");
@@ -314,7 +322,7 @@ mod tests {
 
     #[test]
     fn test_remove_use_context() -> Result<(), CodeListError> {
-        let mut purpose_and_context = PurposeAndContext::new(None, None, Some("Use Context".to_string()));
+        let mut purpose_and_context = create_test_purpose_and_context_all_params_are_some();
         purpose_and_context.remove_use_context()?;
         assert_eq!(purpose_and_context.use_context, None);
         Ok(())
@@ -322,7 +330,7 @@ mod tests {
 
     #[test]
     fn test_remove_use_context_does_not_exist() -> Result<(), CodeListError> {
-        let mut purpose_and_context = PurposeAndContext::new(None, None, None);
+        let mut purpose_and_context = create_test_purpose_and_context_all_params_are_none();
         let error = purpose_and_context.remove_use_context().unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Use context does not exist: Unable to remove use context.");
