@@ -1,4 +1,3 @@
-
 import unittest
 from codelist import CodeList
 
@@ -33,6 +32,52 @@ class TestCodeList(unittest.TestCase):
 
         entries = codelist.entries()
         self.assertEqual(len(entries), 1)
+
+    def test_metadata(self):
+        metadata = {
+            "provenance": {
+                "source": "MANUAL",  # This maps to Provenance
+            },
+            "categorisation_and_usage": {
+                "authors": ["John Doe", "Jane Smith"],
+                "keywords": ["test", "example"],
+            },
+            "purpose_and_context": {
+                "version": "1.0",
+                "purpose": "Testing metadata functionality",
+            },
+            "validation_and_review": {
+                "description": "Test codelist with metadata",
+                "review_status": "DRAFT",
+            }
+        }
+        
+        codelist = CodeList(
+            codelist_type="ICD10",
+            source="test",
+            metadata=metadata
+        )
+        
+        # Test metadata retrieval
+        self.assertEqual(codelist.get_authors(), ["John Doe", "Jane Smith"])
+        self.assertEqual(codelist.get_version(), "1.0")
+        self.assertEqual(codelist.get_description(), "Test codelist with metadata")
+        self.assertEqual(codelist.get_review_status(), "DRAFT")
+
+    def test_invalid_metadata(self):
+        invalid_metadata = {
+            "provenance": {
+                "source": "INVALID_SOURCE",  # Invalid source type
+            }
+        }
+        
+        with self.assertRaises(ValueError) as e:
+            CodeList(
+                codelist_type="ICD10",
+                source="test",
+                metadata=invalid_metadata
+            )
+        self.assertIn("Invalid provenance source", str(e.exception))
 
 if __name__ == '__main__':
     unittest.main()
