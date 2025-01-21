@@ -10,7 +10,7 @@ use pyo3::types::PyDict;
 use codelist_rs::codelist::CodeList;
 use codelist_rs::codelist_options::CodeListOptions;
 use codelist_rs::types::CodeListType;
-use codelist_rs::metadata::{Metadata, MetadataSource};
+use codelist_rs::metadata::{Metadata, Provenance, CategorisationAndUsage, PurposeAndContext, ValidationAndReview};
 
 
 /// Python wrapper for the CodeList struct

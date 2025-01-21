@@ -2,6 +2,7 @@ use codelist_rs::codelist::CodeList;
 use regex::Regex;
 use std::sync::LazyLock;
 use crate::errors::CodeListValidatorError;
+use codelist_rs::metadata::{ Metadata, Provenance, CategorisationAndUsage, PurposeAndContext, ValidationAndReview };
 
 /// OPCS code regex pattern
 static REGEX: LazyLock<Regex> = LazyLock::new(|| {
@@ -85,12 +86,12 @@ mod tests {
 
     // Helper function to create test metadata
     fn create_test_metadata() -> Metadata {
-        Metadata {
-            source: MetadataSource::ManuallyCreated,
-            authors: Some(vec!["Caroline Morton".to_string()]),
-            version: Some("2024-12-19".to_string()),
-            description: Some("A test codelist".to_string()),
-        }
+        Metadata::new(
+            Provenance::new(MetadataSource::ManuallyCreated, None),
+            CategorisationAndUsage::new(None, None, None),
+            PurposeAndContext::new(None, None, None),
+            ValidationAndReview::new(None, None, None, None, None),
+        )
     }
 
     // Helper function to create a test codelist with two entries, default options and test metadata

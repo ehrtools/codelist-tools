@@ -39,8 +39,10 @@ impl CodeList {
     /// Create a new CodeList
     ///
     /// # Arguments
+    /// * `entries` - The set of code entries
     /// * `codelist_type` - The type of codelist
     /// * `metadata` - Metadata describing the codelist
+    /// * `logs` - Logs of anything that happened during the codelist creation
     /// * `options` - Customisable options for the codelist
     ///
     /// # Returns
