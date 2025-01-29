@@ -5,12 +5,6 @@ use serde_json;
 use csv;
 
 /// Enum to represent the different types of errors that can occur in the codelist library
-/// 
-/// * `InvalidCodeListType` - An error that occurs when an invalid code list type is provided
-/// * `JSONError` - An error that occurs when there is an error serializing or deserializing JSON
-/// * `IOError` - An error that occurs when there is an error reading or writing to a file
-/// * `EntryNotFound` - An error that occurs when an entry is not found in the codelist
-/// * `CSVError` - An error that occurs when there is an error serializing or deserializing CSV
 
 #[derive(Debug, thiserror::Error, thiserror_ext::Construct)]
 pub enum CodeListError {
@@ -52,6 +46,69 @@ pub enum CodeListError {
 
     #[error("Comment for CodeEntry with code {code} and term {term} does not exist. Please use add comment instead if you are trying to add a comment.")]
     CodeEntryCommentDoesNotExist { code: String, term: String },
+
+    #[error("Contributor {contributor} not found")]
+    ContributorNotFound { contributor: String },
+
+    #[error("Invalid metadata source: {source_string}")]
+    InvalidMetadataSource { source_string: String },
+
+    #[error("Purpose already exists: {msg}")]
+    PurposeAlreadyExists { msg: String },
+
+    #[error("Purpose does not exist: {msg}")]
+    PurposeDoesNotExist { msg: String },
+
+    #[error("Target audience already exists: {msg}")]
+    TargetAudienceAlreadyExists { msg: String },
+
+    #[error("Target audience does not exist: {msg}")]
+    TargetAudienceDoesNotExist { msg: String },
+
+    #[error("Use context already exists: {msg}")]
+    UseContextAlreadyExists { msg: String },
+
+    #[error("Use context does not exist: {msg}")]
+    UseContextDoesNotExist { msg: String },
+
+    #[error("Reviewer already exists: {msg}")]
+    ReviewerAlreadyExists { msg: String },
+
+    #[error("Reviewer does not exist: {msg}")]
+    ReviewerDoesNotExist { msg: String },
+
+    #[error("Review date already exists: {msg}")]
+    ReviewDateAlreadyExists { msg: String },
+
+    #[error("Review date does not exist: {msg}")]
+    ReviewDateDoesNotExist { msg: String },
+
+    #[error("Status already exists: {msg}")]
+    StatusAlreadyExists { msg: String },
+
+    #[error("Status does not exist: {msg}")]
+    StatusDoesNotExist { msg: String },
+
+    #[error("Validation notes already exist: {msg}")]
+    ValidationNotesAlreadyExist { msg: String },
+
+    #[error("Validation notes do not exist: {msg}")]
+    ValidationNotesDoNotExist { msg: String },
+
+    #[error("Review date is none.")]
+    ReviewDateIsNone,
+
+    #[error("Tag does not exist: {msg}")]
+    TagDoesNotExist { msg: String },
+
+    #[error("Usage does not exist: {msg}")]
+    UsageDoesNotExist { msg: String },
+
+    #[error("License already exists: {msg}")]
+    LicenseAlreadyExists { msg: String },
+
+    #[error("License does not exist: {msg}")]
+    LicenseDoesNotExist { msg: String },
 
     #[error("JSON error: {0}")]
     #[construct(skip)]
