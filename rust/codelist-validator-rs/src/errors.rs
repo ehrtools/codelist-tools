@@ -3,7 +3,8 @@
 /// * `InvalidCodeLength` - An error that occurs when the code is not the correct length
 /// * `ParseIntError` - An error that occurs when the code is not composed of numerical characters
 /// * `InvalidCodeContents` - An error that occurs when the code does not match the expected format
-
+/// * `InvalidCodelist` - An error that occurs when the codelist is invalid
+/// * `UnsupportedCodeType` - An error that occurs when the code type is not supported
 #[derive(Debug, thiserror::Error, thiserror_ext::Construct, Clone)]
 pub enum CodeListValidatorError {
     #[error("Code {code} is an invalid length for type {codelist_type}. Reason: {reason}")]
@@ -22,4 +23,7 @@ pub enum CodeListValidatorError {
 
     #[error("Some codes in the list are invalid. Details: {reasons:?}")]
     InvalidCodelist { reasons: Vec<String> },
+
+    #[error("CodeType {code_type} is not supported")]
+    UnsupportedCodeType { code_type: String },
 }

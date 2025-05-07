@@ -1,68 +1,43 @@
+// SNOMED validator for validating SNOMED codes in a codelist
 use codelist_rs::codelist::CodeList;
 use crate::errors::CodeListValidatorError;
-use codelist_rs::metadata::{ Metadata, Provenance, CategorisationAndUsage, PurposeAndContext, ValidationAndReview };
+use crate::validator::CodeValidator;
+
+
+pub struct SnomedValidator<'a>(pub &'a CodeList);
 
 const MAX_LENGTH: u32 = 18;
 const MIN_LENGTH: u32 = 6;
 
-pub trait SNOMEDValidator {
-    fn validate_code(&self, code: &str, min_length: u32, max_length: u32) -> Result<(), CodeListValidatorError>; // for 1 code
-    fn validate_all_code(&self, min_length: Option<u32>, max_length: Option<u32>) -> Result<(), CodeListValidatorError>;
-}
-
-impl SNOMEDValidator for CodeList {
-    /// Validate the form of a single SNOMED code
-    ///
-    /// Rules:
-    ///     - The code must be a number
-    ///     - The code must be between the minimum and maximum length (the default is minimum length 6 and maximum length 18)
-    /// 
-    /// # Arguments
-    /// 
-    /// * `code`: the code to validate
-    /// * `min_length`: the minimum length of the code (default is 6)
-    /// * `max_length`: the maximum length of the code (default is 18)
-    /// 
-    /// # Returns
-    /// 
-    /// * `Result<(), CodeListValidatorError>`: unit type if the code is valid, otherwise an error containing the code and the reason the code is invalid
-    fn validate_code(&self, code: &str, min_length: u32, max_length: u32) -> Result<(), CodeListValidatorError> {
+impl<'a> CodeValidator for SnomedValidator<'a> {
+    fn validate_code(&self, code: &str) -> Result<(), CodeListValidatorError> {
         code.trim().parse::<u128>().map_err(|e| CodeListValidatorError::ParseIntError {
             code: code.to_string(),
             reason: e.to_string(),
-            codelist_type: self.codelist_type.to_string(),
+            codelist_type: self.0.codelist_type.to_string(),
         })?;
         let length = code.len() as u32;
-        if length < min_length || length > max_length {
-            return Err(CodeListValidatorError::invalid_code_length(code, format!("Code is not between {} and {} numbers in length", min_length, max_length), self.codelist_type.to_string()));
+        if length < MIN_LENGTH || length > MAX_LENGTH {
+            return Err(CodeListValidatorError::invalid_code_length(
+                code,
+                format!("Code is not between {} and {} numbers in length", MIN_LENGTH, MAX_LENGTH),
+                self.0.codelist_type.to_string(),
+            ));
         }
         Ok(())
     }
 
-    /// Validate all SNOMED codes in the codelist
-    /// 
-    /// # Arguments
-    /// 
-    /// * `min_length`: optional minimum length of the code (default is 6)
-    /// * `max_length`: optional maximum length of the code (default is 18)
-    /// 
-    /// # Returns
-    /// 
-    /// * `Result<(), CodeListValidatorError>`: unit type if all codes are valid in the codelist, otherwise an error containing a vector of all invalid codes and the reason for being invalid
-    fn validate_all_code(&self, min_length: Option<u32>, max_length: Option<u32>) -> Result<(), CodeListValidatorError> {
+    fn validate_all_code(&self) -> Result<(), CodeListValidatorError> {
         let mut reasons = Vec::new();
-        let min_length = min_length.unwrap_or(MIN_LENGTH);
-        let max_length = max_length.unwrap_or(MAX_LENGTH);
 
-        for code_entry in self.entries.iter() {
+        for code_entry in self.0.entries.iter() {
             let code = &code_entry.code;
-            if let Err(err) = self.validate_code(code, min_length, max_length) {
-                let error_reason = err.to_string();
-                reasons.push(error_reason);
+            if let Err(err) = self.validate_code(code) {
+                reasons.push(err.to_string());
             }
         }
 
-        if reasons.is_empty() { 
+        if reasons.is_empty() {
             Ok(())
         } else {
             Err(CodeListValidatorError::invalid_codelist(reasons))
@@ -73,15 +48,21 @@ impl SNOMEDValidator for CodeList {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use codelist_rs::metadata::{ Metadata, MetadataSource };
+    use codelist_rs::metadata::{ Metadata };
     use codelist_rs::codelist::CodeList;
     use codelist_rs::types::CodeListType;
     use codelist_rs::errors::CodeListError;
+    use codelist_rs::metadata::metadata_source::Source;
+    use codelist_rs::metadata::provenance::Provenance;
+    use codelist_rs::metadata::categorisation_and_usage::CategorisationAndUsage;
+    use codelist_rs::metadata::purpose_and_context::PurposeAndContext;
+    use codelist_rs::metadata::validation_and_review::ValidationAndReview;
+    use crate::validator::Validator;
 
     // Helper function to create test metadata
     fn create_test_metadata() -> Metadata {
         Metadata::new(
-            Provenance::new(MetadataSource::ManuallyCreated, None),
+            Provenance::new(Source::ManuallyCreated, None),
             CategorisationAndUsage::new(None, None, None),
             PurposeAndContext::new(None, None, None),
             ValidationAndReview::new(None, None, None, None, None),
@@ -90,7 +71,7 @@ mod tests {
 
     // Helper function to create a test codelist with two entries, default options and test metadata
     fn create_test_codelist() -> Result<CodeList, CodeListError> {
-        let codelist = CodeList::new(CodeListType::SNOMED, create_test_metadata(), None);
+        let codelist = CodeList::new("test_codelist".to_string(), CodeListType::SNOMED, create_test_metadata(), None);
         Ok(codelist)
     }
 
@@ -98,23 +79,15 @@ mod tests {
     fn test_validate_code_with_valid_code_default_max_min_lengths() -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
         let code = "204351007";
-        assert!(codelist.validate_code(code, MIN_LENGTH, MAX_LENGTH).is_ok());
+        assert!(codelist.validate_codes().is_ok());
         Ok(())
     }
-
-    #[test]
-    fn test_validate_code_with_valid_code_custom_max_min_lengths() -> Result<(), CodeListError> {
-        let codelist = create_test_codelist()?;
-        let code = "1111111111111111111";
-        assert!(codelist.validate_code(code, 18, 20).is_ok());
-        Ok(())
-    }
-
     #[test]
     fn test_validate_code_with_invalid_code_not_all_numbers() -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
+        let validator = SnomedValidator(&codelist);
         let code = "11A6BB789A";
-        let error = codelist.validate_code(code, MIN_LENGTH, MAX_LENGTH).unwrap_err();
+        let error = validator.validate_code(code).unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Code 11A6BB789A is not composed of all numerical characters for type SNOMED. Reason: invalid digit found in string");
         Ok(())
@@ -124,28 +97,31 @@ mod tests {
     #[test]
     fn test_validate_code_with_invalid_code_length_less_than_min_length_of_3() -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
+        let validator = SnomedValidator(&codelist);
         let code = "11";
-        let error = codelist.validate_code(code, 3, 5).unwrap_err();
+        let error = validator.validate_code(code).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Code 11 is an invalid length for type SNOMED. Reason: Code is not between 3 and 5 numbers in length");
+        assert_eq!(error_string, "Code 11 is an invalid length for type SNOMED. Reason: Code is not between 6 and 18 numbers in length");
         Ok(())
     }
 
     #[test]
-    fn test_validate_code_with_invalid_code_length_greater_than_max_length_of_5() -> Result<(), CodeListError> {
+    fn test_validate_code_with_invalid_code_length_greater_than_max_length_of_18() -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
-        let code = "1111111";
-        let error = codelist.validate_code(code, 3, 5).unwrap_err();
+        let validator = SnomedValidator(&codelist);
+        let code = "1111111111111111111111111111";
+        let error = validator.validate_code(code).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Code 1111111 is an invalid length for type SNOMED. Reason: Code is not between 3 and 5 numbers in length");
+        assert_eq!(error_string, "Code 1111111111111111111111111111 is an invalid length for type SNOMED. Reason: Code is not between 6 and 18 numbers in length");
         Ok(())
     }
 
     #[test]
     fn test_validate_code_with_invalid_code_length_less_than_default_min_length() -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
+        let validator = SnomedValidator(&codelist);
         let code = "2043";
-        let error = codelist.validate_code(code, MIN_LENGTH, MAX_LENGTH).unwrap_err();
+        let error = validator.validate_code(code).unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Code 2043 is an invalid length for type SNOMED. Reason: Code is not between 6 and 18 numbers in length");
         Ok(())
@@ -154,8 +130,9 @@ mod tests {
     #[test]
     fn test_validate_code_with_invalid_code_length_greater_than_default_max_length() -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
+        let validator = SnomedValidator(&codelist);
         let code = "2043510071234567890";
-        let error = codelist.validate_code(code, MIN_LENGTH, MAX_LENGTH).unwrap_err();
+        let error = validator.validate_code(code).unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Code 2043510071234567890 is an invalid length for type SNOMED. Reason: Code is not between 6 and 18 numbers in length");
         Ok(())
@@ -173,7 +150,7 @@ mod tests {
         codelist.add_entry("24700007".to_string(), "Multiple sclerosis (disorder)".to_string(), None)?;
         codelist.add_entry("398254007".to_string(), "Pre-eclampsia (disorder)".to_string(), None)?;
 
-        assert!(codelist.validate_all_code(None, None).is_ok());
+        assert!(codelist.validate_codes().is_ok());
 
         Ok(())
     }
@@ -188,8 +165,8 @@ mod tests {
         codelist.add_entry("1".to_string(), "Fallot's trilogy (disorder)".to_string(), None)?;
         codelist.add_entry("1111111111111111111AAAAAAAAAA".to_string(), "Fallot's trilogy (disorder)".to_string(), None)?;
         codelist.add_entry("11111".to_string(), "Fallot's trilogy (disorder)".to_string(), None)?;
-        
-        let error = codelist.validate_all_code(None, None).unwrap_err();
+
+        let error = codelist.validate_codes().unwrap_err();
         let error_string = error.to_string();
 
         assert!(error_string.contains("Some codes in the list are invalid. Details:"));
@@ -215,7 +192,7 @@ mod tests {
         codelist.add_entry("24700007".to_string(), "Multiple sclerosis (disorder)".to_string(), None)?;
         codelist.add_entry("11111".to_string(), "Pre-eclampsia (disorder)".to_string(), None)?;
 
-        let error = codelist.validate_all_code(None, None).unwrap_err();
+        let error = codelist.validate_codes().unwrap_err();
         let error_string = error.to_string();
 
         assert!(error_string.contains("Some codes in the list are invalid. Details:"));
