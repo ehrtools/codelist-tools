@@ -12,7 +12,7 @@ pub struct ValidationAndReview {
     pub reviewed: bool,
     pub reviewer: Option<String>,
     pub review_date: Option<DateTime<Utc>>,
-    pub status: Option<String>,
+    pub status: Option<String>, // TODO: make this an enum
     pub validation_notes: Option<String>,
 }
 
@@ -181,6 +181,11 @@ impl ValidationAndReview {
         Ok(())
     }
 
+    /// Get the validation notes
+    pub fn get_validation_notes(&self) -> Option<String> {
+        self.validation_notes.clone()
+    }
+
     /// Add validation notes
     ///
     /// # Arguments
@@ -205,13 +210,17 @@ impl ValidationAndReview {
     /// # Returns
     /// * `Result<(), CodeListError>` - unit type or error if validation notes does not exist
     pub fn update_validation_notes(&mut self, validation_notes: String) -> Result<(), CodeListError> {
-        if self.validation_notes.is_some() {
-            self.validation_notes = Some(validation_notes);
+        if let Some(existing) = &mut self.validation_notes {
+            existing.push('\n');
+            existing.push_str(&validation_notes);
+            Ok(())
         } else {
-            return Err(CodeListError::validation_notes_do_not_exist("Unable to update validation notes. Please use add validation notes instead."));
+            Err(CodeListError::validation_notes_do_not_exist(
+                "Unable to update validation notes. Please use add validation notes instead.",
+            ))
         }
-        Ok(())
     }
+
 
     /// Remove the validation notes
     ///
@@ -457,7 +466,7 @@ mod tests {
         let mut validation_and_review = test_validation_and_review_all_params_are_some_or_true();
         assert_eq!(validation_and_review.validation_notes, Some("Validation Notes".to_string()));
         validation_and_review.update_validation_notes("Validation Notes 2".to_string())?;
-        assert_eq!(validation_and_review.validation_notes, Some("Validation Notes 2".to_string()));
+        assert_eq!(validation_and_review.validation_notes, Some("Validation Notes\nValidation Notes 2".to_string()));
         Ok(())
     }
 

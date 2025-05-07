@@ -12,7 +12,7 @@ use crate::metadata::metadata::Metadata;
 use crate::metadata::purpose_and_context::PurposeAndContext;
 use crate::metadata::provenance::Provenance;
 use crate::metadata::validation_and_review::ValidationAndReview;
-use crate::metadata::metadata_source::MetadataSource;
+use crate::metadata::metadata_source::Source;
 use crate::types::CodeListType;
 
 /// Struct to represent a codelist factory, which is used to load codelists from a directory and make sure all codelists are created following the same rules
@@ -59,10 +59,10 @@ impl CodeListFactory {
     /// * `CodeListError::InvalidTerm` - If the term value is not a valid string
     /// * `CodeListError::EmptyCode` - If the code value is an empty string
     /// * `CodeListError::EmptyTerm` - If the term value is an empty string
-    pub fn load_codelist_from_csv_file(&self, file_path: &str) -> Result<CodeList, CodeListError> {
+    pub fn load_codelist_from_csv_file(&self, name: String, file_path: &str) -> Result<CodeList, CodeListError> {
         let mut rdr = csv::Reader::from_path(file_path)?;
         let headers = rdr.headers()?;
-        let mut codelist = CodeList::new(self.codelist_type.clone(), self.metadata.clone(), Some(self.codelist_options.clone()));
+        let mut codelist = CodeList::new(name, self.codelist_type.clone(), self.metadata.clone(), Some(self.codelist_options.clone()));
         
         let code_column: Vec<_> = headers.iter()
             .enumerate()
@@ -132,8 +132,8 @@ impl CodeListFactory {
     /// * `CodeListError::InvalidInput` - If the JSON is not an array of objects
     /// 
     /// * Assumes that the json file is an array of objects with "code" and "term" fields 
-    pub fn load_codelist_from_json_file(&self, file_path: &str) -> Result<CodeList, CodeListError> {
-        let mut codelist = CodeList::new(self.codelist_type.clone(), self.metadata.clone(), Some(self.codelist_options.clone()));
+    pub fn load_codelist_from_json_file(&self, name: String, file_path: &str) -> Result<CodeList, CodeListError> {
+        let mut codelist = CodeList::new(name, self.codelist_type.clone(), self.metadata.clone(), Some(self.codelist_options.clone()));
 
         let file = std::fs::File::open(file_path)?;
         let reader = std::io::BufReader::new(file);
@@ -201,10 +201,10 @@ impl CodeListFactory {
     /// 
     /// # Errors
     /// * `CodeListError::InvalidFilePath` - If the file path is not a csv or json file
-    pub fn load_codelist_from_file(&self, file_path: &str) -> Result<CodeList, CodeListError> {
+    pub fn load_codelist_from_file(&self, name: String, file_path: &str) -> Result<CodeList, CodeListError> {
         match std::path::Path::new(file_path).extension() {
-            Some(ext) if ext == "csv" => self.load_codelist_from_csv_file(file_path),
-            Some(ext) if ext == "json" => self.load_codelist_from_json_file(file_path),
+            Some(ext) if ext == "csv" => self.load_codelist_from_csv_file(name, file_path),
+            Some(ext) if ext == "json" => self.load_codelist_from_json_file(name, file_path),
             _ => Err(CodeListError::invalid_file_path(format!("File path {} is not a csv or json file", file_path))),
         }
     }
@@ -231,7 +231,8 @@ impl CodeListFactory {
             if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
                 if ext == "csv" || ext == "json" {
                     if let Some(path_str) = path.to_str() {
-                        if let Ok(codelist) = self.load_codelist_from_file(path_str) {
+                        // TODO: We are using the file name as the codelist name, but this may not be the best approach
+                        if let Ok(codelist) = self.load_codelist_from_file(folder_path.to_string(), path_str) {
                             codelists.push(codelist);
                         }
                     }
@@ -333,7 +334,7 @@ mod tests {
     // Helper function to create test metadata
     fn create_test_metadata() -> Metadata {
         Metadata {
-            provenance: Provenance::new(MetadataSource::ManuallyCreated, None),
+            provenance: Provenance::new(Source::ManuallyCreated, None),
             categorisation_and_usage: CategorisationAndUsage::new(None, None, None),
             purpose_and_context: PurposeAndContext::new(None, None, None),
             validation_and_review: ValidationAndReview::new(None, None, None, None, None),
@@ -348,8 +349,8 @@ mod tests {
     }
 
     fn create_test_codelists(factory: &CodeListFactory) -> Result<Vec<CodeList>, CodeListError> {
-        let codelist1 = CodeList::new(CodeListType::ICD10, factory.metadata.clone(), Some(factory.codelist_options.clone()));
-        let codelist2 = CodeList::new(CodeListType::ICD10, factory.metadata.clone(), Some(factory.codelist_options.clone()));
+        let codelist1 = CodeList::new("test_codelist".to_string(), CodeListType::ICD10, factory.metadata.clone(), Some(factory.codelist_options.clone()));
+        let codelist2 = CodeList::new("test_codelist2".to_string(), CodeListType::ICD10, factory.metadata.clone(), Some(factory.codelist_options.clone()));
         let codelists = factory.load_codelists(Some(vec![codelist1, codelist2]), None)?;
         Ok(codelists)
     }
@@ -388,7 +389,7 @@ C03,Test Disease 3,Description 3";
         fs::write(&file_path, csv_content)?;
         let factory = create_test_codelist_factory();
         
-        let result = factory.load_codelist_from_csv_file(file_path_str);
+        let result = factory.load_codelist_from_csv_file("test_codelist".to_string(), file_path_str);
         assert!(result.is_ok());
         let codelist = result?;
         assert_eq!(codelist.entries.len(), 3);
@@ -426,7 +427,7 @@ C03,Test Disease 3,Description 3";
         fs::write(&file_path, csv_content)?;
         let factory = create_test_codelist_factory();
         
-        let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
+        let error = factory.load_codelist_from_csv_file("test_codelist".to_string(), file_path_str).unwrap_err();
 
         assert!(matches!(error, CodeListError::InvalidTermField { msg } if msg == format!("Column not found with the header: {}", factory.codelist_options.term_column_name)));
 
@@ -450,7 +451,7 @@ C03,Test Disease 3,Description 3";
         fs::write(&file_path, csv_content)?;
         let factory = create_test_codelist_factory();
         
-        let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
+        let error = factory.load_codelist_from_csv_file("test_codelist".to_string(), file_path_str).unwrap_err();
 
         assert!(matches!(error, CodeListError::InvalidCodeField { msg } if msg == format!("Column not found with the header: {}", factory.codelist_options.code_column_name)));
 
@@ -473,7 +474,7 @@ B02,Test Disease 2,Description 2";
         fs::write(&file_path, csv_content)?;
         let factory = create_test_codelist_factory();
         
-        let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
+        let error = factory.load_codelist_from_csv_file("test_codelist".to_string(), file_path_str).unwrap_err();
     assert!(matches!(error, CodeListError::EmptyCode { msg } if msg.contains("Empty code field in row: 2")));
 
         Ok(())
@@ -495,7 +496,7 @@ B02,Test Disease 2,Description 2";
         fs::write(&file_path, csv_content)?;
         let factory = create_test_codelist_factory();
         
-        let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
+        let error = factory.load_codelist_from_csv_file("test_codelist".to_string(), file_path_str).unwrap_err();
         assert!(matches!(error, CodeListError::EmptyTerm { msg } if msg.contains("Empty term field in row: 2")));
 
         Ok(())
@@ -516,7 +517,7 @@ A01,A01,Test Disease 1";
         fs::write(&file_path, csv_content)?;
         let factory = create_test_codelist_factory();
         
-        let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
+        let error = factory.load_codelist_from_csv_file("test_codelist".to_string(), file_path_str).unwrap_err();
         assert!(matches!(error, CodeListError::InvalidCodeField { msg } if msg.contains("Multiple columns found with the header: code")));
 
         Ok(())
@@ -537,7 +538,7 @@ A01,Test Disease 1,Test Disease 1";
         fs::write(&file_path, csv_content)?;
         let factory = create_test_codelist_factory();
         
-        let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
+        let error = factory.load_codelist_from_csv_file("test_codelist".to_string(), file_path_str).unwrap_err();
         assert!(matches!(error, CodeListError::InvalidTermField { msg } if msg.contains("Multiple columns found with the header: term")));
 
         Ok(())
@@ -558,7 +559,7 @@ A01";  // Missing columns
         fs::write(&file_path, csv_content)?;
         let factory = create_test_codelist_factory();
         
-        let error = factory.load_codelist_from_csv_file(file_path_str).unwrap_err();
+        let error = factory.load_codelist_from_csv_file("test_codelist".to_string(), file_path_str).unwrap_err();
         assert!(matches!(error, CodeListError::CSVError(_)));
 
         Ok(())
@@ -581,7 +582,7 @@ A01";  // Missing columns
         fs::write(&file_path, json_content)?;
         let factory = create_test_codelist_factory();
         
-        let result = factory.load_codelist_from_json_file(file_path_str);
+        let result = factory.load_codelist_from_json_file("test_codelist".to_string(), file_path_str);
         assert!(result.is_ok());
         let codelist = result?;
         assert_eq!(codelist.entries.len(), 3);
@@ -614,7 +615,7 @@ A01";  // Missing columns
         ]"#;
         fs::write(&file_path, json_content)?;
         
-        let error = factory.load_codelist_from_json_file(file_path_str).unwrap_err();
+        let error = factory.load_codelist_from_json_file("test_codelist".to_string(), file_path_str).unwrap_err();
         assert!(matches!(error, CodeListError::InvalidCodeField { msg } if msg.contains(format!("No {} field found in json file at index: 0", factory.codelist_options.code_field_name).as_str())));
 
         Ok(())
@@ -632,7 +633,7 @@ A01";  // Missing columns
         ]"#;
         fs::write(&file_path, json_content)?;
 
-        let error = factory.load_codelist_from_json_file(file_path_str).unwrap_err();
+        let error = factory.load_codelist_from_json_file("test_codelist".to_string(), file_path_str).unwrap_err();
         assert!(matches!(error, CodeListError::InvalidTermField { msg } if msg.contains(format!("No {} field found in json file at index: 0", factory.codelist_options.term_field_name).as_str())));
 
         Ok(())
@@ -652,7 +653,7 @@ A01";  // Missing columns
         ]"#;
         fs::write(&file_path, json_content)?;
 
-        let error = factory.load_codelist_from_json_file(file_path_str).unwrap_err();
+        let error = factory.load_codelist_from_json_file("test_codelist".to_string(), file_path_str).unwrap_err();
         assert!(matches!(error, CodeListError::EmptyCode { msg } if msg.contains("Empty code at index: 0")));
 
         Ok(())
@@ -672,7 +673,7 @@ A01";  // Missing columns
         ]"#;
         fs::write(&file_path, json_content)?;
 
-        let error = factory.load_codelist_from_json_file(file_path_str).unwrap_err();
+        let error = factory.load_codelist_from_json_file("test_codelist".to_string(), file_path_str).unwrap_err();
         assert!(matches!(error, CodeListError::EmptyTerm { msg } if msg.contains("Empty term at index: 0")));
 
         Ok(())
@@ -692,7 +693,7 @@ A01";  // Missing columns
         ]"#;
         fs::write(&file_path, json_content)?;
 
-        let error = factory.load_codelist_from_json_file(file_path_str).unwrap_err();
+        let error = factory.load_codelist_from_json_file("test_codelist".to_string(), file_path_str).unwrap_err();
         assert!(matches!(error, CodeListError::InvalidCodeType { msg } if msg.contains("Code at index 0 must be a string or number")));
 
         Ok(())
@@ -712,7 +713,7 @@ A01";  // Missing columns
         ]"#;
         fs::write(&file_path, json_content)?;
 
-        let error = factory.load_codelist_from_json_file(file_path_str).unwrap_err();
+        let error = factory.load_codelist_from_json_file("test_codelist".to_string(), file_path_str).unwrap_err();
         assert!(matches!(error, CodeListError::InvalidTermType { msg } if msg.contains("Term at index 0 must be a string")));
 
         Ok(())
@@ -728,7 +729,7 @@ A01";  // Missing columns
         let json_content = r#"{"code": "A01", "term": "Test Disease 1"}"#;
         fs::write(&file_path, json_content)?;
 
-        let error = factory.load_codelist_from_json_file(file_path_str).unwrap_err();
+        let error = factory.load_codelist_from_json_file("test_codelist".to_string(), file_path_str).unwrap_err();
         println!("Error: {}", error);
         assert!(matches!(error, CodeListError::InvalidInput { msg } if msg.contains("JSON must be an array of objects")));
 
@@ -738,7 +739,7 @@ A01";  // Missing columns
     #[test]
     fn test_load_codelist_from_file_invalid_file_path() -> Result<(), CodeListError> {
         let factory = create_test_codelist_factory();
-        let error = factory.load_codelist_from_file("invalid_file_path").unwrap_err();
+        let error = factory.load_codelist_from_file("invalid codelist".to_string(),"invalid_file_path").unwrap_err();
         assert!(matches!(error, CodeListError::InvalidFilePath { msg } if msg.contains("File path invalid_file_path is not a csv or json file")));
         Ok(())
     }
@@ -759,7 +760,7 @@ B02,Test Disease 2,Description 2";
         fs::write(&file_path, csv_content)?;
         let factory = create_test_codelist_factory();
         
-        let result = factory.load_codelist_from_file(file_path_str);
+        let result = factory.load_codelist_from_file("test_codelist".to_string(), file_path_str);
         assert!(result.is_ok());
         let codelist = result?;
         assert_eq!(codelist.entries.len(), 2);
@@ -872,8 +873,8 @@ B02,Test Disease 2,Description 2";
         fs::write(&json_path, json_content)?;
 
         // create test codelists
-        let codelist1 = CodeList::new(CodeListType::ICD10, factory.metadata.clone(), Some(factory.codelist_options.clone()));
-        let codelist2 = CodeList::new(CodeListType::ICD10, factory.metadata.clone(), Some(factory.codelist_options.clone()));
+        let codelist1 = CodeList::new("test_codelist".to_string(), CodeListType::ICD10, factory.metadata.clone(), Some(factory.codelist_options.clone()));
+        let codelist2 = CodeList::new("test_codelist2".to_string(), CodeListType::ICD10, factory.metadata.clone(), Some(factory.codelist_options.clone()));
         let codelists = factory.load_codelists(Some(vec![codelist1, codelist2]), None)?;
 
         // load codelists from folder

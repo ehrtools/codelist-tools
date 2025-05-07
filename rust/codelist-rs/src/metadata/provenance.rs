@@ -5,12 +5,12 @@ use chrono::Utc;
 use std::collections::HashSet;
 use serde::{Deserialize, Serialize};
 // Internal imports
-use crate::metadata::metadata_source::MetadataSource;
+use crate::metadata::metadata_source::Source;
 use crate::errors::CodeListError;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Provenance {
-    pub source: MetadataSource,          
+    pub source: Source,
     pub created_date: chrono::DateTime<Utc>,
     pub last_modified_date: chrono::DateTime<Utc>,
     pub contributors: HashSet<String>,
@@ -21,11 +21,11 @@ impl Provenance {
     ///
     /// # Arguments
     /// * `source` - The source of the codelist
-    pub fn new(source: MetadataSource, contributors: Option<HashSet<String>>) -> Provenance {
+    pub fn new(source: Source, contributors: Option<HashSet<String>>) -> Provenance {
         Self {
             source,
-            created_date: chrono::Utc::now(),
-            last_modified_date: chrono::Utc::now(),
+            created_date: Utc::now(),
+            last_modified_date: Utc::now(),
             contributors: contributors.unwrap_or_default(),
         }
     }
@@ -35,7 +35,7 @@ impl Provenance {
     /// # Arguments
     /// * `self` - The provenance to update
     pub fn update_last_modified_date(&mut self) {
-        self.last_modified_date = chrono::Utc::now();
+        self.last_modified_date = Utc::now();
     }
 
     /// Add a contributor to the provenance
@@ -72,19 +72,19 @@ mod tests {
     }
 
     fn create_test_provenance_no_contributors() -> Provenance {
-        Provenance::new(MetadataSource::LoadedFromFile, None)
+        Provenance::new(Source::LoadedFromFile, None)
     }
 
     fn create_test_provenance_with_contributors() -> Provenance {
         let mut contributors = HashSet::new();
         contributors.insert("Example Contributor".to_string());
-        Provenance::new(MetadataSource::LoadedFromFile, Some(contributors))
+        Provenance::new(Source::LoadedFromFile, Some(contributors))
     }
 
     #[test]
     fn test_new_provenance_no_contributors() {
         let provenance = create_test_provenance_no_contributors();
-        assert_eq!(provenance.source, MetadataSource::LoadedFromFile);
+        assert_eq!(provenance.source, Source::LoadedFromFile);
         let time_difference = get_time_difference(provenance.created_date);
         assert!(time_difference < 1000);
         let time_difference = get_time_difference(provenance.last_modified_date);
@@ -95,7 +95,7 @@ mod tests {
     #[test]
     fn test_new_provenance_with_contributors() {
         let provenance = create_test_provenance_with_contributors();
-        assert_eq!(provenance.source, MetadataSource::LoadedFromFile);
+        assert_eq!(provenance.source, Source::LoadedFromFile);
         assert_eq!(provenance.contributors, HashSet::from(["Example Contributor".to_string()]));
         let time_difference = get_time_difference(provenance.created_date);
         assert!(time_difference < 1000);

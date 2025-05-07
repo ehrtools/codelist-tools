@@ -5,7 +5,6 @@ use std::collections::HashSet;
 use std::io::Write;
 use serde::{Serialize, Deserialize};
 use csv::Writer;
-use chrono::Utc;
 // Internal imports
 use crate::types::CodeListType;
 use crate::code_entry::CodeEntry;
@@ -15,6 +14,7 @@ use crate::codelist_options::CodeListOptions;
 use crate::metadata::provenance::Provenance;
 use crate::metadata::categorisation_and_usage::CategorisationAndUsage;
 use crate::metadata::purpose_and_context::PurposeAndContext;
+use chrono::Utc;
 use crate::metadata::validation_and_review::ValidationAndReview;
 
 /// Struct to represent a codelist
@@ -27,6 +27,7 @@ use crate::metadata::validation_and_review::ValidationAndReview;
 /// * `codelist_options` - Options for the codelist
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct CodeList {
+    pub name: String,
     pub entries: HashSet<CodeEntry>,
     pub codelist_type: CodeListType,
     pub metadata: Metadata,
@@ -47,8 +48,9 @@ impl CodeList {
     ///
     /// # Returns
     /// * `CodeList` - The new CodeList
-    pub fn new(codelist_type: CodeListType, metadata: Metadata, options: Option<CodeListOptions>) -> Self {
+    pub fn new(name: String, codelist_type: CodeListType, metadata: Metadata, options: Option<CodeListOptions>) -> Self {
         CodeList {
+            name,
             entries: HashSet::new(),
             codelist_type,
             metadata,
@@ -191,13 +193,13 @@ impl CodeList {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::metadata::MetadataSource;
+    use crate::metadata::Source;
     use tempfile::TempDir;
 
     // Helper function to create test metadata
     fn create_test_metadata() -> Metadata {
         Metadata {
-            provenance: Provenance::new(MetadataSource::ManuallyCreated, None),
+            provenance: Provenance::new(Source::ManuallyCreated, None),
             categorisation_and_usage: CategorisationAndUsage::new(None, None, None),
             purpose_and_context: PurposeAndContext::new(None, None, None),
             validation_and_review: ValidationAndReview::new(None, None, None, None, None),
@@ -206,7 +208,7 @@ mod tests {
 
     // Helper function to create a test codelist with two entries, default options and test metadata
     fn create_test_codelist() -> Result<CodeList, CodeListError> {
-        let mut codelist = CodeList::new(CodeListType::ICD10, create_test_metadata(), None);
+        let mut codelist = CodeList::new("test_codelist".to_string(), CodeListType::ICD10, create_test_metadata(), None);
         codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
         codelist.add_entry("A48.51".to_string(), "Infant botulism".to_string(), Some("test comment".to_string()))?;
         
@@ -229,7 +231,7 @@ mod tests {
         assert_eq!(codelist.logs.len(), 0);
         assert_eq!(&codelist.codelist_options, &CodeListOptions::default());
 
-        assert_eq!(codelist.metadata().provenance.source, MetadataSource::ManuallyCreated);
+        assert_eq!(codelist.metadata().provenance.source, Source::ManuallyCreated);
         let time_difference = get_time_difference(codelist.metadata().provenance.created_date);
         assert!(time_difference < 1000);
         let time_difference = get_time_difference(codelist.metadata().provenance.last_modified_date);
@@ -267,7 +269,7 @@ mod tests {
             term_field_name: "test_term".to_string(),
         };
         
-        let codelist = CodeList::new(CodeListType::ICD10, metadata, Some(codelist_options));
+        let codelist = CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata, Some(codelist_options));
 
         assert_eq!(codelist.codelist_options.allow_duplicates, true);
         assert_eq!(codelist.codelist_options.truncate_to_3_digits, true);
@@ -277,7 +279,7 @@ mod tests {
         assert_eq!(codelist.codelist_options.code_column_name, "test_code".to_string());
         assert_eq!(codelist.codelist_options.term_column_name, "test_term".to_string());
 
-        assert_eq!(codelist.metadata().provenance.source, MetadataSource::ManuallyCreated);
+        assert_eq!(codelist.metadata().provenance.source, Source::ManuallyCreated);
         let time_difference = get_time_difference(codelist.metadata().provenance.created_date);
         assert!(time_difference < 1000);
         let time_difference = get_time_difference(codelist.metadata().provenance.last_modified_date);
@@ -307,7 +309,7 @@ mod tests {
 
     #[test]
     fn test_duplicate_entries() -> Result<(), CodeListError> {
-        let mut codelist = CodeList::new(CodeListType::ICD10, create_test_metadata(), None);
+        let mut codelist = CodeList::new("test_codelist".to_string(), CodeListType::ICD10, create_test_metadata(), None);
             codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
             codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
 
@@ -466,13 +468,13 @@ mod tests {
         Ok(())
     }
 
-#[test]
-    fn test_get_metadata() {
-        let metadata = create_test_metadata();
-        let codelist = CodeList::new(CodeListType::ICD10, metadata.clone(), None);
+    #[test]
+        fn test_get_metadata() {
+            let metadata = create_test_metadata();
+            let codelist = CodeList::new("test".to_string(), CodeListType::ICD10, metadata.clone(), None);
 
-        assert_eq!(codelist.metadata(), &metadata);
-    }
+            assert_eq!(codelist.metadata(), &metadata);
+        }
 }
 
 // add tests for get code, get code term entries

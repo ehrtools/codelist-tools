@@ -9,7 +9,7 @@ pub mod metadata;
 pub use metadata::Metadata;
 pub use provenance::Provenance;
 pub use categorisation_and_usage::CategorisationAndUsage;
-pub use metadata_source::MetadataSource;
+pub use metadata_source::Source;
 pub use purpose_and_context::PurposeAndContext;
 pub use validation_and_review::ValidationAndReview;
 
