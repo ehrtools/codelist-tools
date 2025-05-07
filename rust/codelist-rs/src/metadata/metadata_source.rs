@@ -1,6 +1,8 @@
 //! This file contains the metadata source enum and its implementation
 
 // External imports
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 
 // Internal imports
@@ -15,26 +17,11 @@ pub enum Source {
 }
 
 impl Source {
-    /// Converts the metadata source to a string
-    /// 
-    /// # Arguments
-    /// * `self` - The metadata source to convert to a string
-    /// 
-    /// # Returns
-    /// * `String` - The string representation of the metadata source
-    pub fn to_string(&self) -> String {
-        match self {
-            Source::LoadedFromFile => "Loaded from file".to_string(),
-            Source::MappedFromAnotherCodelist => "Mapped from another codelist".to_string(),
-            Source::ManuallyCreated => "Manually created".to_string(),
-        }
-    }
-
     /// Converts a string to a metadata source
-    /// 
+    ///
     /// # Arguments
     /// * `s` - The string to convert to a metadata source
-    /// 
+    ///
     /// # Returns
     /// * `Source` - The metadata source
     pub fn from_string(s: &str) -> Result<Source, CodeListError> {
@@ -44,6 +31,17 @@ impl Source {
             "Manually created" => Source::ManuallyCreated,
             _ => return Err(CodeListError::invalid_metadata_source(s)),
         })
+    }
+}
+
+impl fmt::Display for Source {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            Source::LoadedFromFile => "Loaded from file",
+            Source::MappedFromAnotherCodelist => "Mapped from another codelist",
+            Source::ManuallyCreated => "Manually created",
+        };
+        write!(f, "{s}")
     }
 }
 
@@ -61,7 +59,10 @@ mod tests {
     #[test]
     fn test_metadata_source_from_string() -> Result<(), CodeListError> {
         assert_eq!(Source::from_string("Loaded from file")?, Source::LoadedFromFile);
-        assert_eq!(Source::from_string("Mapped from another codelist")?, Source::MappedFromAnotherCodelist);
+        assert_eq!(
+            Source::from_string("Mapped from another codelist")?,
+            Source::MappedFromAnotherCodelist
+        );
         assert_eq!(Source::from_string("Manually created")?, Source::ManuallyCreated);
         let error = Source::from_string("Metadata source").unwrap_err();
         let error_string = error.to_string();

@@ -1,12 +1,14 @@
 //! This file contains the provenance struct and its implementation
 
 // External imports
-use chrono::Utc;
 use std::collections::HashSet;
+
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
+
 // Internal imports
-use crate::metadata::metadata_source::Source;
 use crate::errors::CodeListError;
+use crate::metadata::metadata_source::Source;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Provenance {
@@ -65,7 +67,8 @@ impl Provenance {
 mod tests {
     use super::*;
 
-    // helper function to get the time difference between the current time and the given date
+    // helper function to get the time difference between the current time and the
+    // given date
     fn get_time_difference(date: chrono::DateTime<Utc>) -> i64 {
         let now = chrono::Utc::now();
         (date - now).num_milliseconds().abs()

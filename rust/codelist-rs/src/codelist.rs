@@ -1,21 +1,17 @@
 //! This file contains the core functionality for the codelist
 
 // External imports
-use std::collections::HashSet;
-use std::io::Write;
-use serde::{Serialize, Deserialize};
+use std::{collections::HashSet, io::Write};
+
 use csv::Writer;
+use serde::{Deserialize, Serialize};
+
 // Internal imports
-use crate::types::CodeListType;
 use crate::code_entry::CodeEntry;
-use crate::metadata::Metadata;
-use crate::errors::CodeListError;
-use crate::codelist_options::CodeListOptions;
-use crate::metadata::provenance::Provenance;
-use crate::metadata::categorisation_and_usage::CategorisationAndUsage;
-use crate::metadata::purpose_and_context::PurposeAndContext;
-use chrono::Utc;
-use crate::metadata::validation_and_review::ValidationAndReview;
+use crate::{
+    codelist_options::CodeListOptions, errors::CodeListError, metadata::Metadata,
+    types::CodeListType,
+};
 
 /// Struct to represent a codelist
 ///
@@ -35,7 +31,6 @@ pub struct CodeList {
     pub codelist_options: CodeListOptions,
 }
 
-
 impl CodeList {
     /// Create a new CodeList
     ///
@@ -48,7 +43,12 @@ impl CodeList {
     ///
     /// # Returns
     /// * `CodeList` - The new CodeList
-    pub fn new(name: String, codelist_type: CodeListType, metadata: Metadata, options: Option<CodeListOptions>) -> Self {
+    pub fn new(
+        name: String,
+        codelist_type: CodeListType,
+        metadata: Metadata,
+        options: Option<CodeListOptions>,
+    ) -> Self {
         CodeList {
             name,
             entries: HashSet::new(),
@@ -72,7 +72,12 @@ impl CodeList {
     /// # Arguments
     /// * `code` - The code to add
     /// * `term` - The term to add
-    pub fn add_entry(&mut self, code: String, term: String, comment: Option<String>) -> Result<(), CodeListError> {
+    pub fn add_entry(
+        &mut self,
+        code: String,
+        term: String,
+        comment: Option<String>,
+    ) -> Result<(), CodeListError> {
         let entry = CodeEntry::new(code, term, comment)?;
         self.entries.insert(entry);
         Ok(())
@@ -85,9 +90,11 @@ impl CodeList {
     /// * `term` - The term to remove
     ///
     /// # Errors
-    /// * `CodeListError::EntryNotFound` - If the entry to be removed is not found
+    /// * `CodeListError::EntryNotFound` - If the entry to be removed is not
+    ///   found
     pub fn remove_entry(&mut self, code: &str, term: &str) -> Result<(), CodeListError> {
-        let removed = self.entries.remove(&CodeEntry::new(code.to_string(), term.to_string(), None)?);
+        let removed =
+            self.entries.remove(&CodeEntry::new(code.to_string(), term.to_string(), None)?);
         if removed {
             Ok(())
         } else {
@@ -95,7 +102,8 @@ impl CodeList {
         }
     }
 
-    /// Get the full entries of the codelist, including code, term and optional comment
+    /// Get the full entries of the codelist, including code, term and optional
+    /// comment
     ///
     /// # Returns
     /// * `&HashSet<CodeEntry>` - The entries of the codelist
@@ -108,10 +116,7 @@ impl CodeList {
     /// # Returns
     /// * `HashSet<(&String, &String)>` - The codes and terms of the codelist
     pub fn code_term_entries(&self) -> HashSet<(&String, &String)> {
-        self.entries
-            .iter()
-            .map(|entry| (&entry.code, &entry.term))
-            .collect()
+        self.entries.iter().map(|entry| (&entry.code, &entry.term)).collect()
     }
 
     /// Get the codes of the codelist
@@ -119,10 +124,7 @@ impl CodeList {
     /// # Returns
     /// * `HashSet<&String>` - The codes of the codelist
     pub fn codes(&self) -> HashSet<&String> {
-        self.entries
-            .iter()
-            .map(|entry| &entry.code)
-            .collect()
+        self.entries.iter().map(|entry| &entry.code).collect()
     }
 
     /// Save the codelist entries to a CSV file
@@ -135,9 +137,12 @@ impl CodeList {
     pub fn save_to_csv(&self, file_path: &str) -> std::result::Result<(), CodeListError> {
         let mut wtr = Writer::from_path(file_path)?;
         // use column names from options
-        wtr.write_record(&[&self.codelist_options.code_field_name, &self.codelist_options.term_field_name])?;
+        wtr.write_record([
+            &self.codelist_options.code_field_name,
+            &self.codelist_options.term_field_name,
+        ])?;
         for entry in self.entries.iter() {
-            wtr.write_record(&[&entry.code, &entry.term])?;
+            wtr.write_record([&entry.code, &entry.term])?;
         }
         wtr.flush()?;
         Ok(())
@@ -166,7 +171,7 @@ impl CodeList {
     pub fn save_log(&self, file_path: &str) -> std::result::Result<(), CodeListError> {
         let mut file = std::fs::File::create(file_path)?;
         for log in &self.logs {
-            writeln!(file, "{}", log)?;
+            writeln!(file, "{log}")?;
         }
         Ok(())
     }
@@ -186,15 +191,17 @@ impl CodeList {
     pub fn metadata(&self) -> &Metadata {
         &self.metadata
     }
-
 }
-
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::metadata::Source;
+    use chrono::Utc;
     use tempfile::TempDir;
+
+    use super::*;
+    use crate::metadata::{
+        CategorisationAndUsage, Provenance, PurposeAndContext, Source, ValidationAndReview,
+    };
 
     // Helper function to create test metadata
     fn create_test_metadata() -> Metadata {
@@ -206,21 +213,31 @@ mod tests {
         }
     }
 
-    // Helper function to create a test codelist with two entries, default options and test metadata
+    // Helper function to create a test codelist with two entries, default options
+    // and test metadata
     fn create_test_codelist() -> Result<CodeList, CodeListError> {
-        let mut codelist = CodeList::new("test_codelist".to_string(), CodeListType::ICD10, create_test_metadata(), None);
+        let mut codelist = CodeList::new(
+            "test_codelist".to_string(),
+            CodeListType::ICD10,
+            create_test_metadata(),
+            None,
+        );
         codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
-        codelist.add_entry("A48.51".to_string(), "Infant botulism".to_string(), Some("test comment".to_string()))?;
-        
+        codelist.add_entry(
+            "A48.51".to_string(),
+            "Infant botulism".to_string(),
+            Some("test comment".to_string()),
+        )?;
+
         Ok(codelist)
     }
 
-    // helper function to get the time difference between the current time and the given date
+    // helper function to get the time difference between the current time and the
+    // given date
     fn get_time_difference(date: chrono::DateTime<Utc>) -> i64 {
         let now = chrono::Utc::now();
         (date - now).num_milliseconds().abs()
     }
-
 
     #[test]
     fn test_create_codelist_default_options() -> Result<(), CodeListError> {
@@ -234,7 +251,8 @@ mod tests {
         assert_eq!(codelist.metadata().provenance.source, Source::ManuallyCreated);
         let time_difference = get_time_difference(codelist.metadata().provenance.created_date);
         assert!(time_difference < 1000);
-        let time_difference = get_time_difference(codelist.metadata().provenance.last_modified_date);
+        let time_difference =
+            get_time_difference(codelist.metadata().provenance.last_modified_date);
         assert!(time_difference < 1000);
         assert_eq!(codelist.metadata().provenance.contributors, HashSet::new());
 
@@ -246,7 +264,7 @@ mod tests {
         assert_eq!(codelist.metadata().purpose_and_context.target_audience, None);
         assert_eq!(codelist.metadata().purpose_and_context.use_context, None);
 
-        assert_eq!(codelist.metadata().validation_and_review.reviewed, false);
+        assert!(!codelist.metadata().validation_and_review.reviewed);
         assert_eq!(codelist.metadata().validation_and_review.reviewer, None);
         assert_eq!(codelist.metadata().validation_and_review.review_date, None);
         assert_eq!(codelist.metadata().validation_and_review.status, None);
@@ -268,12 +286,17 @@ mod tests {
             code_field_name: "test_code".to_string(),
             term_field_name: "test_term".to_string(),
         };
-        
-        let codelist = CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata, Some(codelist_options));
 
-        assert_eq!(codelist.codelist_options.allow_duplicates, true);
-        assert_eq!(codelist.codelist_options.truncate_to_3_digits, true);
-        assert_eq!(codelist.codelist_options.add_x_codes, true);
+        let codelist = CodeList::new(
+            "test_codelist".to_string(),
+            CodeListType::ICD10,
+            metadata,
+            Some(codelist_options),
+        );
+
+        assert!(codelist.codelist_options.allow_duplicates);
+        assert!(codelist.codelist_options.truncate_to_3_digits);
+        assert!(codelist.codelist_options.add_x_codes);
         assert_eq!(codelist.codelist_options.code_field_name, "test_code".to_string());
         assert_eq!(codelist.codelist_options.term_field_name, "test_term".to_string());
         assert_eq!(codelist.codelist_options.code_column_name, "test_code".to_string());
@@ -282,7 +305,8 @@ mod tests {
         assert_eq!(codelist.metadata().provenance.source, Source::ManuallyCreated);
         let time_difference = get_time_difference(codelist.metadata().provenance.created_date);
         assert!(time_difference < 1000);
-        let time_difference = get_time_difference(codelist.metadata().provenance.last_modified_date);
+        let time_difference =
+            get_time_difference(codelist.metadata().provenance.last_modified_date);
         assert!(time_difference < 1000);
         assert_eq!(codelist.metadata().provenance.contributors, HashSet::new());
 
@@ -294,12 +318,12 @@ mod tests {
         assert_eq!(codelist.metadata().purpose_and_context.target_audience, None);
         assert_eq!(codelist.metadata().purpose_and_context.use_context, None);
 
-        assert_eq!(codelist.metadata().validation_and_review.reviewed, false);
+        assert!(!codelist.metadata().validation_and_review.reviewed);
         assert_eq!(codelist.metadata().validation_and_review.reviewer, None);
         assert_eq!(codelist.metadata().validation_and_review.review_date, None);
         assert_eq!(codelist.metadata().validation_and_review.status, None);
         assert_eq!(codelist.metadata().validation_and_review.validation_notes, None);
-       
+
         assert_eq!(codelist.codelist_type(), &CodeListType::ICD10);
         assert_eq!(codelist.full_entries().len(), 0);
         assert_eq!(codelist.logs.len(), 0);
@@ -309,9 +333,14 @@ mod tests {
 
     #[test]
     fn test_duplicate_entries() -> Result<(), CodeListError> {
-        let mut codelist = CodeList::new("test_codelist".to_string(), CodeListType::ICD10, create_test_metadata(), None);
-            codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
-            codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
+        let mut codelist = CodeList::new(
+            "test_codelist".to_string(),
+            CodeListType::ICD10,
+            create_test_metadata(),
+            None,
+        );
+        codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
+        codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
 
         assert_eq!(codelist.full_entries().len(), 1);
 
@@ -331,8 +360,12 @@ mod tests {
     fn test_add_entry() -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
         let entry1 = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
-        let entry2 = CodeEntry::new("A48.51".to_string(), "Infant botulism".to_string(), Some("test comment".to_string()))?;
-    
+        let entry2 = CodeEntry::new(
+            "A48.51".to_string(),
+            "Infant botulism".to_string(),
+            Some("test comment".to_string()),
+        )?;
+
         assert_eq!(codelist.full_entries().len(), 2);
         assert!(codelist.full_entries().contains(&entry1));
         assert!(codelist.full_entries().contains(&entry2));
@@ -368,7 +401,11 @@ mod tests {
         let codelist = create_test_codelist()?;
         let entries = codelist.full_entries();
         let test_entry_1 = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
-        let test_entry_2 = CodeEntry::new("A48.51".to_string(), "Infant botulism".to_string(), Some("test comment".to_string()))?;
+        let test_entry_2 = CodeEntry::new(
+            "A48.51".to_string(),
+            "Infant botulism".to_string(),
+            Some("test comment".to_string()),
+        )?;
 
         assert_eq!(entries.len(), 2);
         assert!(entries.contains(&test_entry_1));
@@ -381,7 +418,7 @@ mod tests {
     fn test_get_code_term_entries() -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
         let entries = codelist.code_term_entries();
-        
+
         let test_entry_1 = (&"R65.2".to_string(), &"Severe sepsis".to_string());
         let test_entry_2 = (&"A48.51".to_string(), &"Infant botulism".to_string());
 
@@ -396,7 +433,7 @@ mod tests {
     fn test_get_codes() -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
         let codes = codelist.codes();
-        
+
         let test_code_1 = "R65.2".to_string();
         let test_code_2 = "A48.51".to_string();
 
@@ -411,7 +448,9 @@ mod tests {
     fn test_save_to_csv() -> Result<(), CodeListError> {
         let temp_dir = TempDir::new()?;
         let file_path = temp_dir.path().join("test.csv");
-        let file_path_str = file_path.to_str().ok_or(CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
+        let file_path_str = file_path
+            .to_str()
+            .ok_or(CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
         let codelist = create_test_codelist()?;
         codelist.save_to_csv(file_path_str)?;
         let content = std::fs::read_to_string(file_path_str)?;
@@ -424,12 +463,14 @@ mod tests {
 
         Ok(())
     }
-    
+
     #[test]
     fn test_save_to_json() -> Result<(), CodeListError> {
         let temp_dir = TempDir::new()?;
         let file_path = temp_dir.path().join("test_codelist.json");
-        let file_path_str = file_path.to_str().ok_or(CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
+        let file_path_str = file_path
+            .to_str()
+            .ok_or(CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
 
         let original_codelist = create_test_codelist()?;
         original_codelist.save_to_json(file_path_str)?;
@@ -450,13 +491,15 @@ mod tests {
         assert_eq!(codelist.logs[0], "Test log message".to_string());
 
         Ok(())
-    }   
+    }
 
     #[test]
     fn test_save_log() -> Result<(), CodeListError> {
         let temp_dir = TempDir::new()?;
         let file_path = temp_dir.path().join("test.log");
-        let file_path_str = file_path.to_str().ok_or(CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
+        let file_path_str = file_path
+            .to_str()
+            .ok_or(CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
 
         let mut codelist = create_test_codelist()?;
         codelist.add_log("Test log message".to_string());
@@ -469,14 +512,13 @@ mod tests {
     }
 
     #[test]
-        fn test_get_metadata() {
-            let metadata = create_test_metadata();
-            let codelist = CodeList::new("test".to_string(), CodeListType::ICD10, metadata.clone(), None);
+    fn test_get_metadata() {
+        let metadata = create_test_metadata();
+        let codelist =
+            CodeList::new("test".to_string(), CodeListType::ICD10, metadata.clone(), None);
 
-            assert_eq!(codelist.metadata(), &metadata);
-        }
+        assert_eq!(codelist.metadata(), &metadata);
+    }
 }
 
 // add tests for get code, get code term entries
-
-

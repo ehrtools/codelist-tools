@@ -1,11 +1,11 @@
 //! This file contains the validation and review struct and its implementation
 
 // External imports
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 // Internal imports
 use crate::errors::CodeListError;
-use chrono::{DateTime, Utc};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ValidationAndReview {
@@ -20,7 +20,8 @@ impl ValidationAndReview {
     /// Create new ValidationAndReview
     ///
     /// # Arguments
-    /// * `reviewed` - Whether the codelist has been reviewed (default is false if value of None is provided)
+    /// * `reviewed` - Whether the codelist has been reviewed (default is false
+    ///   if value of None is provided)
     /// * `reviewer` - The reviewer of the codelist
     /// * `review_date` - The date of the review
     /// * `status` - The status of the codelist
@@ -28,7 +29,13 @@ impl ValidationAndReview {
     ///
     /// # Returns
     /// * `ValidationAndReview` - The new ValidationAndReview
-    pub fn new(reviewed: Option<bool>, reviewer: Option<String>, review_date: Option<DateTime<Utc>>, status: Option<String>, validation_notes: Option<String>) -> Self {
+    pub fn new(
+        reviewed: Option<bool>,
+        reviewer: Option<String>,
+        review_date: Option<DateTime<Utc>>,
+        status: Option<String>,
+        validation_notes: Option<String>,
+    ) -> Self {
         Self {
             reviewed: reviewed.unwrap_or(false),
             reviewer,
@@ -52,12 +59,15 @@ impl ValidationAndReview {
     /// * `reviewer` - The reviewer of the codelist
     ///
     /// # Returns
-    /// * `Result<(), CodeListError>` - unit type or error if reviewer already exists
+    /// * `Result<(), CodeListError>` - unit type or error if reviewer already
+    ///   exists
     pub fn add_reviewer(&mut self, reviewer: String) -> Result<(), CodeListError> {
         if self.reviewer.is_none() {
             self.reviewer = Some(reviewer);
         } else {
-            return Err(CodeListError::reviewer_already_exists("Unable to add reviewer. Please use update reviewer instead."));
+            return Err(CodeListError::reviewer_already_exists(
+                "Unable to add reviewer. Please use update reviewer instead.",
+            ));
         }
         Ok(())
     }
@@ -68,12 +78,15 @@ impl ValidationAndReview {
     /// * `reviewer` - The reviewer of the codelist
     ///
     /// # Returns
-    /// * `Result<(), CodeListError>` - unit type or error if reviewer does not exist
+    /// * `Result<(), CodeListError>` - unit type or error if reviewer does not
+    ///   exist
     pub fn update_reviewer(&mut self, reviewer: String) -> Result<(), CodeListError> {
         if self.reviewer.is_some() {
             self.reviewer = Some(reviewer);
         } else {
-            return Err(CodeListError::reviewer_does_not_exist("Unable to update reviewer. Please use add reviewer instead."));
+            return Err(CodeListError::reviewer_does_not_exist(
+                "Unable to update reviewer. Please use add reviewer instead.",
+            ));
         }
         Ok(())
     }
@@ -81,7 +94,8 @@ impl ValidationAndReview {
     /// Remove the reviewer
     ///
     /// # Returns
-    /// * `Result<(), CodeListError>` - unit type or error if reviewer does not exist
+    /// * `Result<(), CodeListError>` - unit type or error if reviewer does not
+    ///   exist
     pub fn remove_reviewer(&mut self) -> Result<(), CodeListError> {
         if self.reviewer.is_some() {
             self.reviewer = None;
@@ -97,12 +111,15 @@ impl ValidationAndReview {
     /// * `review_date` - The date of the review
     ///
     /// # Returns
-    /// * `Result<(), CodeListError>` - unit type or error if review date already exists
+    /// * `Result<(), CodeListError>` - unit type or error if review date
+    ///   already exists
     pub fn add_review_date(&mut self, review_date: DateTime<Utc>) -> Result<(), CodeListError> {
         if self.review_date.is_none() {
             self.review_date = Some(review_date);
         } else {
-            return Err(CodeListError::review_date_already_exists("Unable to add review date. Please use update review date instead."));
+            return Err(CodeListError::review_date_already_exists(
+                "Unable to add review date. Please use update review date instead.",
+            ));
         }
         Ok(())
     }
@@ -113,12 +130,15 @@ impl ValidationAndReview {
     /// * `review_date` - The date of the review
     ///
     /// # Returns
-    /// * `Result<(), CodeListError>` - unit type or error if review date does not exist
+    /// * `Result<(), CodeListError>` - unit type or error if review date does
+    ///   not exist
     pub fn update_review_date(&mut self, review_date: DateTime<Utc>) -> Result<(), CodeListError> {
         if self.review_date.is_some() {
             self.review_date = Some(review_date);
         } else {
-            return Err(CodeListError::review_date_does_not_exist("Unable to update review date. Please use add review date instead."));
+            return Err(CodeListError::review_date_does_not_exist(
+                "Unable to update review date. Please use add review date instead.",
+            ));
         }
         Ok(())
     }
@@ -126,7 +146,8 @@ impl ValidationAndReview {
     /// Remove the review date
     ///
     /// # Returns
-    /// * `Result<(), CodeListError>` - unit type or error if review date does not exist
+    /// * `Result<(), CodeListError>` - unit type or error if review date does
+    ///   not exist
     pub fn remove_review_date(&mut self) -> Result<(), CodeListError> {
         if self.review_date.is_some() {
             self.review_date = None;
@@ -142,12 +163,15 @@ impl ValidationAndReview {
     /// * `status` - The status of the codelist
     ///
     /// # Returns
-    /// * `Result<(), CodeListError>` - unit type or error if status already exists
+    /// * `Result<(), CodeListError>` - unit type or error if status already
+    ///   exists
     pub fn add_status(&mut self, status: String) -> Result<(), CodeListError> {
         if self.status.is_none() {
             self.status = Some(status);
         } else {
-            return Err(CodeListError::status_already_exists("Unable to add status. Please use update status instead."));
+            return Err(CodeListError::status_already_exists(
+                "Unable to add status. Please use update status instead.",
+            ));
         }
         Ok(())
     }
@@ -158,12 +182,15 @@ impl ValidationAndReview {
     /// * `status` - The status of the codelist
     ///
     /// # Returns
-    /// * `Result<(), CodeListError>` - unit type or error if status does not exist
+    /// * `Result<(), CodeListError>` - unit type or error if status does not
+    ///   exist
     pub fn update_status(&mut self, status: String) -> Result<(), CodeListError> {
         if self.status.is_some() {
             self.status = Some(status);
         } else {
-            return Err(CodeListError::status_does_not_exist("Unable to update status. Please use add status instead."));
+            return Err(CodeListError::status_does_not_exist(
+                "Unable to update status. Please use add status instead.",
+            ));
         }
         Ok(())
     }
@@ -171,7 +198,8 @@ impl ValidationAndReview {
     /// Remove the status
     ///
     /// # Returns
-    /// * `Result<(), CodeListError>` - unit type or error if status does not exist
+    /// * `Result<(), CodeListError>` - unit type or error if status does not
+    ///   exist
     pub fn remove_status(&mut self) -> Result<(), CodeListError> {
         if self.status.is_some() {
             self.status = None;
@@ -192,12 +220,15 @@ impl ValidationAndReview {
     /// * `validation_notes` - The notes of the validation
     ///
     /// # Returns
-    /// * `Result<(), CodeListError>` - unit type or error if validation notes already exist
+    /// * `Result<(), CodeListError>` - unit type or error if validation notes
+    ///   already exist
     pub fn add_validation_notes(&mut self, validation_notes: String) -> Result<(), CodeListError> {
         if self.validation_notes.is_none() {
             self.validation_notes = Some(validation_notes);
         } else {
-            return Err(CodeListError::validation_notes_already_exist("Unable to add validation notes. Please use update validation notes instead."));
+            return Err(CodeListError::validation_notes_already_exist(
+                "Unable to add validation notes. Please use update validation notes instead.",
+            ));
         }
         Ok(())
     }
@@ -208,8 +239,12 @@ impl ValidationAndReview {
     /// * `validation_notes` - The notes of the validation
     ///
     /// # Returns
-    /// * `Result<(), CodeListError>` - unit type or error if validation notes does not exist
-    pub fn update_validation_notes(&mut self, validation_notes: String) -> Result<(), CodeListError> {
+    /// * `Result<(), CodeListError>` - unit type or error if validation notes
+    ///   does not exist
+    pub fn update_validation_notes(
+        &mut self,
+        validation_notes: String,
+    ) -> Result<(), CodeListError> {
         if let Some(existing) = &mut self.validation_notes {
             existing.push('\n');
             existing.push_str(&validation_notes);
@@ -221,16 +256,18 @@ impl ValidationAndReview {
         }
     }
 
-
     /// Remove the validation notes
     ///
     /// # Returns
-    /// * `Result<(), CodeListError>` - unit type or error if validation notes does not exist
+    /// * `Result<(), CodeListError>` - unit type or error if validation notes
+    ///   does not exist
     pub fn remove_validation_notes(&mut self) -> Result<(), CodeListError> {
         if self.validation_notes.is_some() {
             self.validation_notes = None;
         } else {
-            return Err(CodeListError::validation_notes_do_not_exist("Unable to remove validation notes."));
+            return Err(CodeListError::validation_notes_do_not_exist(
+                "Unable to remove validation notes.",
+            ));
         }
         Ok(())
     }
@@ -242,14 +279,21 @@ mod tests {
 
     // helper function to create a test validation and review
     fn test_validation_and_review_all_params_are_some_or_true() -> ValidationAndReview {
-        ValidationAndReview::new(Some(true), Some("Reviewer".to_string()), Some(chrono::Utc::now()), Some("Status".to_string()), Some("Validation Notes".to_string()))
+        ValidationAndReview::new(
+            Some(true),
+            Some("Reviewer".to_string()),
+            Some(chrono::Utc::now()),
+            Some("Status".to_string()),
+            Some("Validation Notes".to_string()),
+        )
     }
 
     fn test_validation_and_review_all_params_are_none() -> ValidationAndReview {
         ValidationAndReview::new(None, None, None, None, None)
     }
 
-    // helper function to get the time difference between the current time and the given date
+    // helper function to get the time difference between the current time and the
+    // given date
     fn get_time_difference(date: chrono::DateTime<Utc>) -> i64 {
         let now = chrono::Utc::now();
         (date - now).num_milliseconds().abs()
@@ -258,7 +302,7 @@ mod tests {
     #[test]
     fn test_new() {
         let validation_and_review = test_validation_and_review_all_params_are_some_or_true();
-        assert_eq!(validation_and_review.reviewed, true);
+        assert!(validation_and_review.reviewed);
         assert_eq!(validation_and_review.reviewer, Some("Reviewer".to_string()));
         let time_difference = get_time_difference(validation_and_review.review_date.unwrap());
         assert!(time_difference < 1000);
@@ -269,9 +313,9 @@ mod tests {
     #[test]
     fn test_update_reviewed() {
         let mut validation_and_review = test_validation_and_review_all_params_are_some_or_true();
-        assert_eq!(validation_and_review.reviewed, true);
+        assert!(validation_and_review.reviewed);
         validation_and_review.update_reviewed(false);
-        assert_eq!(validation_and_review.reviewed, false);
+        assert!(!validation_and_review.reviewed);
     }
 
     #[test]
@@ -288,7 +332,10 @@ mod tests {
         let mut validation_and_review = test_validation_and_review_all_params_are_some_or_true();
         let error = validation_and_review.add_reviewer("Reviewer".to_string()).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Reviewer already exists: Unable to add reviewer. Please use update reviewer instead.");
+        assert_eq!(
+            error_string,
+            "Reviewer already exists: Unable to add reviewer. Please use update reviewer instead."
+        );
         Ok(())
     }
 
@@ -306,7 +353,10 @@ mod tests {
         let mut validation_and_review = test_validation_and_review_all_params_are_none();
         let error = validation_and_review.update_reviewer("Reviewer".to_string()).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Reviewer does not exist: Unable to update reviewer. Please use add reviewer instead.");
+        assert_eq!(
+            error_string,
+            "Reviewer does not exist: Unable to update reviewer. Please use add reviewer instead."
+        );
         Ok(())
     }
 
@@ -334,8 +384,7 @@ mod tests {
         assert_eq!(validation_and_review.review_date, None);
         validation_and_review.add_review_date(chrono::Utc::now())?;
         let time_difference = get_time_difference(
-            validation_and_review.review_date
-                .ok_or(CodeListError::review_date_is_none())?
+            validation_and_review.review_date.ok_or(CodeListError::review_date_is_none())?,
         );
         assert!(time_difference < 1000);
         Ok(())
@@ -403,7 +452,10 @@ mod tests {
         let mut validation_and_review = test_validation_and_review_all_params_are_some_or_true();
         let error = validation_and_review.add_status("Status".to_string()).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Status already exists: Unable to add status. Please use update status instead.");
+        assert_eq!(
+            error_string,
+            "Status already exists: Unable to add status. Please use update status instead."
+        );
         Ok(())
     }
 
@@ -421,7 +473,10 @@ mod tests {
         let mut validation_and_review = test_validation_and_review_all_params_are_none();
         let error = validation_and_review.update_status("Status".to_string()).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Status does not exist: Unable to update status. Please use add status instead.");
+        assert_eq!(
+            error_string,
+            "Status does not exist: Unable to update status. Please use add status instead."
+        );
         Ok(())
     }
 
@@ -455,7 +510,8 @@ mod tests {
     #[test]
     fn test_add_validation_notes_already_exists() -> Result<(), CodeListError> {
         let mut validation_and_review = test_validation_and_review_all_params_are_some_or_true();
-        let error = validation_and_review.add_validation_notes("Validation Notes".to_string()).unwrap_err();
+        let error =
+            validation_and_review.add_validation_notes("Validation Notes".to_string()).unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Validation notes already exist: Unable to add validation notes. Please use update validation notes instead.");
         Ok(())
@@ -466,14 +522,19 @@ mod tests {
         let mut validation_and_review = test_validation_and_review_all_params_are_some_or_true();
         assert_eq!(validation_and_review.validation_notes, Some("Validation Notes".to_string()));
         validation_and_review.update_validation_notes("Validation Notes 2".to_string())?;
-        assert_eq!(validation_and_review.validation_notes, Some("Validation Notes\nValidation Notes 2".to_string()));
+        assert_eq!(
+            validation_and_review.validation_notes,
+            Some("Validation Notes\nValidation Notes 2".to_string())
+        );
         Ok(())
     }
 
     #[test]
     fn test_update_validation_notes_does_not_exist() -> Result<(), CodeListError> {
         let mut validation_and_review = test_validation_and_review_all_params_are_none();
-        let error = validation_and_review.update_validation_notes("Validation Notes".to_string()).unwrap_err();
+        let error = validation_and_review
+            .update_validation_notes("Validation Notes".to_string())
+            .unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Validation notes do not exist: Unable to update validation notes. Please use add validation notes instead.");
         Ok(())
@@ -493,7 +554,10 @@ mod tests {
         let mut validation_and_review = test_validation_and_review_all_params_are_none();
         let error = validation_and_review.remove_validation_notes().unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Validation notes do not exist: Unable to remove validation notes.");
+        assert_eq!(
+            error_string,
+            "Validation notes do not exist: Unable to remove validation notes."
+        );
         Ok(())
     }
 }

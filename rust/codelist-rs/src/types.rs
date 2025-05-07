@@ -2,11 +2,11 @@
 
 /// External imports
 use std::str::FromStr;
-use serde::{Serialize, Deserialize};
+
+use serde::{Deserialize, Serialize};
 
 /// Internal imports
 use crate::errors::CodeListError;
-
 
 /// Enum to represent the different types of codelists
 ///
@@ -21,7 +21,6 @@ pub enum CodeListType {
     OPCS,
 }
 
-
 impl FromStr for CodeListType {
     type Err = CodeListError;
     /// Convert a string to a CodeListType
@@ -30,10 +29,12 @@ impl FromStr for CodeListType {
     /// * `s` - The string to convert to a CodeListType
     ///
     /// # Returns
-    /// * `Result<CodeListType, CodeListError>` - The CodeListType or a CodeListError
+    /// * `Result<CodeListType, CodeListError>` - The CodeListType or a
+    ///   CodeListError
     ///
     /// # Errors
-    /// * `CodeListError::InvalidCodeListType` - If the string is not a valid CodeListType
+    /// * `CodeListError::InvalidCodeListType` - If the string is not a valid
+    ///   CodeListType
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "icd10" => Ok(CodeListType::ICD10),
@@ -44,17 +45,18 @@ impl FromStr for CodeListType {
     }
 }
 
-impl ToString for CodeListType {
-    /// Convert a CodeListType to a string
-    ///
-    /// # Returns
-    /// * `String` - The string representation of the CodeListType
-    fn to_string(&self) -> String {
-        match self {
-            CodeListType::ICD10 => "ICD10".to_string(),
-            CodeListType::SNOMED => "SNOMED".to_string(),
-            CodeListType::OPCS => "OPCS".to_string(),
-        }
+use std::fmt;
+
+/// Implement `Display` for `CodeListType` so it automatically supports
+/// `to_string()`
+impl fmt::Display for CodeListType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            CodeListType::ICD10 => "ICD10",
+            CodeListType::SNOMED => "SNOMED",
+            CodeListType::OPCS => "OPCS",
+        };
+        write!(f, "{s}")
     }
 }
 
@@ -85,4 +87,3 @@ mod tests {
         assert_eq!(CodeListType::OPCS.to_string(), "OPCS");
     }
 }
-

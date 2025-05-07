@@ -1,8 +1,8 @@
 //! This file contains the Code Entry model
 //!
-//! A code entry is a pair of code and term. For example, in the ICD-10 codelist, the code
-//! is the ICD-10 code and the term is the description of the code. like 'B29.0' and
-//! 'Acute viral hepatitis C'.
+//! A code entry is a pair of code and term. For example, in the ICD-10
+//! codelist, the code is the ICD-10 code and the term is the description of the
+//! code. like 'B29.0' and 'Acute viral hepatitis C'.
 
 // External imports
 use serde::{Deserialize, Serialize};
@@ -40,8 +40,11 @@ impl CodeEntry {
     /// # Errors
     /// * `CodeListError::EmptyCode` - If the code is an empty string
     /// * `CodeListError::EmptyTerm` - If the term is an empty string
-    
-    pub fn new<T: Into<String>>(code: T, term: String, comment: Option<String>) -> Result<CodeEntry, CodeListError> {
+    pub fn new<T: Into<String>>(
+        code: T,
+        term: String,
+        comment: Option<String>,
+    ) -> Result<CodeEntry, CodeListError> {
         let code = code.into();
 
         if code.trim().is_empty() {
@@ -51,11 +54,7 @@ impl CodeEntry {
             return Err(CodeListError::empty_term("Empty term supplied"));
         }
 
-        Ok(CodeEntry {
-            code,
-            term,
-            comment,
-        })
+        Ok(CodeEntry { code, term, comment })
     }
 
     /// Add a comment to the code entry
@@ -67,7 +66,8 @@ impl CodeEntry {
     /// * `Result<(), CodeListError>`
     ///
     /// # Errors
-    /// * `CodeListError::CodeEntryCommentAlreadyExists` - If the comment already exists
+    /// * `CodeListError::CodeEntryCommentAlreadyExists` - If the comment
+    ///   already exists
     pub fn add_comment(&mut self, comment: String) -> Result<(), CodeListError> {
         if self.comment.is_none() {
             self.comment = Some(comment);
@@ -86,7 +86,8 @@ impl CodeEntry {
     /// * `Result<(), CodeListError>`
     ///
     /// # Errors
-    /// * `CodeListError::CodeEntryCommentDoesNotExist` - If the comment does not exist
+    /// * `CodeListError::CodeEntryCommentDoesNotExist` - If the comment does
+    ///   not exist
     pub fn update_comment(&mut self, comment: String) -> Result<(), CodeListError> {
         if let Some(_x) = &self.comment {
             self.comment = Some(comment);
@@ -102,7 +103,8 @@ impl CodeEntry {
     /// * `Result<(), CodeListError>`
     ///
     /// # Errors
-    /// * `CodeListError::CodeEntryCommentDoesNotExist` - If there is no comment to remove
+    /// * `CodeListError::CodeEntryCommentDoesNotExist` - If there is no comment
+    ///   to remove
     pub fn remove_comment(&mut self) -> Result<(), CodeListError> {
         if let Some(_x) = &self.comment {
             self.comment = None;
@@ -128,13 +130,16 @@ mod tests {
 
     #[test]
     fn test_creating_code_entry_with_comment() -> Result<(), CodeListError> {
-        let entry = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string(), Some("Test comment".to_string()))?;
+        let entry = CodeEntry::new(
+            "R65.2".to_string(),
+            "Severe sepsis".to_string(),
+            Some("Test comment".to_string()),
+        )?;
         assert_eq!(entry.code, "R65.2");
         assert_eq!(entry.term, "Severe sepsis");
         assert_eq!(entry.comment, Some("Test comment".to_string()));
         Ok(())
     }
-
 
     #[test]
     fn test_empty_code_returns_error() -> Result<(), CodeListError> {
@@ -179,7 +184,11 @@ mod tests {
 
     #[test]
     fn test_add_comment_when_comment_already_exists() -> Result<(), CodeListError> {
-        let mut entry = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string(), Some("test".to_string()))?;
+        let mut entry = CodeEntry::new(
+            "R65.2".to_string(),
+            "Severe sepsis".to_string(),
+            Some("test".to_string()),
+        )?;
         let comment = "Test comment";
         let error = entry.add_comment(comment.to_string()).unwrap_err();
         let error_string = error.to_string();
@@ -190,7 +199,11 @@ mod tests {
 
     #[test]
     fn test_update_comment_when_comment_exists() -> Result<(), CodeListError> {
-        let mut entry = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string(), Some("test".to_string()))?;
+        let mut entry = CodeEntry::new(
+            "R65.2".to_string(),
+            "Severe sepsis".to_string(),
+            Some("test".to_string()),
+        )?;
         let comment = "Test comment";
         let result = entry.update_comment(comment.to_string());
         assert!(result.is_ok());
@@ -210,7 +223,11 @@ mod tests {
 
     #[test]
     fn test_remove_comment_when_comment_exists() -> Result<(), CodeListError> {
-        let mut entry = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string(), Some("test".to_string()))?;
+        let mut entry = CodeEntry::new(
+            "R65.2".to_string(),
+            "Severe sepsis".to_string(),
+            Some("test".to_string()),
+        )?;
         let result = entry.remove_comment();
         assert!(result.is_ok());
         assert_eq!(entry.comment, None);

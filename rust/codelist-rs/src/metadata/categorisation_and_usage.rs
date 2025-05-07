@@ -1,8 +1,10 @@
-//! This file contains the categorisation and usage struct and its implementation
+//! This file contains the categorisation and usage struct and its
+//! implementation
 
 // External imports
-use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+
+use serde::{Deserialize, Serialize};
 
 // Internal imports
 use crate::errors::CodeListError;
@@ -24,12 +26,12 @@ impl CategorisationAndUsage {
     ///
     /// # Returns
     /// * `CategorisationAndUsage` - The new CategorisationAndUsage
-    pub fn new(tags: Option<HashSet<String>>, usage: Option<HashSet<String>>, license: Option<String>) -> Self {
-        Self {
-            tags: tags.unwrap_or_default(),
-            usage: usage.unwrap_or_default(),
-            license,
-        }
+    pub fn new(
+        tags: Option<HashSet<String>>,
+        usage: Option<HashSet<String>>,
+        license: Option<String>,
+    ) -> Self {
+        Self { tags: tags.unwrap_or_default(), usage: usage.unwrap_or_default(), license }
     }
 
     /// Add a tag to the categorisation and usage
@@ -40,7 +42,7 @@ impl CategorisationAndUsage {
     pub fn add_tag(&mut self, tag: String) {
         self.tags.insert(tag);
     }
-    
+
     /// Remove a tag from the categorisation and usage
     ///
     /// # Arguments
@@ -48,12 +50,13 @@ impl CategorisationAndUsage {
     /// * `tag` - The tag to remove
     ///
     /// # Returns
-    /// * `Result<(), CodeListError>` - Unit type if successful, or an error if the tag does not exist
+    /// * `Result<(), CodeListError>` - Unit type if successful, or an error if
+    ///   the tag does not exist
     pub fn remove_tag(&mut self, tag: String) -> Result<(), CodeListError> {
         if self.tags.remove(&tag) {
             Ok(())
         } else {
-            Err(CodeListError::tag_does_not_exist(format!("Unable to remove tag {}", tag)))
+            Err(CodeListError::tag_does_not_exist(format!("Unable to remove tag {tag}",)))
         }
     }
 
@@ -73,12 +76,13 @@ impl CategorisationAndUsage {
     /// * `usage` - The usage to remove
     ///
     /// # Returns
-    /// * `Result<(), CodeListError>` - The result of the operation, or an error if the usage does not exist
+    /// * `Result<(), CodeListError>` - The result of the operation, or an error
+    ///   if the usage does not exist
     pub fn remove_usage(&mut self, usage: String) -> Result<(), CodeListError> {
         if self.usage.remove(&usage) {
             Ok(())
         } else {
-            Err(CodeListError::usage_does_not_exist(format!("Unable to remove usage {}", usage)))
+            Err(CodeListError::usage_does_not_exist(format!("Unable to remove usage {usage}",)))
         }
     }
 
@@ -89,10 +93,13 @@ impl CategorisationAndUsage {
     /// * `license` - The license to add
     ///
     /// # Returns
-    /// * `Result<(), CodeListError>` - Unit type if successful, or an error if the license already exists
+    /// * `Result<(), CodeListError>` - Unit type if successful, or an error if
+    ///   the license already exists
     pub fn add_license(&mut self, license: String) -> Result<(), CodeListError> {
         if self.license.is_some() {
-            Err(CodeListError::license_already_exists(format!("Unable to add license {}. Please use update license instead.", license)))
+            Err(CodeListError::license_already_exists(format!(
+                "Unable to add license {license}. Please use update license instead.",
+            )))
         } else {
             self.license = Some(license);
             Ok(())
@@ -106,13 +113,16 @@ impl CategorisationAndUsage {
     /// * `license` - The license to update to
     ///
     /// # Returns
-    /// * `Result<(), CodeListError>` - Unit type if successful, or an error if the license does not exist
+    /// * `Result<(), CodeListError>` - Unit type if successful, or an error if
+    ///   the license does not exist
     pub fn update_license(&mut self, license: String) -> Result<(), CodeListError> {
         if self.license.is_some() {
             self.license = Some(license);
             Ok(())
         } else {
-            Err(CodeListError::license_does_not_exist(format!("Unable to update license {}. Please use add license instead.", license)))
+            Err(CodeListError::license_does_not_exist(format!(
+                "Unable to update license {license}. Please use add license instead.",
+            )))
         }
     }
 
@@ -122,28 +132,32 @@ impl CategorisationAndUsage {
     /// * `self` - The categorisation and usage to update
     ///
     /// # Returns
-    /// * `Result<(), CodeListError>` - Unit type if successful, or an error if the license does not exist
+    /// * `Result<(), CodeListError>` - Unit type if successful, or an error if
+    ///   the license does not exist
     pub fn remove_license(&mut self) -> Result<(), CodeListError> {
         if self.license.is_some() {
             self.license = None;
             Ok(())
         } else {
-            Err(CodeListError::license_does_not_exist(format!("Unable to remove license. Please use add license instead.")))
+            Err(CodeListError::license_does_not_exist(
+                "Unable to remove license. Please use add license instead.".to_string(),
+            ))
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    // Helper function to create a test categorisation and usage with all parameters set to None
+    // Helper function to create a test categorisation and usage with all parameters
+    // set to None
     fn test_categorisation_and_usage_all_none() -> CategorisationAndUsage {
         CategorisationAndUsage::new(None, None, None)
     }
 
-    /// Helper function to create a test categorisation and usage with all paramaters set to some value
+    /// Helper function to create a test categorisation and usage with all
+    /// paramaters set to some value
     fn test_categorisation_and_usage_all_some() -> CategorisationAndUsage {
         let mut tags = HashSet::new();
         tags.insert("tag1".to_string());
@@ -152,14 +166,19 @@ mod tests {
         usage.insert("usage1".to_string());
         usage.insert("usage2".to_string());
         CategorisationAndUsage::new(Some(tags), Some(usage), Some("license1".to_string()))
-        
     }
 
-    #[test] 
+    #[test]
     fn test_new() -> Result<(), CodeListError> {
         let categorisation_and_usage = test_categorisation_and_usage_all_some();
-        assert_eq!(categorisation_and_usage.tags, HashSet::from(["tag1".to_string(), "tag2".to_string()]));
-        assert_eq!(categorisation_and_usage.usage, HashSet::from(["usage1".to_string(), "usage2".to_string()]));
+        assert_eq!(
+            categorisation_and_usage.tags,
+            HashSet::from(["tag1".to_string(), "tag2".to_string()])
+        );
+        assert_eq!(
+            categorisation_and_usage.usage,
+            HashSet::from(["usage1".to_string(), "usage2".to_string()])
+        );
         assert_eq!(categorisation_and_usage.license, Some("license1".to_string()));
         Ok(())
     }
@@ -168,7 +187,10 @@ mod tests {
     fn test_add_tag() -> Result<(), CodeListError> {
         let mut categorisation_and_usage = test_categorisation_and_usage_all_some();
         categorisation_and_usage.add_tag("tag3".to_string());
-        assert_eq!(categorisation_and_usage.tags, HashSet::from(["tag1".to_string(), "tag2".to_string(), "tag3".to_string()]));
+        assert_eq!(
+            categorisation_and_usage.tags,
+            HashSet::from(["tag1".to_string(), "tag2".to_string(), "tag3".to_string()])
+        );
         Ok(())
     }
 
@@ -267,7 +289,10 @@ mod tests {
         let mut categorisation_and_usage = test_categorisation_and_usage_all_none();
         let error = categorisation_and_usage.remove_license().unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "License does not exist: Unable to remove license. Please use add license instead.");
+        assert_eq!(
+            error_string,
+            "License does not exist: Unable to remove license. Please use add license instead."
+        );
         Ok(())
     }
 }
