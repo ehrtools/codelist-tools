@@ -1,18 +1,37 @@
-/// This contains the bindings for the codelist-rs library at the level of the
-/// Python module.
+extern crate core;
 
-// External imports
 use pyo3::prelude::*;
 
 // Internal imports
-pub mod codelists;
-use codelists::codelist::PyCodeList;
+pub mod codelist;
+pub mod factory;
+
+use codelist::PyCodeList;
+use factory::PyCodeListFactory;
 
 
-/// Python module for the codelist-rs library
+/// Top-level Python module `codelists_rs`
 #[pymodule]
-fn codelist(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_class::<PyCodeList>()?;
+fn codelists_rs(py: Python, m: &PyModule) -> PyResult<()> {
+    // Add codelist submodule
+    let codelist_module = PyModule::new(py, "codelist")?;
+    codelist_module.add_class::<PyCodeList>()?;
+    m.add_submodule(codelist_module)?;
+
+    // Register it globally under the full dotted path
+    py.import("sys")?
+        .getattr("modules")?
+        .set_item("codelists_rs.codelist", codelist_module)?;
+
+    // Add factory submodule
+    let factory_module = PyModule::new(py, "factory")?;
+    factory_module.add_class::<PyCodeListFactory>()?;
+    m.add_submodule(factory_module)?;
+
+    // Register it globally under the full dotted path
+    py.import("sys")?
+        .getattr("modules")?
+        .set_item("codelists_rs.factory", factory_module)?;
+
     Ok(())
 }
- 

@@ -1,12 +1,14 @@
 [package]
-name = "codelist-py"
+name = "codelists_rs"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "codelist"
+name = "codelists_rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.20.0", features = ["extension-module"] }
+pyo3 = { version = "0.20.3", features = ["extension-module"] }
+chrono = { version = "0.4.39", features = ["serde"] }
 codelist-rs = { path = "../../rust/codelist-rs" }
+codelist-validator-rs = { path = "../../rust/codelist-validator-rs" }

@@ -1,6 +1,6 @@
 //! This file contains the codelist options for the codelist
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// Struct to represent a codelist options
 ///
@@ -13,13 +13,12 @@ use serde::{Serialize, Deserialize};
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct CodeListOptions {
     pub allow_duplicates: bool,
-    pub truncate_to_3_digits: bool,  // ICD10 specific only
+    pub truncate_to_3_digits: bool, // ICD10 specific only
     pub add_x_codes: bool,
     pub code_column_name: String, // for csv files
-    pub term_column_name: String, // for csv files          
-    pub code_field_name: String, // for json files
-    pub term_field_name: String, // for json files
-
+    pub term_column_name: String, // for csv files
+    pub code_field_name: String,  // for json files
+    pub term_field_name: String,  // for json files
 }
 
 impl Default for CodeListOptions {
@@ -47,9 +46,9 @@ mod tests {
     #[test]
     fn test_default() {
         let options = CodeListOptions::default();
-        assert_eq!(options.allow_duplicates, false);
-        assert_eq!(options.truncate_to_3_digits, false);
-        assert_eq!(options.add_x_codes, false);
+        assert!(!options.allow_duplicates);
+        assert!(!options.truncate_to_3_digits);
+        assert!(!options.add_x_codes);
         assert_eq!(options.code_column_name, "code");
         assert_eq!(options.term_column_name, "term");
         assert_eq!(options.code_field_name, "code");
