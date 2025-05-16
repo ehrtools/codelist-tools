@@ -51,9 +51,9 @@ impl Metadata {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashSet;
-    use indexmap::IndexSet;
     use chrono::Utc;
+    use indexmap::IndexSet;
+    use std::collections::HashSet;
 
     use super::*;
     use crate::{errors::CodeListError, metadata::Source};
