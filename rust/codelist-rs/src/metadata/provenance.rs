@@ -2,8 +2,8 @@
 
 // External imports
 use chrono::Utc;
-use serde::{Deserialize, Serialize};
 use indexmap::IndexSet;
+use serde::{Deserialize, Serialize};
 
 // Internal imports
 use crate::errors::CodeListError;

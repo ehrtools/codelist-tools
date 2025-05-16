@@ -1,8 +1,8 @@
 //! This file contains the metadata struct and its implementation
 
 // External imports
-use serde::{Deserialize, Serialize};
 use indexmap::IndexSet;
+use serde::{Deserialize, Serialize};
 // Internal imports
 use crate::metadata::categorisation_and_usage::CategorisationAndUsage;
 use crate::metadata::{

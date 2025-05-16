@@ -1,10 +1,10 @@
 //! This file contains the core functionality for the codelist
 
 // External imports
-use std::{collections::HashSet, io::Write};
-use indexmap::IndexSet;
 use csv::Writer;
+use indexmap::IndexSet;
 use serde::{Deserialize, Serialize};
+use std::{collections::HashSet, io::Write};
 
 // Internal imports
 use crate::code_entry::CodeEntry;
