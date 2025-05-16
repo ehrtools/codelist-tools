@@ -12,3 +12,4 @@ pyo3 = { version = "0.20.3", features = ["extension-module"] }
 chrono = { version = "0.4.39", features = ["serde"] }
 codelist-rs = { path = "../../rust/codelist-rs" }
 codelist-validator-rs = { path = "../../rust/codelist-validator-rs" }
+indexmap = "2.9.0"
