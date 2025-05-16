@@ -1,10 +1,9 @@
 //! This file contains the provenance struct and its implementation
 
 // External imports
-use std::collections::HashSet;
-
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
+use indexmap::IndexSet;
 
 // Internal imports
 use crate::errors::CodeListError;
@@ -15,7 +14,7 @@ pub struct Provenance {
     pub source: Source,
     pub created_date: chrono::DateTime<Utc>,
     pub last_modified_date: chrono::DateTime<Utc>,
-    pub contributors: HashSet<String>,
+    pub contributors: IndexSet<String>,
 }
 
 impl Provenance {
@@ -23,7 +22,7 @@ impl Provenance {
     ///
     /// # Arguments
     /// * `source` - The source of the codelist
-    pub fn new(source: Source, contributors: Option<HashSet<String>>) -> Provenance {
+    pub fn new(source: Source, contributors: Option<IndexSet<String>>) -> Provenance {
         Self {
             source,
             created_date: Utc::now(),
@@ -55,7 +54,7 @@ impl Provenance {
     /// * `self` - The provenance to update
     /// * `contributor` - The contributor to remove
     pub fn remove_contributor(&mut self, contributor: String) -> Result<(), CodeListError> {
-        if self.contributors.remove(&contributor) {
+        if self.contributors.shift_remove(&contributor) {
             Ok(())
         } else {
             Err(CodeListError::contributor_not_found(contributor))
@@ -79,7 +78,7 @@ mod tests {
     }
 
     fn create_test_provenance_with_contributors() -> Provenance {
-        let mut contributors = HashSet::new();
+        let mut contributors = IndexSet::new();
         contributors.insert("Example Contributor".to_string());
         Provenance::new(Source::LoadedFromFile, Some(contributors))
     }
@@ -92,14 +91,14 @@ mod tests {
         assert!(time_difference < 1000);
         let time_difference = get_time_difference(provenance.last_modified_date);
         assert!(time_difference < 1000);
-        assert_eq!(provenance.contributors, HashSet::new());
+        assert_eq!(provenance.contributors, IndexSet::new());
     }
 
     #[test]
     fn test_new_provenance_with_contributors() {
         let provenance = create_test_provenance_with_contributors();
         assert_eq!(provenance.source, Source::LoadedFromFile);
-        assert_eq!(provenance.contributors, HashSet::from(["Example Contributor".to_string()]));
+        assert_eq!(provenance.contributors, IndexSet::from(["Example Contributor".to_string()]));
         let time_difference = get_time_difference(provenance.created_date);
         assert!(time_difference < 1000);
         let time_difference = get_time_difference(provenance.last_modified_date);
@@ -118,7 +117,7 @@ mod tests {
     fn test_add_contributor() {
         let mut provenance = create_test_provenance_no_contributors();
         provenance.add_contributor("Example Contributor".to_string());
-        assert_eq!(provenance.contributors, HashSet::from(["Example Contributor".to_string()]));
+        assert_eq!(provenance.contributors, IndexSet::from(["Example Contributor".to_string()]));
     }
 
     #[test]
@@ -126,7 +125,7 @@ mod tests {
         let mut provenance = create_test_provenance_with_contributors();
         provenance.add_contributor("Example Contributor".to_string());
         provenance.remove_contributor("Example Contributor".to_string())?;
-        assert_eq!(provenance.contributors, HashSet::new());
+        assert_eq!(provenance.contributors, IndexSet::new());
         Ok(())
     }
 

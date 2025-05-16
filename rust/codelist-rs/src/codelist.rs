@@ -2,7 +2,7 @@
 
 // External imports
 use std::{collections::HashSet, io::Write};
-
+use indexmap::IndexSet;
 use csv::Writer;
 use serde::{Deserialize, Serialize};
 
@@ -254,7 +254,7 @@ mod tests {
         let time_difference =
             get_time_difference(codelist.metadata().provenance.last_modified_date);
         assert!(time_difference < 1000);
-        assert_eq!(codelist.metadata().provenance.contributors, HashSet::new());
+        assert_eq!(codelist.metadata().provenance.contributors, IndexSet::new());
 
         assert_eq!(codelist.metadata().categorisation_and_usage.tags, HashSet::new());
         assert_eq!(codelist.metadata().categorisation_and_usage.usage, HashSet::new());
@@ -308,7 +308,7 @@ mod tests {
         let time_difference =
             get_time_difference(codelist.metadata().provenance.last_modified_date);
         assert!(time_difference < 1000);
-        assert_eq!(codelist.metadata().provenance.contributors, HashSet::new());
+        assert_eq!(codelist.metadata().provenance.contributors, IndexSet::new());
 
         assert_eq!(codelist.metadata().categorisation_and_usage.tags, HashSet::new());
         assert_eq!(codelist.metadata().categorisation_and_usage.usage, HashSet::new());
