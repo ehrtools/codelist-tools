@@ -1,7 +1,6 @@
 //! This file contains the metadata struct and its implementation
 
 // External imports
-use indexmap::IndexSet;
 use serde::{Deserialize, Serialize};
 // Internal imports
 use crate::metadata::categorisation_and_usage::CategorisationAndUsage;
@@ -53,7 +52,7 @@ impl Metadata {
 #[cfg(test)]
 mod tests {
     use std::collections::HashSet;
-
+    use indexmap::IndexSet;
     use chrono::Utc;
 
     use super::*;

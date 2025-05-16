@@ -2,7 +2,6 @@
 
 // External imports
 use csv::Writer;
-use indexmap::IndexSet;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, io::Write};
 
@@ -196,6 +195,7 @@ impl CodeList {
 #[cfg(test)]
 mod tests {
     use chrono::Utc;
+    use indexmap::IndexSet;
     use tempfile::TempDir;
 
     use super::*;
