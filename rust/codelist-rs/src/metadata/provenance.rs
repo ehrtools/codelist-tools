@@ -1,4 +1,6 @@
 //! This file contains the provenance struct and its implementation
+//!
+//! Note: Contributors are maintained in their original insertion order using IndexSet.
 
 // External imports
 use chrono::Utc;
@@ -135,5 +137,44 @@ mod tests {
         let error = provenance.remove_contributor("Example Contributor".to_string()).unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Contributor Example Contributor not found");
+    }
+
+    #[test]
+    fn test_contributors_order_is_maintained() -> Result<(), CodeListError> {
+        let mut provenance = create_test_provenance_no_contributors();
+
+        provenance.add_contributor("Example1".to_string());
+        {
+            let mut iter = provenance.contributors.iter();
+            assert_eq!(iter.next(), Some(&"Example1".to_string()));
+            assert_eq!(iter.next(), None);
+        }
+
+        provenance.add_contributor("Example2".to_string());
+        {
+            let mut iter = provenance.contributors.iter();
+            assert_eq!(iter.next(), Some(&"Example1".to_string()));
+            assert_eq!(iter.next(), Some(&"Example2".to_string()));
+            assert_eq!(iter.next(), None);
+        }
+
+        provenance.add_contributor("Example3".to_string());
+        {
+            let mut iter = provenance.contributors.iter();
+            assert_eq!(iter.next(), Some(&"Example1".to_string()));
+            assert_eq!(iter.next(), Some(&"Example2".to_string()));
+            assert_eq!(iter.next(), Some(&"Example3".to_string()));
+            assert_eq!(iter.next(), None);
+        }
+
+        provenance.remove_contributor("Example2".to_string())?;
+        {
+            let mut iter = provenance.contributors.iter();
+            assert_eq!(iter.next(), Some(&"Example1".to_string()));
+            assert_eq!(iter.next(), Some(&"Example3".to_string()));
+            assert_eq!(iter.next(), None);
+        }
+
+        Ok(())
     }
 }
