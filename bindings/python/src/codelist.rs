@@ -6,6 +6,7 @@ use pyo3::prelude::*;
 use pyo3::types::{PyDict, PySet};
 use pyo3::{PyErr, PyResult};
 use pyo3::exceptions::PyValueError;
+use indexmap::IndexSet;
 
 // Internal imports
 use codelist_rs::codelist::CodeList;
@@ -55,12 +56,12 @@ impl PyCodeList {
         let source = Source::from_string(source).map_err(|_| {
             PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid source: {}", source))
         })?;
-        // convert authors vec to HashSet
+        // convert authors vec to IndexSet
         let authors_set = authors
             .map(|authors| {
                 authors
                     .into_iter()
-                    .collect::<std::collections::HashSet<String>>()
+                    .collect::<IndexSet<String>>()
             })
             .unwrap_or_default();
         let provenance = Provenance::new(source, Some(authors_set));

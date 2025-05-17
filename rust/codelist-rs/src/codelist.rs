@@ -1,10 +1,9 @@
 //! This file contains the core functionality for the codelist
 
 // External imports
-use std::{collections::HashSet, io::Write};
-
 use csv::Writer;
 use serde::{Deserialize, Serialize};
+use std::{collections::HashSet, io::Write};
 
 // Internal imports
 use crate::code_entry::CodeEntry;
@@ -196,6 +195,7 @@ impl CodeList {
 #[cfg(test)]
 mod tests {
     use chrono::Utc;
+    use indexmap::IndexSet;
     use tempfile::TempDir;
 
     use super::*;
@@ -254,7 +254,7 @@ mod tests {
         let time_difference =
             get_time_difference(codelist.metadata().provenance.last_modified_date);
         assert!(time_difference < 1000);
-        assert_eq!(codelist.metadata().provenance.contributors, HashSet::new());
+        assert_eq!(codelist.metadata().provenance.contributors, IndexSet::new());
 
         assert_eq!(codelist.metadata().categorisation_and_usage.tags, HashSet::new());
         assert_eq!(codelist.metadata().categorisation_and_usage.usage, HashSet::new());
@@ -308,7 +308,7 @@ mod tests {
         let time_difference =
             get_time_difference(codelist.metadata().provenance.last_modified_date);
         assert!(time_difference < 1000);
-        assert_eq!(codelist.metadata().provenance.contributors, HashSet::new());
+        assert_eq!(codelist.metadata().provenance.contributors, IndexSet::new());
 
         assert_eq!(codelist.metadata().categorisation_and_usage.tags, HashSet::new());
         assert_eq!(codelist.metadata().categorisation_and_usage.usage, HashSet::new());
