@@ -190,6 +190,82 @@ impl CodeList {
     pub fn metadata(&self) -> &Metadata {
         &self.metadata
     }
+
+    /// Truncate codelist entries to 3 digits
+    ///
+    /// # Arguments
+    /// * `term_management` - How to handle ambiguous terms
+    ///
+    /// # Errors
+    /// * `CodeListError::CodeListNotTruncatable` - If the codelist is not ICD10
+    pub fn truncate_to_3_digits(
+        &mut self,
+        term_management: TermManagement,
+    ) -> Result<(), CodeListError> {
+        if !self.codelist_type.is_truncatable() {
+            return Err(CodeListError::CodeListNotTruncatable);
+        }
+
+        // Keep track of all the three-digit codes
+        let mut threes = self
+            .entries
+            .iter()
+            .filter(|entry| entry.code.len() == 3)
+            .map(|entry| entry.code.clone())
+            .collect::<HashSet<String>>();
+
+        let mut adds = vec![];
+        let mut removes = vec![];
+
+        for entry in self.entries.iter() {
+            // Codes of 3 or less will not be truncated
+            if entry.code.len() <= 3 {
+                continue;
+            }
+
+            // We'll remove this one later
+            removes.push(entry.clone());
+
+            // truncate the entry's code
+            let truncated_code = entry.code[..3].to_string();
+
+            // If we already have this one, then go on to the next one
+            if threes.contains(&truncated_code) {
+                continue;
+            }
+
+            // Note that we've seen it
+            threes.insert(truncated_code.clone());
+
+            // The term and comment that goes with it to make the
+            // entry depends on the term_management
+            let (term, comment) = match term_management {
+                TermManagement::First => {
+                    let comment = format!("{} truncated to 3 digits", &entry.code);
+                    (entry.term.clone(), Some(comment))
+                }
+            };
+
+            // We'll add this one later
+            adds.push(CodeEntry::new(truncated_code, term, comment)?);
+        }
+
+        // Add the new three-digit codes
+        for entry in &adds {
+            self.add_entry(entry.code.clone(), entry.term.clone(), entry.comment.clone())?;
+        }
+
+        // Remove the longer codes
+        for entry in &removes {
+            self.remove_entry(entry.code.as_str(), entry.term.as_str())?;
+        }
+
+        Ok(())
+    }
+}
+
+pub enum TermManagement {
+    First,
 }
 
 #[cfg(test)]
@@ -279,7 +355,6 @@ mod tests {
 
         let codelist_options = CodeListOptions {
             allow_duplicates: true,
-            truncate_to_3_digits: true,
             add_x_codes: true,
             code_column_name: "test_code".to_string(),
             term_column_name: "test_term".to_string(),
@@ -295,7 +370,6 @@ mod tests {
         );
 
         assert!(codelist.codelist_options.allow_duplicates);
-        assert!(codelist.codelist_options.truncate_to_3_digits);
         assert!(codelist.codelist_options.add_x_codes);
         assert_eq!(codelist.codelist_options.code_field_name, "test_code".to_string());
         assert_eq!(codelist.codelist_options.term_field_name, "test_term".to_string());
@@ -518,6 +592,76 @@ mod tests {
             CodeList::new("test".to_string(), CodeListType::ICD10, metadata.clone(), None);
 
         assert_eq!(codelist.metadata(), &metadata);
+    }
+
+    #[test]
+    fn test_truncate_to_3_digits_snomed() -> Result<(), CodeListError> {
+        let metadata = create_test_metadata();
+
+        let mut snomed_codelist = CodeList::new(
+            "test_codelist".to_string(),
+            CodeListType::SNOMED,
+            metadata.clone(),
+            None,
+        );
+
+        // A SNOMED list is not truncatable
+        assert!(snomed_codelist.truncate_to_3_digits(TermManagement::First).is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_truncate_to_3_digits_icd10_4_digits() -> Result<(), CodeListError> {
+        let metadata = create_test_metadata();
+
+        let mut expected_codelist =
+            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
+        expected_codelist.add_entry(
+            "B01".to_string(),
+            "Varicella pneumonia".to_string(),
+            Some("B012 truncated to 3 digits".to_string()),
+        )?;
+
+        let mut observed_codelist =
+            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
+
+        observed_codelist.add_entry("B012".to_string(), "Varicella pneumonia".to_string(), None)?;
+
+        observed_codelist.truncate_to_3_digits(TermManagement::First)?;
+
+        assert_eq!(observed_codelist, expected_codelist);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_truncate_to_3_digits_3_and_4_digits() -> Result<(), CodeListError> {
+        let metadata = create_test_metadata();
+
+        let mut expected_codelist =
+            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
+        expected_codelist.add_entry(
+            "B01".to_string(),
+            "Varicella [chickenpox]".to_string(),
+            None,
+        )?;
+
+        let mut observed_codelist =
+            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
+
+        observed_codelist.add_entry(
+            "B01".to_string(),
+            "Varicella [chickenpox]".to_string(),
+            None,
+        )?;
+        observed_codelist.add_entry("B012".to_string(), "Varicella pneumonia".to_string(), None)?;
+
+        observed_codelist.truncate_to_3_digits(TermManagement::First)?;
+
+        assert_eq!(observed_codelist, expected_codelist);
+
+        Ok(())
     }
 }
 

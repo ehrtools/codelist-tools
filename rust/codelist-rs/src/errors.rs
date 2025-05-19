@@ -123,4 +123,7 @@ pub enum CodeListError {
     #[error("CSV error: {0}")]
     #[construct(skip)]
     CSVError(#[from] csv::Error),
+
+    #[error("This CodeList cannot be truncated.")]
+    CodeListNotTruncatable,
 }
