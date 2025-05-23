@@ -203,7 +203,9 @@ impl CodeList {
         term_management: TermManagement,
     ) -> Result<(), CodeListError> {
         if !self.codelist_type.is_truncatable() {
-            return Err(CodeListError::CodeListNotTruncatable);
+            return Err(CodeListError::CodeListNotTruncatable {
+                codelist_type: self.codelist_type.to_string(),
+            });
         }
 
         // Keep track of all the three-digit codes
