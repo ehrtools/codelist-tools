@@ -264,6 +264,48 @@ impl CodeList {
 
         Ok(())
     }
+
+    /// Add X to codelist entries that are 3 digits
+    ///
+    /// # Errors
+    /// * `CodeListError::CodeListNotXAddable` - If the codelist is not ICD10
+    pub fn add_x_codes(&mut self) -> Result<(), CodeListError> {
+        if !self.codelist_type.is_x_addable() {
+            return Err(CodeListError::CodeListNotXAddable {
+                codelist_type: self.codelist_type.to_string(),
+            });
+        }
+
+        // Keep track of all the four-digit codes ending in X
+        let mut exes = self
+            .entries
+            .iter()
+            .filter(|entry| entry.code.len() == 4 && entry.code.ends_with("X"))
+            .map(|entry| entry.code.clone())
+            .collect::<HashSet<String>>();
+        
+        let mut adds = vec![];
+
+        for entry in &self.entries {
+            if entry.code.len() == 3 {
+                let mut new_code = entry.code.clone();
+                new_code.push('X');
+
+                if exes.contains(&new_code) {
+                    continue;
+                }
+
+                exes.insert(new_code.clone());
+                adds.push(CodeEntry::new(new_code, entry.term.clone(), entry.comment.clone())?);
+            }
+        }
+
+        for entry in &adds {
+            self.add_entry(entry.code.clone(), entry.term.clone(), entry.comment.clone())?;
+        }
+        
+        Ok(())
+    }
 }
 
 pub enum TermManagement {
@@ -663,6 +705,114 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn test_add_x_codes_icd10() -> Result<(), CodeListError> {
+        let metadata = create_test_metadata();
+
+        let mut expected_codelist =
+            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
+        expected_codelist.add_entry(
+            "A10".to_string(),
+            "Cholera".to_string(),
+            None,
+        )?;
+
+        expected_codelist.add_entry(
+            "B01".to_string(),
+            "Typhoid and paratyphoid fevers".to_string(),
+            None,
+        )?;
+
+        expected_codelist.add_entry(
+            "B0111".to_string(),
+            "TB".to_string(),
+            None,
+        )?;
+
+        let mut observed_codelist = expected_codelist.clone();
+
+        expected_codelist.add_entry(
+            "A10X".to_string(),
+            "Cholera".to_string(),
+            None,
+        )?;
+
+        expected_codelist.add_entry(
+            "B01X".to_string(),
+            "Typhoid and paratyphoid fevers".to_string(),
+            None,
+        )?;
+
+        observed_codelist.add_x_codes()?;
+
+        assert_eq!(observed_codelist, expected_codelist);
+        
+        Ok(())
+    }
+
+    #[test]
+    fn test_add_x_codes_icd10_exists() -> Result<(), CodeListError> {
+        let metadata = create_test_metadata();
+
+        let mut expected_codelist =
+            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
+        expected_codelist.add_entry(
+            "A10".to_string(),
+            "Cholera".to_string(),
+            None,
+        )?;
+
+        expected_codelist.add_entry(
+            "B01".to_string(),
+            "Typhoid and paratyphoid fevers".to_string(),
+            None,
+        )?;
+
+        expected_codelist.add_entry(
+            "B01X".to_string(),
+            "Varicella [chickenpox]".to_string(),
+            None,
+        )?;
+
+        expected_codelist.add_entry(
+            "B0111".to_string(),
+            "TB".to_string(),
+            None,
+        )?;
+
+        let mut observed_codelist = expected_codelist.clone();
+
+        expected_codelist.add_entry(
+            "A10X".to_string(),
+            "Cholera".to_string(),
+            None,
+        )?;
+
+        observed_codelist.add_x_codes()?;
+
+        assert_eq!(observed_codelist, expected_codelist);
+        
+        Ok(())
+    }
+    
+    #[test]
+    fn test_add_x_codes_snomed() -> Result<(), CodeListError> {
+        let metadata = create_test_metadata();
+
+        let mut snomed_codelist = CodeList::new(
+            "test_codelist".to_string(),
+            CodeListType::SNOMED,
+            metadata.clone(),
+            None,
+        );
+
+        // A SNOMED list is not x_appendable
+        assert!(snomed_codelist.add_x_codes().is_err());
+
+        Ok(())
+    }
+
 }
 
 // add tests for get code, get code term entries
