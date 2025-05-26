@@ -357,7 +357,6 @@ mod tests {
 
         let codelist_options = CodeListOptions {
             allow_duplicates: true,
-            add_x_codes: true,
             code_column_name: "test_code".to_string(),
             term_column_name: "test_term".to_string(),
             code_field_name: "test_code".to_string(),
@@ -372,7 +371,6 @@ mod tests {
         );
 
         assert!(codelist.codelist_options.allow_duplicates);
-        assert!(codelist.codelist_options.add_x_codes);
         assert_eq!(codelist.codelist_options.code_field_name, "test_code".to_string());
         assert_eq!(codelist.codelist_options.term_field_name, "test_term".to_string());
         assert_eq!(codelist.codelist_options.code_column_name, "test_code".to_string());
