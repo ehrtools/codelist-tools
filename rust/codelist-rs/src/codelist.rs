@@ -283,7 +283,7 @@ impl CodeList {
             .filter(|entry| entry.code.len() == 4 && entry.code.ends_with("X"))
             .map(|entry| entry.code.clone())
             .collect::<HashSet<String>>();
-        
+
         let mut adds = vec![];
 
         for entry in &self.entries {
@@ -303,7 +303,7 @@ impl CodeList {
         for entry in &adds {
             self.add_entry(entry.code.clone(), entry.term.clone(), entry.comment.clone())?;
         }
-        
+
         Ok(())
     }
 }
@@ -712,11 +712,7 @@ mod tests {
 
         let mut expected_codelist =
             CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
-        expected_codelist.add_entry(
-            "A10".to_string(),
-            "Cholera".to_string(),
-            None,
-        )?;
+        expected_codelist.add_entry("A10".to_string(), "Cholera".to_string(), None)?;
 
         expected_codelist.add_entry(
             "B01".to_string(),
@@ -724,19 +720,11 @@ mod tests {
             None,
         )?;
 
-        expected_codelist.add_entry(
-            "B0111".to_string(),
-            "TB".to_string(),
-            None,
-        )?;
+        expected_codelist.add_entry("B0111".to_string(), "TB".to_string(), None)?;
 
         let mut observed_codelist = expected_codelist.clone();
 
-        expected_codelist.add_entry(
-            "A10X".to_string(),
-            "Cholera".to_string(),
-            None,
-        )?;
+        expected_codelist.add_entry("A10X".to_string(), "Cholera".to_string(), None)?;
 
         expected_codelist.add_entry(
             "B01X".to_string(),
@@ -747,7 +735,7 @@ mod tests {
         observed_codelist.add_x_codes()?;
 
         assert_eq!(observed_codelist, expected_codelist);
-        
+
         Ok(())
     }
 
@@ -757,11 +745,7 @@ mod tests {
 
         let mut expected_codelist =
             CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
-        expected_codelist.add_entry(
-            "A10".to_string(),
-            "Cholera".to_string(),
-            None,
-        )?;
+        expected_codelist.add_entry("A10".to_string(), "Cholera".to_string(), None)?;
 
         expected_codelist.add_entry(
             "B01".to_string(),
@@ -775,27 +759,19 @@ mod tests {
             None,
         )?;
 
-        expected_codelist.add_entry(
-            "B0111".to_string(),
-            "TB".to_string(),
-            None,
-        )?;
+        expected_codelist.add_entry("B0111".to_string(), "TB".to_string(), None)?;
 
         let mut observed_codelist = expected_codelist.clone();
 
-        expected_codelist.add_entry(
-            "A10X".to_string(),
-            "Cholera".to_string(),
-            None,
-        )?;
+        expected_codelist.add_entry("A10X".to_string(), "Cholera".to_string(), None)?;
 
         observed_codelist.add_x_codes()?;
 
         assert_eq!(observed_codelist, expected_codelist);
-        
+
         Ok(())
     }
-    
+
     #[test]
     fn test_add_x_codes_snomed() -> Result<(), CodeListError> {
         let metadata = create_test_metadata();
@@ -812,7 +788,6 @@ mod tests {
 
         Ok(())
     }
-
 }
 
 // add tests for get code, get code term entries
