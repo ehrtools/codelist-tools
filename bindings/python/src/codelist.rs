@@ -276,6 +276,15 @@ impl PyCodeList {
         Ok(())
     }
 
+    /// Add X Codes to the codelist. This is a convenient way to add X to 3 digit ICD10 codes.
+    fn add_x_codes(&mut self) -> PyResult<()> {
+
+        self.inner
+            .add_x_codes()
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+        Ok(())
+    }
+
     /// See if the codelist is validated
     fn is_validated(&self) -> bool {
         self.inner.metadata.validation_and_review.reviewed
