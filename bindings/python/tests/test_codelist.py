@@ -132,5 +132,38 @@ class TestCodeListValidation(unittest.TestCase):
             codelist.validate_codes()
         self.assertIn("Code 11 is an invalid length for type SNOMED", str(e.exception))
 
+    def test_truncate_icd10_to_3_digits(self):
+        codelist = CodeList(
+            name="Test Codelist",
+            codelist_type="ICD10",
+            source="Manually created",
+        )
+        # codelist of various lengths
+        codelist.add_entry("A01.1", "Typhoid fever, intestinal more complex")
+        codelist.add_entry("A01", "Typhoid fever, intestinal")
+        codelist.add_entry("A02", "Salmonella infections")
+        codelist.add_entry("A0311", "Random infections, unspecified")
+
+        codelist.truncate_to_3_digits(term_management="first")
+
+        ## May be in different order so test entries to account for that
+        self.assertEqual(len(codelist.entries()), 3)
+        self.assertIn(("A01", "Typhoid fever, intestinal"), codelist.entries())
+        self.assertIn(("A02", "Salmonella infections"), codelist.entries())
+        self.assertIn(("A03", "Random infections, unspecified"), codelist.entries())
+
+    def test_cannot_truncate_snomed(self):
+        codelist = CodeList(
+            name="Test SNOMED Codelist",
+            codelist_type="SNOMED",
+            source="Manually created",
+        )
+        codelist.add_entry("123456", "Valid SNOMED")
+        with self.assertRaises(ValueError) as e:
+            codelist.truncate_to_3_digits(term_management="first")
+        self.assertEqual(str(e.exception), "SNOMED is not truncatable to 3 digits.")
+
+
+
 if __name__ == '__main__':
     unittest.main()

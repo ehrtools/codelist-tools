@@ -312,6 +312,20 @@ pub enum TermManagement {
     First,
 }
 
+/// Map Term Management from string
+impl TermManagement {
+    /// Map TermManagement from a string
+    pub fn from_str(s: &str) -> Result<Self, CodeListError> {
+        match s.to_lowercase().as_str() {
+            "first" => Ok(TermManagement::First),
+            _ => Err(CodeListError::TermManagementNotKnown {
+                term_management: s.to_string(),
+            }),
+        }
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use chrono::Utc;
