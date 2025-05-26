@@ -280,7 +280,7 @@ impl PyCodeList {
     fn truncate_to_3_digits(&mut self, term_management: String) -> PyResult<()> {
 
         // Term management as string to TermManagement enum
-        let term_management = TermManagement::from_str(&term_management)
+        let term_management = term_management.parse::<TermManagement>()
             .map_err(|e| PyValueError::new_err(e.to_string()))?;
 
         self.inner

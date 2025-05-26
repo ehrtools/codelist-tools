@@ -1,6 +1,7 @@
 //! This file contains the provenance struct and its implementation
 //!
-//! Note: Contributors are maintained in their original insertion order using IndexSet.
+//! Note: Contributors are maintained in their original insertion order using
+//! IndexSet.
 
 // External imports
 use chrono::Utc;

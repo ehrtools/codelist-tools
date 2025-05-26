@@ -152,6 +152,17 @@ class TestCodeListValidation(unittest.TestCase):
         self.assertIn(("A02", "Salmonella infections"), codelist.entries())
         self.assertIn(("A03", "Random infections, unspecified"), codelist.entries())
 
+    def test_invalid_term_management_arg_for_truncate(self):
+        codelist = CodeList(
+            name="Test Codelist",
+            codelist_type="ICD10",
+            source="Manually created",
+        )
+        codelist.add_entry("A01.1", "Typhoid fever, intestinal more complex")
+        with self.assertRaises(ValueError) as e:
+            codelist.truncate_to_3_digits(term_management="invalid")
+        self.assertEqual(str(e.exception), "invalid is not known. Valid values are 'first'")
+
     def test_cannot_truncate_snomed(self):
         codelist = CodeList(
             name="Test SNOMED Codelist",
@@ -161,7 +172,7 @@ class TestCodeListValidation(unittest.TestCase):
         codelist.add_entry("123456", "Valid SNOMED")
         with self.assertRaises(ValueError) as e:
             codelist.truncate_to_3_digits(term_management="first")
-        self.assertEqual(str(e.exception), "SNOMED is not truncatable to 3 digits.")
+        self.assertEqual(str(e.exception), "SNOMED cannot be truncated to 3 digits.")
 
 
 
