@@ -127,6 +127,6 @@ pub enum CodeListError {
     #[error("{codelist_type} is not truncatable to 3 digits.")]
     CodeListNotTruncatable { codelist_type: String },
 
-    #[error("{codelist_type} is not x-addable.")]
+    #[error("{codelist_type} cannot be transformed by having X added to the end of it")]
     CodeListNotXAddable { codelist_type: String },
 }
