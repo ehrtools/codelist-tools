@@ -28,6 +28,13 @@ impl CodeListType {
     pub fn is_truncatable(&self) -> bool {
         matches!(self, CodeListType::ICD10)
     }
+
+    /// Is the `CodeListType` able to have X added
+    // TODO: Make it a trait?
+    // Right now adding X only applies to ICD10 code lists, but ICD11 is coming.
+    pub fn is_x_addable(&self) -> bool {
+        matches!(self, CodeListType::ICD10)
+    }
 }
 
 impl FromStr for CodeListType {
