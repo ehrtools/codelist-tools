@@ -2,6 +2,7 @@
 
 // External imports
 use serde::{Deserialize, Serialize};
+
 // Internal imports
 use crate::metadata::categorisation_and_usage::CategorisationAndUsage;
 use crate::metadata::{
@@ -51,9 +52,10 @@ impl Metadata {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashSet;
+
     use chrono::Utc;
     use indexmap::IndexSet;
-    use std::collections::HashSet;
 
     use super::*;
     use crate::{errors::CodeListError, metadata::Source};

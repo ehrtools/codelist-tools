@@ -1,15 +1,13 @@
 //! This file contains the core functionality for the codelist
 
-// External imports
+use std::{collections::HashSet, io::Write, str::FromStr};
+
 use csv::Writer;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashSet, io::Write};
 
-// Internal imports
-use crate::code_entry::CodeEntry;
 use crate::{
-    codelist_options::CodeListOptions, errors::CodeListError, metadata::Metadata,
-    types::CodeListType,
+    code_entry::CodeEntry, codelist_options::CodeListOptions, errors::CodeListError,
+    metadata::Metadata, types::CodeListType,
 };
 
 /// Struct to represent a codelist
@@ -308,8 +306,21 @@ impl CodeList {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum TermManagement {
     First,
+}
+
+/// Map Term Management from string
+impl FromStr for TermManagement {
+    type Err = CodeListError;
+    /// Map TermManagement from a string
+    fn from_str(s: &str) -> Result<Self, CodeListError> {
+        match s.to_lowercase().as_str() {
+            "first" => Ok(TermManagement::First),
+            _ => Err(CodeListError::TermManagementNotKnown { term_management: s.to_string() }),
+        }
+    }
 }
 
 #[cfg(test)]
