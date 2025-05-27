@@ -173,8 +173,35 @@ class TestCodeListValidation(unittest.TestCase):
         with self.assertRaises(ValueError) as e:
             codelist.truncate_to_3_digits(term_management="first")
         self.assertEqual(str(e.exception), "SNOMED cannot be truncated to 3 digits.")
+        
+     
+    def test_x_code_added_icd10(self):
+        codelist = CodeList(
+            name="Test Codelist",
+            codelist_type="ICD10",
+            source="Manually created",
+        )
+        codelist.add_entry("A01", "Typhoid fever")
+        self.assertEqual(codelist.entries(), [("A01", "Typhoid fever")])
+        codelist.add_x_codes()
+        self.assertIn(("A01X", "Typhoid fever"), codelist.entries())
+
+    def test_x_code_not_added_snomed(self):
+        codelist = CodeList(
+            name="Test SNOMED",
+            codelist_type="SNOMED",
+            source="Manually created",
+        )
+        codelist.add_entry("123456", "Valid SNOMED")
+        self.assertEqual(codelist.entries(), [("123456", "Valid SNOMED")])
+
+        with self.assertRaises(ValueError) as e:
+            codelist.add_x_codes()
+        self.assertEqual(str(e.exception), "SNOMED cannot be transformed by having X added to the end of it")
 
 
+
+        
 
 if __name__ == '__main__':
     unittest.main()
