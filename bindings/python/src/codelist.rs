@@ -297,6 +297,11 @@ impl PyCodeList {
             .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
+
+    /// See if the codelist is validated
+    fn is_validated(&self) -> bool {
+        self.inner.metadata.validation_and_review.reviewed
+    }
   
     /// Add Validation Information to the codelist
     fn add_validation_info(&mut self, reviewer: String, status: Option<String>, notes: Option<String>) -> PyResult<()> {
