@@ -327,11 +327,10 @@ impl FromStr for TermManagement {
 mod tests {
     use chrono::Utc;
     use indexmap::IndexSet;
-    use std::default::Default;
     use tempfile::TempDir;
 
     use super::*;
-    use crate::metadata::Source;
+    use crate::metadata::{Metadata, Source};
 
     // Helper function to create a test codelist with two entries, default options
     // and test metadata
@@ -339,7 +338,7 @@ mod tests {
         let mut codelist = CodeList::new(
             "test_codelist".to_string(),
             CodeListType::ICD10,
-            Default::default(),
+            Metadata::default(),
             None,
         );
         codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
