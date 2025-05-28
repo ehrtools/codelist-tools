@@ -327,22 +327,11 @@ impl FromStr for TermManagement {
 mod tests {
     use chrono::Utc;
     use indexmap::IndexSet;
+    use std::default::Default;
     use tempfile::TempDir;
 
     use super::*;
-    use crate::metadata::{
-        CategorisationAndUsage, Provenance, PurposeAndContext, Source, ValidationAndReview,
-    };
-
-    // Helper function to create test metadata
-    fn create_test_metadata() -> Metadata {
-        Metadata {
-            provenance: Provenance::new(Source::ManuallyCreated, None),
-            categorisation_and_usage: CategorisationAndUsage::new(None, None, None),
-            purpose_and_context: PurposeAndContext::new(None, None, None),
-            validation_and_review: ValidationAndReview::new(None, None, None, None, None),
-        }
-    }
+    use crate::metadata::Source;
 
     // Helper function to create a test codelist with two entries, default options
     // and test metadata
@@ -350,7 +339,7 @@ mod tests {
         let mut codelist = CodeList::new(
             "test_codelist".to_string(),
             CodeListType::ICD10,
-            create_test_metadata(),
+            Default::default(),
             None,
         );
         codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
@@ -406,8 +395,6 @@ mod tests {
 
     #[test]
     fn test_create_codelist_custom_options() -> Result<(), CodeListError> {
-        let metadata = create_test_metadata();
-
         let codelist_options = CodeListOptions {
             allow_duplicates: true,
             code_column_name: "test_code".to_string(),
@@ -419,7 +406,7 @@ mod tests {
         let codelist = CodeList::new(
             "test_codelist".to_string(),
             CodeListType::ICD10,
-            metadata,
+            Default::default(),
             Some(codelist_options),
         );
 
@@ -463,7 +450,7 @@ mod tests {
         let mut codelist = CodeList::new(
             "test_codelist".to_string(),
             CodeListType::ICD10,
-            create_test_metadata(),
+            Default::default(),
             None,
         );
         codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
@@ -640,7 +627,7 @@ mod tests {
 
     #[test]
     fn test_get_metadata() {
-        let metadata = create_test_metadata();
+        let metadata: Metadata = Default::default();
         let codelist =
             CodeList::new("test".to_string(), CodeListType::ICD10, metadata.clone(), None);
 
@@ -649,12 +636,10 @@ mod tests {
 
     #[test]
     fn test_truncate_to_3_digits_snomed() -> Result<(), CodeListError> {
-        let metadata = create_test_metadata();
-
         let mut snomed_codelist = CodeList::new(
             "test_codelist".to_string(),
             CodeListType::SNOMED,
-            metadata.clone(),
+            Default::default(),
             None,
         );
 
@@ -666,7 +651,7 @@ mod tests {
 
     #[test]
     fn test_truncate_to_3_digits_icd10_4_digits() -> Result<(), CodeListError> {
-        let metadata = create_test_metadata();
+        let metadata: Metadata = Default::default();
 
         let mut expected_codelist =
             CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
@@ -677,7 +662,7 @@ mod tests {
         )?;
 
         let mut observed_codelist =
-            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
+            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata, None);
 
         observed_codelist.add_entry("B012".to_string(), "Varicella pneumonia".to_string(), None)?;
 
@@ -690,7 +675,7 @@ mod tests {
 
     #[test]
     fn test_truncate_to_3_digits_3_and_4_digits() -> Result<(), CodeListError> {
-        let metadata = create_test_metadata();
+        let metadata: Metadata = Default::default();
 
         let mut expected_codelist =
             CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
@@ -701,7 +686,7 @@ mod tests {
         )?;
 
         let mut observed_codelist =
-            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
+            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata, None);
 
         observed_codelist.add_entry(
             "B01".to_string(),
@@ -719,10 +704,12 @@ mod tests {
 
     #[test]
     fn test_add_x_codes_icd10() -> Result<(), CodeListError> {
-        let metadata = create_test_metadata();
-
-        let mut expected_codelist =
-            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
+        let mut expected_codelist = CodeList::new(
+            "test_codelist".to_string(),
+            CodeListType::ICD10,
+            Default::default(),
+            None,
+        );
         expected_codelist.add_entry("A10".to_string(), "Cholera".to_string(), None)?;
 
         expected_codelist.add_entry(
@@ -752,10 +739,12 @@ mod tests {
 
     #[test]
     fn test_add_x_codes_icd10_exists() -> Result<(), CodeListError> {
-        let metadata = create_test_metadata();
-
-        let mut expected_codelist =
-            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
+        let mut expected_codelist = CodeList::new(
+            "test_codelist".to_string(),
+            CodeListType::ICD10,
+            Default::default(),
+            None,
+        );
         expected_codelist.add_entry("A10".to_string(), "Cholera".to_string(), None)?;
 
         expected_codelist.add_entry(
@@ -785,12 +774,10 @@ mod tests {
 
     #[test]
     fn test_add_x_codes_snomed() -> Result<(), CodeListError> {
-        let metadata = create_test_metadata();
-
         let mut snomed_codelist = CodeList::new(
             "test_codelist".to_string(),
             CodeListType::SNOMED,
-            metadata.clone(),
+            Default::default(),
             None,
         );
 

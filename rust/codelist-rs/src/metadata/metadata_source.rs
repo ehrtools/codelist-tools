@@ -9,10 +9,11 @@ use serde::{Deserialize, Serialize};
 use crate::errors::CodeListError;
 
 /// Enum to represent the different sources of the codelist
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum Source {
     LoadedFromFile,
     MappedFromAnotherCodelist,
+    #[default]
     ManuallyCreated,
 }
 

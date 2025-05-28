@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 // Internal imports
 use crate::errors::CodeListError;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct PurposeAndContext {
     pub purpose: Option<String>,
     pub target_audience: Option<String>,

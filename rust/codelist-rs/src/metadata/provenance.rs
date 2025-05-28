@@ -20,6 +20,12 @@ pub struct Provenance {
     pub contributors: IndexSet<String>,
 }
 
+impl Default for Provenance {
+    fn default() -> Self {
+        Provenance::new(Source::ManuallyCreated, None)
+    }
+}
+
 impl Provenance {
     /// Create a new provenance
     ///

@@ -20,7 +20,7 @@ use crate::metadata::{
 /// * `purpose_and_context` - The purpose and context of the codelist
 /// * `validation_and_review` - The validation and review of the codelist
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Metadata {
     pub provenance: Provenance,
     pub categorisation_and_usage: CategorisationAndUsage,
