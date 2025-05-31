@@ -1,5 +1,6 @@
 //! This file contains the core functionality for the codelist
 
+// External imports
 use csv::Writer;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashSet};
@@ -107,7 +108,7 @@ impl CodeList {
     /// comment
     ///
     /// # Returns
-    /// * `&HashSet<CodeEntry>` - The entries of the codelist
+    /// * `&BTreeMap<String, (Option<String>, Option<String>)` - The entries of the codelist
     pub fn full_entries(&self) -> &BTreeMap<String, (Option<String>, Option<String>)> {
         &self.entries
     }
