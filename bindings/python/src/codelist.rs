@@ -9,7 +9,7 @@ use pyo3::exceptions::PyValueError;
 use indexmap::IndexSet;
 
 // Internal imports
-use codelist_rs::codelist::CodeList;
+use codelist_rs::codelist::{CodeList, TermManagement};
 use codelist_rs::codelist_options::CodeListOptions;
 use codelist_rs::metadata::{
     CategorisationAndUsage, Metadata, Provenance, PurposeAndContext, Source, ValidationAndReview,
@@ -276,11 +276,33 @@ impl PyCodeList {
         Ok(())
     }
 
+    /// Truncate to 3 digits if ICD10
+    fn truncate_to_3_digits(&mut self, term_management: String) -> PyResult<()> {
+
+        // Term management as string to TermManagement enum
+        let term_management = term_management.parse::<TermManagement>()
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+
+        self.inner
+            .truncate_to_3_digits(term_management)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+        Ok(())
+    }
+   
+    /// Add X Codes to the codelist. This is a convenient way to add X to 3 digit ICD10 codes.
+    fn add_x_codes(&mut self) -> PyResult<()> {
+
+        self.inner
+            .add_x_codes()
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+        Ok(())
+    }
+
     /// See if the codelist is validated
     fn is_validated(&self) -> bool {
         self.inner.metadata.validation_and_review.reviewed
     }
-
+  
     /// Add Validation Information to the codelist
     fn add_validation_info(&mut self, reviewer: String, status: Option<String>, notes: Option<String>) -> PyResult<()> {
         // Add reviewer

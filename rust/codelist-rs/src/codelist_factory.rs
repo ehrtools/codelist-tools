@@ -466,8 +466,6 @@ mod tests {
         let codelist_factory = CodeListFactory::new(codelist_options, metadata, codelist_type);
 
         assert!(!codelist_factory.codelist_options.allow_duplicates);
-        assert!(!codelist_factory.codelist_options.truncate_to_3_digits,);
-        assert!(!codelist_factory.codelist_options.add_x_codes);
         assert_eq!(codelist_factory.codelist_options.code_column_name, "code".to_string());
         assert_eq!(codelist_factory.codelist_options.term_column_name, "term".to_string());
         assert_eq!(codelist_factory.metadata, metadata_clone);
@@ -513,8 +511,6 @@ C03,Test Disease 3,Description 3";
             .any(|e| e.0 == "C03" && e.1 .0 == Some("Test Disease 3".to_string())));
 
         assert!(!codelist.codelist_options.allow_duplicates);
-        assert!(!codelist.codelist_options.truncate_to_3_digits);
-        assert!(!codelist.codelist_options.add_x_codes);
         assert_eq!(codelist.codelist_options.code_column_name, "code".to_string());
         assert_eq!(codelist.codelist_options.term_column_name, "term".to_string());
         assert_eq!(codelist.metadata, factory.metadata);
@@ -723,8 +719,6 @@ A01"; // Missing columns
             .any(|e| e.0 == "C03" && e.1 .0 == Some("Test Disease 3".to_string())));
 
         assert!(!codelist.codelist_options.allow_duplicates);
-        assert!(!codelist.codelist_options.truncate_to_3_digits);
-        assert!(!codelist.codelist_options.add_x_codes);
         assert_eq!(codelist.codelist_options.code_column_name, "code".to_string());
         assert_eq!(codelist.codelist_options.term_column_name, "term".to_string());
         assert_eq!(codelist.metadata, factory.metadata);

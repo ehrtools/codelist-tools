@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 // Internal imports
 use crate::errors::CodeListError;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct CategorisationAndUsage {
     pub tags: HashSet<String>,
     pub usage: HashSet<String>,

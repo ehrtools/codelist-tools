@@ -1,6 +1,7 @@
 //! This file contains the provenance struct and its implementation
 //!
-//! Note: Contributors are maintained in their original insertion order using IndexSet.
+//! Note: Contributors are maintained in their original insertion order using
+//! IndexSet.
 
 // External imports
 use chrono::Utc;
@@ -17,6 +18,12 @@ pub struct Provenance {
     pub created_date: chrono::DateTime<Utc>,
     pub last_modified_date: chrono::DateTime<Utc>,
     pub contributors: IndexSet<String>,
+}
+
+impl Default for Provenance {
+    fn default() -> Self {
+        Provenance::new(Source::ManuallyCreated, None)
+    }
 }
 
 impl Provenance {
