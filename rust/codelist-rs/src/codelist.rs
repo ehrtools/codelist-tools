@@ -404,9 +404,7 @@ impl CodeList {
             // The term and comment that goes with it to make the
             // entry depends on the term_management
             let comment = match term_management {
-                TermManagement::First => {
-                    Some(format!("{} truncated to 3 digits", code))
-                }
+                TermManagement::First => Some(format!("{} truncated to 3 digits", code)),
             };
 
             // We'll add this one later
@@ -996,7 +994,11 @@ mod tests {
         let mut observed_codelist =
             CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata, None);
 
-        observed_codelist.add_entry("B012".to_string(), Some("Varicella pneumonia".to_string()), None)?;
+        observed_codelist.add_entry(
+            "B012".to_string(),
+            Some("Varicella pneumonia".to_string()),
+            None,
+        )?;
 
         observed_codelist.truncate_to_3_digits(TermManagement::First)?;
 
@@ -1025,7 +1027,11 @@ mod tests {
             Some("Varicella [chickenpox]".to_string()),
             None,
         )?;
-        observed_codelist.add_entry("B012".to_string(), Some("Varicella pneumonia".to_string()), None)?;
+        observed_codelist.add_entry(
+            "B012".to_string(),
+            Some("Varicella pneumonia".to_string()),
+            None,
+        )?;
 
         observed_codelist.truncate_to_3_digits(TermManagement::First)?;
 
