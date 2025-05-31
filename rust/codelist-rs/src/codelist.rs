@@ -1,11 +1,9 @@
 //! This file contains the core functionality for the codelist
 
-use std::{collections::HashSet, io::Write, str::FromStr};
-
 use csv::Writer;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashSet};
-use std::io::Write;
+use std::io::{Write, str::FromStr};
 
 // Internal imports
 use crate::{
@@ -793,7 +791,7 @@ mod tests {
 
     #[test]
     fn test_get_metadata() {
-        let metadata = create_test_metadata();
+        let metadata: Metadata = Default::default();
         let codelist =
             CodeList::new("test".to_string(), CodeListType::ICD10, metadata.clone(), None);
 
@@ -990,14 +988,14 @@ mod tests {
             CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
         expected_codelist.add_entry(
             "B01".to_string(),
-            "Varicella pneumonia".to_string(),
+            Some("Varicella pneumonia".to_string()),
             Some("B012 truncated to 3 digits".to_string()),
         )?;
 
         let mut observed_codelist =
             CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata, None);
 
-        observed_codelist.add_entry("B012".to_string(), "Varicella pneumonia".to_string(), None)?;
+        observed_codelist.add_entry("B012".to_string(), Some("Varicella pneumonia".to_string()), None)?;
 
         observed_codelist.truncate_to_3_digits(TermManagement::First)?;
 
@@ -1014,7 +1012,7 @@ mod tests {
             CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
         expected_codelist.add_entry(
             "B01".to_string(),
-            "Varicella [chickenpox]".to_string(),
+            Some("Varicella [chickenpox]".to_string()),
             None,
         )?;
 
@@ -1023,10 +1021,10 @@ mod tests {
 
         observed_codelist.add_entry(
             "B01".to_string(),
-            "Varicella [chickenpox]".to_string(),
+            Some("Varicella [chickenpox]".to_string()),
             None,
         )?;
-        observed_codelist.add_entry("B012".to_string(), "Varicella pneumonia".to_string(), None)?;
+        observed_codelist.add_entry("B012".to_string(), Some("Varicella pneumonia".to_string()), None)?;
 
         observed_codelist.truncate_to_3_digits(TermManagement::First)?;
 
@@ -1043,23 +1041,23 @@ mod tests {
             Default::default(),
             None,
         );
-        expected_codelist.add_entry("A10".to_string(), "Cholera".to_string(), None)?;
+        expected_codelist.add_entry("A10".to_string(), Some("Cholera".to_string()), None)?;
 
         expected_codelist.add_entry(
             "B01".to_string(),
-            "Typhoid and paratyphoid fevers".to_string(),
+            Some("Typhoid and paratyphoid fevers".to_string()),
             None,
         )?;
 
-        expected_codelist.add_entry("B0111".to_string(), "TB".to_string(), None)?;
+        expected_codelist.add_entry("B0111".to_string(), Some("TB".to_string()), None)?;
 
         let mut observed_codelist = expected_codelist.clone();
 
-        expected_codelist.add_entry("A10X".to_string(), "Cholera".to_string(), None)?;
+        expected_codelist.add_entry("A10X".to_string(), Some("Cholera".to_string()), None)?;
 
         expected_codelist.add_entry(
             "B01X".to_string(),
-            "Typhoid and paratyphoid fevers".to_string(),
+            Some("Typhoid and paratyphoid fevers".to_string()),
             None,
         )?;
 
@@ -1078,25 +1076,25 @@ mod tests {
             Default::default(),
             None,
         );
-        expected_codelist.add_entry("A10".to_string(), "Cholera".to_string(), None)?;
+        expected_codelist.add_entry("A10".to_string(), Some("Cholera".to_string()), None)?;
 
         expected_codelist.add_entry(
             "B01".to_string(),
-            "Typhoid and paratyphoid fevers".to_string(),
+            Some("Typhoid and paratyphoid fevers".to_string()),
             None,
         )?;
 
         expected_codelist.add_entry(
             "B01X".to_string(),
-            "Varicella [chickenpox]".to_string(),
+            Some("Varicella [chickenpox]".to_string()),
             None,
         )?;
 
-        expected_codelist.add_entry("B0111".to_string(), "TB".to_string(), None)?;
+        expected_codelist.add_entry("B0111".to_string(), Some("TB".to_string()), None)?;
 
         let mut observed_codelist = expected_codelist.clone();
 
-        expected_codelist.add_entry("A10X".to_string(), "Cholera".to_string(), None)?;
+        expected_codelist.add_entry("A10X".to_string(), Some("Cholera".to_string()), None)?;
 
         observed_codelist.add_x_codes()?;
 
