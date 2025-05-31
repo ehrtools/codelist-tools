@@ -1,4 +1,3 @@
-pub mod code_entry;
 pub mod codelist;
 pub mod codelist_factory;
 pub mod codelist_options;

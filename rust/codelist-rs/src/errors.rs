@@ -31,9 +31,6 @@ pub enum CodeListError {
     #[error("Empty code: {msg}")]
     EmptyCode { msg: String },
 
-    #[error("Empty term: {msg}")]
-    EmptyTerm { msg: String },
-
     #[error("Column index out of bounds: {msg}")]
     ColumnIndexOutOfBounds { msg: String },
 
@@ -43,11 +40,17 @@ pub enum CodeListError {
     #[error("Invalid term type: {msg}")]
     InvalidTermType { msg: String },
 
-    #[error("Comment for CodeEntry with code {code} and term {term} already exists. Please update comment instead.")]
-    CodeEntryCommentAlreadyExists { code: String, term: String },
+    #[error("Comment for entry with code {code} already exists. {msg}.")]
+    CodeEntryCommentAlreadyExists { code: String, msg: String },
 
-    #[error("Comment for CodeEntry with code {code} and term {term} does not exist. Please use add comment instead if you are trying to add a comment.")]
-    CodeEntryCommentDoesNotExist { code: String, term: String },
+    #[error("Term for entry with code {code} already exists. {msg}.")]
+    CodeEntryTermAlreadyExists { code: String, msg: String },
+
+    #[error("Comment for entry with code {code} does not exist. {msg}.")]
+    CodeEntryCommentDoesNotExist { code: String, msg: String },
+
+    #[error("Term for entry with code {code} does not exist. {msg}.")]
+    CodeEntryTermDoesNotExist { code: String, msg: String },
 
     #[error("Contributor {contributor} not found")]
     ContributorNotFound { contributor: String },

@@ -8,8 +8,12 @@ fn main() -> Result<(), CodeListError> {
     let mut codelist =
         CodeList::new("test_codelist".to_string(), CodeListType::ICD10, Metadata::default(), None);
 
-    codelist.add_entry("A00".to_string(), "Cholera".to_string(), None)?;
-    codelist.add_entry("A01".to_string(), "Typhoid and paratyphoid fevers".to_string(), None)?;
+    codelist.add_entry("A00".to_string(), Some("Cholera".to_string()), None)?;
+    codelist.add_entry(
+        "A01".to_string(),
+        Some("Typhoid and paratyphoid fevers".to_string()),
+        None,
+    )?;
 
     println!("{codelist:#?}");
 

@@ -43,8 +43,7 @@ impl CodeValidator for OpcsValidator<'_> {
     fn validate_all_code(&self) -> Result<(), CodeListValidatorError> {
         let mut reasons = Vec::new();
 
-        for code_entry in self.0.entries.iter() {
-            let code = &code_entry.code;
+        for (code, _) in self.0.entries.iter() {
             if let Err(err) = self.validate_code(code) {
                 reasons.push(err.to_string());
             }
@@ -202,36 +201,40 @@ mod tests {
     #[test]
     fn test_validate_codelist_with_valid_codes() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist()?;
-        codelist.add_entry("C01".to_string(), "Excision of eye".to_string(), None)?;
+        codelist.add_entry("C01".to_string(), Some("Excision of eye".to_string()), None)?;
         codelist.add_entry(
             "C02".to_string(),
-            "Extirpation of lesion of orbit".to_string(),
+            Some("Extirpation of lesion of orbit".to_string()),
             None,
         )?;
         codelist.add_entry(
             "C03".to_string(),
-            "Insertion of prosthesis of eye".to_string(),
+            Some("Insertion of prosthesis of eye".to_string()),
             None,
         )?;
         codelist.add_entry(
             "C04".to_string(),
-            "Attention to prosthesis of eye".to_string(),
+            Some("Attention to prosthesis of eye".to_string()),
             None,
         )?;
-        codelist.add_entry("C05".to_string(), "Plastic repair of orbit ".to_string(), None)?;
+        codelist.add_entry(
+            "C05".to_string(),
+            Some("Plastic repair of orbit ".to_string()),
+            None,
+        )?;
         codelist.add_entry(
             "L31.4".to_string(),
-            "Insertion Artery Carotid Stent Transluminal Percutaneous".to_string(),
+            Some("Insertion Artery Carotid Stent Transluminal Percutaneous".to_string()),
             None,
         )?;
         codelist.add_entry(
             "L35.3".to_string(),
-            "Insertion Artery Cerebral Stent Transluminal Percutaneous".to_string(),
+            Some("Insertion Artery Cerebral Stent Transluminal Percutaneous".to_string()),
             None,
         )?;
         codelist.add_entry(
             "L47.4".to_string(),
-            "Insertion Artery Coeliac Stent Transluminal Percutaneous".to_string(),
+            Some("Insertion Artery Coeliac Stent Transluminal Percutaneous".to_string()),
             None,
         )?;
         assert!(codelist.validate_codes().is_ok());
@@ -241,36 +244,40 @@ mod tests {
     #[test]
     fn test_validate_codelist_with_all_invalid_codes() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist()?;
-        codelist.add_entry("A0".to_string(), "Excision of eye".to_string(), None)?;
+        codelist.add_entry("A0".to_string(), Some("Excision of eye".to_string()), None)?;
         codelist.add_entry(
             "A01000".to_string(),
-            "Extirpation of lesion of orbit".to_string(),
+            Some("Extirpation of lesion of orbit".to_string()),
             None,
         )?;
         codelist.add_entry(
             "101".to_string(),
-            "Insertion of prosthesis of eye".to_string(),
+            Some("Insertion of prosthesis of eye".to_string()),
             None,
         )?;
         codelist.add_entry(
             "AA1".to_string(),
-            "Attention to prosthesis of eye".to_string(),
+            Some("Attention to prosthesis of eye".to_string()),
             None,
         )?;
-        codelist.add_entry("A0A".to_string(), "Plastic repair of orbit ".to_string(), None)?;
+        codelist.add_entry(
+            "A0A".to_string(),
+            Some("Plastic repair of orbit ".to_string()),
+            None,
+        )?;
         codelist.add_entry(
             "A01.".to_string(),
-            "Insertion Artery Carotid Stent Transluminal Percutaneous".to_string(),
+            Some("Insertion Artery Carotid Stent Transluminal Percutaneous".to_string()),
             None,
         )?;
         codelist.add_entry(
             "A01.A".to_string(),
-            "Insertion Artery Cerebral Stent Transluminal Percutaneous".to_string(),
+            Some("Insertion Artery Cerebral Stent Transluminal Percutaneous".to_string()),
             None,
         )?;
         codelist.add_entry(
             "A010A".to_string(),
-            "Insertion Artery Coeliac Stent Transluminal Percutaneous".to_string(),
+            Some("Insertion Artery Coeliac Stent Transluminal Percutaneous".to_string()),
             None,
         )?;
         let error = codelist.validate_codes().unwrap_err();
@@ -295,36 +302,40 @@ mod tests {
     #[test]
     fn test_validate_codelist_with_mixed_invalid_and_valid_codes() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist()?;
-        codelist.add_entry("C01".to_string(), "Excision of eye".to_string(), None)?;
+        codelist.add_entry("C01".to_string(), Some("Excision of eye".to_string()), None)?;
         codelist.add_entry(
             "A01000".to_string(),
-            "Extirpation of lesion of orbit".to_string(),
+            Some("Extirpation of lesion of orbit".to_string()),
             None,
         )?;
         codelist.add_entry(
             "C03".to_string(),
-            "Insertion of prosthesis of eye".to_string(),
+            Some("Insertion of prosthesis of eye".to_string()),
             None,
         )?;
         codelist.add_entry(
             "AA1".to_string(),
-            "Attention to prosthesis of eye".to_string(),
+            Some("Attention to prosthesis of eye".to_string()),
             None,
         )?;
-        codelist.add_entry("C05".to_string(), "Plastic repair of orbit ".to_string(), None)?;
+        codelist.add_entry(
+            "C05".to_string(),
+            Some("Plastic repair of orbit ".to_string()),
+            None,
+        )?;
         codelist.add_entry(
             "A01.".to_string(),
-            "Insertion Artery Carotid Stent Transluminal Percutaneous".to_string(),
+            Some("Insertion Artery Carotid Stent Transluminal Percutaneous".to_string()),
             None,
         )?;
         codelist.add_entry(
             "L35.3".to_string(),
-            "Insertion Artery Cerebral Stent Transluminal Percutaneous".to_string(),
+            Some("Insertion Artery Cerebral Stent Transluminal Percutaneous".to_string()),
             None,
         )?;
         codelist.add_entry(
             "A010A".to_string(),
-            "Insertion Artery Coeliac Stent Transluminal Percutaneous".to_string(),
+            Some("Insertion Artery Coeliac Stent Transluminal Percutaneous".to_string()),
             None,
         )?;
         let error = codelist.validate_codes().unwrap_err();

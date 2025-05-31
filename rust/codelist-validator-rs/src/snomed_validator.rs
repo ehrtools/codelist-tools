@@ -29,8 +29,7 @@ impl CodeValidator for SnomedValidator<'_> {
     fn validate_all_code(&self) -> Result<(), CodeListValidatorError> {
         let mut reasons = Vec::new();
 
-        for code_entry in self.0.entries.iter() {
-            let code = &code_entry.code;
+        for (code, _) in self.0.entries.iter() {
             if let Err(err) = self.validate_code(code) {
                 reasons.push(err.to_string());
             }
@@ -152,42 +151,44 @@ mod tests {
         let mut codelist = create_test_codelist()?;
         codelist.add_entry(
             "204351007".to_string(),
-            "Fallot's trilogy (disorder)".to_string(),
+            Some("Fallot's trilogy (disorder)".to_string()),
             None,
         )?;
         codelist.add_entry(
             "405752007".to_string(),
-            "Congenital atrial septal defect (disorder)".to_string(),
+            Some("Congenital atrial septal defect (disorder)".to_string()),
             None,
         )?;
         codelist.add_entry(
             "405752008".to_string(),
-            "Congenital atrial septal defect with patent foramen ovale (disorder)".to_string(),
+            Some(
+                "Congenital atrial septal defect with patent foramen ovale (disorder)".to_string(),
+            ),
             None,
         )?;
         codelist.add_entry(
             "77480004".to_string(),
-            "Congenital biliary atresia (disorder)".to_string(),
+            Some("Congenital biliary atresia (disorder)".to_string()),
             None,
         )?;
         codelist.add_entry(
             "34000006".to_string(),
-            "Crohn's disease (disorder)".to_string(),
+            Some("Crohn's disease (disorder)".to_string()),
             None,
         )?;
         codelist.add_entry(
             "417357006".to_string(),
-            "Sickling disorder due to hemoglobin S (disorder)".to_string(),
+            Some("Sickling disorder due to hemoglobin S (disorder)".to_string()),
             None,
         )?;
         codelist.add_entry(
             "24700007".to_string(),
-            "Multiple sclerosis (disorder)".to_string(),
+            Some("Multiple sclerosis (disorder)".to_string()),
             None,
         )?;
         codelist.add_entry(
             "398254007".to_string(),
-            "Pre-eclampsia (disorder)".to_string(),
+            Some("Pre-eclampsia (disorder)".to_string()),
             None,
         )?;
 
@@ -199,21 +200,41 @@ mod tests {
     #[test]
     fn test_validate_codelist_with_all_invalid_codes() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist()?;
-        codelist.add_entry("11".to_string(), "Fallot's trilogy (disorder)".to_string(), None)?;
+        codelist.add_entry(
+            "11".to_string(),
+            Some("Fallot's trilogy (disorder)".to_string()),
+            None,
+        )?;
         codelist.add_entry(
             "111111111111111111111111111111".to_string(),
-            "Fallot's trilogy (disorder)".to_string(),
+            Some("Fallot's trilogy (disorder)".to_string()),
             None,
         )?;
-        codelist.add_entry("AA090".to_string(), "Fallot's trilogy (disorder)".to_string(), None)?;
-        codelist.add_entry("BB".to_string(), "Fallot's trilogy (disorder)".to_string(), None)?;
-        codelist.add_entry("1".to_string(), "Fallot's trilogy (disorder)".to_string(), None)?;
+        codelist.add_entry(
+            "AA090".to_string(),
+            Some("Fallot's trilogy (disorder)".to_string()),
+            None,
+        )?;
+        codelist.add_entry(
+            "BB".to_string(),
+            Some("Fallot's trilogy (disorder)".to_string()),
+            None,
+        )?;
+        codelist.add_entry(
+            "1".to_string(),
+            Some("Fallot's trilogy (disorder)".to_string()),
+            None,
+        )?;
         codelist.add_entry(
             "1111111111111111111AAAAAAAAAA".to_string(),
-            "Fallot's trilogy (disorder)".to_string(),
+            Some("Fallot's trilogy (disorder)".to_string()),
             None,
         )?;
-        codelist.add_entry("11111".to_string(), "Fallot's trilogy (disorder)".to_string(), None)?;
+        codelist.add_entry(
+            "11111".to_string(),
+            Some("Fallot's trilogy (disorder)".to_string()),
+            None,
+        )?;
 
         let error = codelist.validate_codes().unwrap_err();
         let error_string = error.to_string();
@@ -232,38 +253,48 @@ mod tests {
     #[test]
     fn test_validate_all_code_with_mixed_valid_and_invalid_codes() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist()?;
-        codelist.add_entry("11".to_string(), "Fallot's trilogy (disorder)".to_string(), None)?;
+        codelist.add_entry(
+            "11".to_string(),
+            Some("Fallot's trilogy (disorder)".to_string()),
+            None,
+        )?;
         codelist.add_entry(
             "405752007".to_string(),
-            "Congenital atrial septal defect (disorder)".to_string(),
+            Some("Congenital atrial septal defect (disorder)".to_string()),
             None,
         )?;
         codelist.add_entry(
             "AA090".to_string(),
-            "Congenital atrial septal defect with patent foramen ovale (disorder)".to_string(),
+            Some(
+                "Congenital atrial septal defect with patent foramen ovale (disorder)".to_string(),
+            ),
             None,
         )?;
         codelist.add_entry(
             "77480004".to_string(),
-            "Congenital biliary atresia (disorder)".to_string(),
+            Some("Congenital biliary atresia (disorder)".to_string()),
             None,
         )?;
         codelist.add_entry(
             "34000006".to_string(),
-            "Crohn's disease (disorder)".to_string(),
+            Some("Crohn's disease (disorder)".to_string()),
             None,
         )?;
         codelist.add_entry(
             "417357006".to_string(),
-            "Sickling disorder due to hemoglobin S (disorder)".to_string(),
+            Some("Sickling disorder due to hemoglobin S (disorder)".to_string()),
             None,
         )?;
         codelist.add_entry(
             "24700007".to_string(),
-            "Multiple sclerosis (disorder)".to_string(),
+            Some("Multiple sclerosis (disorder)".to_string()),
             None,
         )?;
-        codelist.add_entry("11111".to_string(), "Pre-eclampsia (disorder)".to_string(), None)?;
+        codelist.add_entry(
+            "11111".to_string(),
+            Some("Pre-eclampsia (disorder)".to_string()),
+            None,
+        )?;
 
         let error = codelist.validate_codes().unwrap_err();
         let error_string = error.to_string();
