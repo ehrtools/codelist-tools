@@ -3,7 +3,8 @@
 use csv::Writer;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashSet};
-use std::io::{Write, str::FromStr};
+use std::io::Write;
+use std::str::FromStr;
 
 // Internal imports
 use crate::{
@@ -373,24 +374,24 @@ impl CodeList {
         let mut threes = self
             .entries
             .iter()
-            .filter(|entry| entry.code.len() == 3)
-            .map(|entry| entry.code.clone())
+            .filter(|(code, (_, _))| code.len() == 3)
+            .map(|(code, (_, _))| code.clone())
             .collect::<HashSet<String>>();
 
         let mut adds = vec![];
         let mut removes = vec![];
 
-        for entry in self.entries.iter() {
+        for (code, (term, _)) in self.entries.iter() {
             // Codes of 3 or less will not be truncated
-            if entry.code.len() <= 3 {
+            if code.len() <= 3 {
                 continue;
             }
 
             // We'll remove this one later
-            removes.push(entry.clone());
+            removes.push(code.clone());
 
             // truncate the entry's code
-            let truncated_code = entry.code[..3].to_string();
+            let truncated_code = code[..3].to_string();
 
             // If we already have this one, then go on to the next one
             if threes.contains(&truncated_code) {
@@ -402,25 +403,24 @@ impl CodeList {
 
             // The term and comment that goes with it to make the
             // entry depends on the term_management
-            let (term, comment) = match term_management {
+            let comment = match term_management {
                 TermManagement::First => {
-                    let comment = format!("{} truncated to 3 digits", &entry.code);
-                    (entry.term.clone(), Some(comment))
+                    Some(format!("{} truncated to 3 digits", code))
                 }
             };
 
             // We'll add this one later
-            adds.push(CodeEntry::new(truncated_code, term, comment)?);
+            adds.push((truncated_code, term.clone(), comment));
         }
 
         // Add the new three-digit codes
-        for entry in &adds {
-            self.add_entry(entry.code.clone(), entry.term.clone(), entry.comment.clone())?;
+        for (code, term, comment) in &adds {
+            self.add_entry(code.clone(), term.clone(), comment.clone())?;
         }
 
         // Remove the longer codes
-        for entry in &removes {
-            self.remove_entry(entry.code.as_str(), entry.term.as_str())?;
+        for code in &removes {
+            self.remove_entry(code)?;
         }
 
         Ok(())
@@ -441,15 +441,15 @@ impl CodeList {
         let mut exes = self
             .entries
             .iter()
-            .filter(|entry| entry.code.len() == 4 && entry.code.ends_with("X"))
-            .map(|entry| entry.code.clone())
+            .filter(|(code, (_, _))| code.len() == 4 && code.ends_with("X"))
+            .map(|(code, (_, _))| code.clone())
             .collect::<HashSet<String>>();
 
         let mut adds = vec![];
 
-        for entry in &self.entries {
-            if entry.code.len() == 3 {
-                let mut new_code = entry.code.clone();
+        for (code, (term, comment)) in &self.entries {
+            if code.len() == 3 {
+                let mut new_code = code.clone();
                 new_code.push('X');
 
                 if exes.contains(&new_code) {
@@ -457,12 +457,13 @@ impl CodeList {
                 }
 
                 exes.insert(new_code.clone());
-                adds.push(CodeEntry::new(new_code, entry.term.clone(), entry.comment.clone())?);
+
+                adds.push((new_code, term.clone(), comment.clone()));
             }
         }
 
-        for entry in &adds {
-            self.add_entry(entry.code.clone(), entry.term.clone(), entry.comment.clone())?;
+        for (code, term, comment) in &adds {
+            self.add_entry(code.clone(), term.clone(), comment.clone())?;
         }
 
         Ok(())
