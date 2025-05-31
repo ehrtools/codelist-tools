@@ -1,4 +1,3 @@
-use chrono::DateTime;
 /// This file contains the python bindings for the codelist-rs library's CodeList struct
 /// This should only contain the python bindings for the CodeList struct.
 // External imports
@@ -92,17 +91,17 @@ impl PyCodeList {
 
     /// Add an entry to the codelist
     #[pyo3(text_signature = "($self, code, term, comment=None)")]
-    fn add_entry(&mut self, code: String, term: String, comment: Option<String>) -> PyResult<()> {
+    fn add_entry(&mut self, code: String, term: Option<String>, comment: Option<String>) -> PyResult<()> {
         let _ = self.inner.add_entry(code, term, comment);
         Ok(())
     }
 
     /// Get all entries in the codelist
-    fn entries(&self) -> Vec<(String, String)> {
+    fn entries(&self) -> Vec<(String, Option<String>)> {
         self.inner
             .full_entries()
             .iter()
-            .map(|entry| (entry.code.clone(), entry.term.clone()))
+            .map(|(code, (term, comment))| (code.clone(), term.clone()))
             .collect()
     }
 
