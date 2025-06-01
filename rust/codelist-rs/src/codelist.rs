@@ -126,7 +126,7 @@ impl CodeList {
     /// # Returns
     /// * `HashSet<&String>` - The codes of the codelist
     pub fn codes(&self) -> HashSet<&String> {
-        self.entries.iter().map(|(code, (_, _))| code).collect()
+        self.entries.keys().collect()
     }
 
     /// Save the codelist entries to a CSV file
