@@ -1,18 +1,22 @@
 //! This file contains the core functionality for the codelist
 
-use std::{collections::HashSet, io::Write, str::FromStr};
-
+// External imports
 use csv::Writer;
 use serde::{Deserialize, Serialize};
+use std::collections::{BTreeMap, HashSet};
+use std::io::Write;
+use std::str::FromStr;
 
+// Internal imports
 use crate::{
-    code_entry::CodeEntry, codelist_options::CodeListOptions, errors::CodeListError,
-    metadata::Metadata, types::CodeListType,
+    codelist_options::CodeListOptions, errors::CodeListError, metadata::Metadata,
+    types::CodeListType,
 };
 
 /// Struct to represent a codelist
 ///
 /// # Fields
+/// * `name` - The name of the codelist
 /// * `entries` - The set of code entries
 /// * `codelist_type` - The type of codelist
 /// * `metadata` - Metadata about the codelist
@@ -21,7 +25,7 @@ use crate::{
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct CodeList {
     pub name: String,
-    pub entries: HashSet<CodeEntry>,
+    pub entries: BTreeMap<String, (Option<String>, Option<String>)>,
     pub codelist_type: CodeListType,
     pub metadata: Metadata,
     pub logs: Vec<String>, // We will want to make this a struct with more info at some point
@@ -32,7 +36,7 @@ impl CodeList {
     /// Create a new CodeList
     ///
     /// # Arguments
-    /// * `entries` - The set of code entries
+    /// * `name` - The name of the codelist
     /// * `codelist_type` - The type of codelist
     /// * `metadata` - Metadata describing the codelist
     /// * `logs` - Logs of anything that happened during the codelist creation
@@ -48,7 +52,7 @@ impl CodeList {
     ) -> Self {
         CodeList {
             name,
-            entries: HashSet::new(),
+            entries: BTreeMap::new(),
             codelist_type,
             metadata,
             logs: Vec::new(),
@@ -68,15 +72,18 @@ impl CodeList {
     ///
     /// # Arguments
     /// * `code` - The code to add
-    /// * `term` - The term to add
+    /// * `term` - The optional term to add
+    /// * `comment` - The optional comment to add
     pub fn add_entry(
         &mut self,
         code: String,
-        term: String,
+        term: Option<String>,
         comment: Option<String>,
     ) -> Result<(), CodeListError> {
-        let entry = CodeEntry::new(code, term, comment)?;
-        self.entries.insert(entry);
+        if code.is_empty() {
+            return Err(CodeListError::empty_code("Empty code supplied"));
+        }
+        self.entries.insert(code, (term, comment));
         Ok(())
     }
 
@@ -84,36 +91,34 @@ impl CodeList {
     ///
     /// # Arguments
     /// * `code` - The code to remove
-    /// * `term` - The term to remove
     ///
     /// # Errors
     /// * `CodeListError::EntryNotFound` - If the entry to be removed is not
     ///   found
-    pub fn remove_entry(&mut self, code: &str, term: &str) -> Result<(), CodeListError> {
-        let removed =
-            self.entries.remove(&CodeEntry::new(code.to_string(), term.to_string(), None)?);
-        if removed {
+    pub fn remove_entry(&mut self, code: &str) -> Result<(), CodeListError> {
+        let removed = self.entries.remove(code);
+        if removed.is_some() {
             Ok(())
         } else {
             Err(CodeListError::entry_not_found(code))
         }
     }
 
-    /// Get the full entries of the codelist, including code, term and optional
+    /// Get the full entries of the codelist, including code, optional term and optional
     /// comment
     ///
     /// # Returns
-    /// * `&HashSet<CodeEntry>` - The entries of the codelist
-    pub fn full_entries(&self) -> &HashSet<CodeEntry> {
+    /// * `&BTreeMap<String, (Option<String>, Option<String>)` - The entries of the codelist
+    pub fn full_entries(&self) -> &BTreeMap<String, (Option<String>, Option<String>)> {
         &self.entries
     }
 
     /// Get the code and term of the codelist
     ///
     /// # Returns
-    /// * `HashSet<(&String, &String)>` - The codes and terms of the codelist
-    pub fn code_term_entries(&self) -> HashSet<(&String, &String)> {
-        self.entries.iter().map(|entry| (&entry.code, &entry.term)).collect()
+    /// * `BTreeMap<&String, Option<&String>>` - The codes and terms of the codelist
+    pub fn code_term_entries(&self) -> BTreeMap<&String, Option<&String>> {
+        self.entries.iter().map(|(code, (term_opt, _))| (code, term_opt.as_ref())).collect()
     }
 
     /// Get the codes of the codelist
@@ -121,7 +126,7 @@ impl CodeList {
     /// # Returns
     /// * `HashSet<&String>` - The codes of the codelist
     pub fn codes(&self) -> HashSet<&String> {
-        self.entries.iter().map(|entry| &entry.code).collect()
+        self.entries.keys().collect()
     }
 
     /// Save the codelist entries to a CSV file
@@ -138,8 +143,8 @@ impl CodeList {
             &self.codelist_options.code_field_name,
             &self.codelist_options.term_field_name,
         ])?;
-        for entry in self.entries.iter() {
-            wtr.write_record([&entry.code, &entry.term])?;
+        for (code, (term, _)) in self.entries.iter() {
+            wtr.write_record([code, term.as_deref().unwrap_or("")])?;
         }
         wtr.flush()?;
         Ok(())
@@ -152,7 +157,7 @@ impl CodeList {
     ///
     /// # Errors
     /// * `CodeListError::IOError` - If an error occurs when writing to the file
-    pub fn save_to_json(&self, file_path: &str) -> std::result::Result<(), CodeListError> {
+    pub fn save_to_json(&self, file_path: &str) -> Result<(), CodeListError> {
         let json = serde_json::to_string_pretty(self)?;
         std::fs::write(file_path, json)?;
         Ok(())
@@ -189,6 +194,166 @@ impl CodeList {
         &self.metadata
     }
 
+    /// Add a comment to a code entry
+    ///
+    /// # Arguments
+    /// * `code` - The code of the entry to add the comment to
+    /// * `comment` - The comment to add
+    ///
+    /// # Returns
+    /// * `Result<(), CodeListError>`
+    ///
+    /// # Errors
+    /// * `CodeListError::CodeEntryCommentAlreadyExists` - If the comment
+    ///   already exists
+    pub fn add_comment(&mut self, code: String, comment: String) -> Result<(), CodeListError> {
+        match self.entries.get_mut(&code) {
+            Some((_, comment_opt)) => {
+                if comment_opt.is_some() {
+                    Err(CodeListError::code_entry_comment_already_exists(
+                        code,
+                        "Please use update comment instead",
+                    ))
+                } else {
+                    *comment_opt = Some(comment);
+                    Ok(())
+                }
+            }
+            None => Err(CodeListError::entry_not_found(&code)),
+        }
+    }
+
+    /// Update the comment for the code entry
+    ///
+    /// # Arguments
+    /// * `code` - The code of the entry to update the comment for
+    /// * `comment` - The comment to update
+    ///
+    /// # Returns
+    /// * `Result<(), CodeListError>`
+    ///
+    /// # Errors
+    /// * `CodeListError::CodeEntryCommentDoesNotExist` - If the comment does
+    ///   not exist
+    pub fn update_comment(&mut self, code: String, comment: String) -> Result<(), CodeListError> {
+        match self.entries.get_mut(&code) {
+            Some((_, comment_opt)) => {
+                if comment_opt.is_some() {
+                    *comment_opt = Some(comment);
+                    Ok(())
+                } else {
+                    Err(CodeListError::code_entry_comment_does_not_exist(
+                        code,
+                        "Please use add comment instead",
+                    ))
+                }
+            }
+            None => Err(CodeListError::entry_not_found(&code)),
+        }
+    }
+
+    /// Remove the comment from the code entry
+    ///
+    /// # Arguments
+    /// * `code` - The code of the entry to remove the comment from
+    ///
+    /// # Returns
+    /// * `Result<(), CodeListError>`
+    ///
+    /// # Errors
+    /// * `CodeListError::CodeEntryCommentDoesNotExist` - If there is no comment
+    ///   to remove
+    pub fn remove_comment(&mut self, code: String) -> Result<(), CodeListError> {
+        match self.entries.get_mut(&code) {
+            Some((_, comment_opt)) => {
+                if comment_opt.is_some() {
+                    *comment_opt = None;
+                    Ok(())
+                } else {
+                    Err(CodeListError::code_entry_comment_does_not_exist(
+                        code,
+                        "Unable to remove comment",
+                    ))
+                }
+            }
+            None => Err(CodeListError::entry_not_found(&code)),
+        }
+    }
+
+    /// Add a term to the code entry
+    ///
+    /// # Arguments
+    /// * `code` - The code of the entry to add the term to
+    /// * `term` - The term to add
+    ///
+    /// # Errors
+    /// * `CodeListError::CodeEntryTermAlreadyExists` - If the term already exists
+    pub fn add_term(&mut self, code: String, term: String) -> Result<(), CodeListError> {
+        match self.entries.get_mut(&code) {
+            Some((term_opt, _)) => {
+                if term_opt.is_some() {
+                    Err(CodeListError::code_entry_term_already_exists(
+                        code,
+                        "Please use update term instead",
+                    ))
+                } else {
+                    *term_opt = Some(term);
+                    Ok(())
+                }
+            }
+            None => Err(CodeListError::entry_not_found(&code)),
+        }
+    }
+
+    /// Update the term for the code entry
+    ///
+    /// # Arguments
+    /// * `code` - The code of the entry to update the term for
+    /// * `term` - The term to update
+    ///
+    /// # Errors
+    /// * `CodeListError::CodeEntryTermDoesNotExist` - If the term does not exist
+    pub fn update_term(&mut self, code: String, term: String) -> Result<(), CodeListError> {
+        match self.entries.get_mut(&code) {
+            Some((term_opt, _)) => {
+                if term_opt.is_some() {
+                    *term_opt = Some(term);
+                    Ok(())
+                } else {
+                    Err(CodeListError::code_entry_term_does_not_exist(
+                        code,
+                        "Please use add term instead",
+                    ))
+                }
+            }
+            None => Err(CodeListError::entry_not_found(&code)),
+        }
+    }
+
+    /// Remove the term from the code entry
+    ///
+    /// # Arguments
+    /// * `code` - The code of the entry to remove the term from
+    ///
+    /// # Errors
+    /// * `CodeListError::CodeEntryTermDoesNotExist` - If there is no term to remove
+    pub fn remove_term(&mut self, code: String) -> Result<(), CodeListError> {
+        match self.entries.get_mut(&code) {
+            Some((term_opt, _)) => {
+                if term_opt.is_some() {
+                    *term_opt = None;
+                    Ok(())
+                } else {
+                    Err(CodeListError::code_entry_term_does_not_exist(
+                        code,
+                        "Unable to remove term",
+                    ))
+                }
+            }
+            None => Err(CodeListError::entry_not_found(&code)),
+        }
+    }
+
     /// Truncate codelist entries to 3 digits
     ///
     /// # Arguments
@@ -210,24 +375,24 @@ impl CodeList {
         let mut threes = self
             .entries
             .iter()
-            .filter(|entry| entry.code.len() == 3)
-            .map(|entry| entry.code.clone())
+            .filter(|(code, (_, _))| code.len() == 3)
+            .map(|(code, (_, _))| code.clone())
             .collect::<HashSet<String>>();
 
         let mut adds = vec![];
         let mut removes = vec![];
 
-        for entry in self.entries.iter() {
+        for (code, (term, _)) in self.entries.iter() {
             // Codes of 3 or less will not be truncated
-            if entry.code.len() <= 3 {
+            if code.len() <= 3 {
                 continue;
             }
 
             // We'll remove this one later
-            removes.push(entry.clone());
+            removes.push(code.clone());
 
             // truncate the entry's code
-            let truncated_code = entry.code[..3].to_string();
+            let truncated_code = code[..3].to_string();
 
             // If we already have this one, then go on to the next one
             if threes.contains(&truncated_code) {
@@ -239,25 +404,22 @@ impl CodeList {
 
             // The term and comment that goes with it to make the
             // entry depends on the term_management
-            let (term, comment) = match term_management {
-                TermManagement::First => {
-                    let comment = format!("{} truncated to 3 digits", &entry.code);
-                    (entry.term.clone(), Some(comment))
-                }
+            let comment = match term_management {
+                TermManagement::First => Some(format!("{} truncated to 3 digits", code)),
             };
 
             // We'll add this one later
-            adds.push(CodeEntry::new(truncated_code, term, comment)?);
+            adds.push((truncated_code, term.clone(), comment));
         }
 
         // Add the new three-digit codes
-        for entry in &adds {
-            self.add_entry(entry.code.clone(), entry.term.clone(), entry.comment.clone())?;
+        for (code, term, comment) in &adds {
+            self.add_entry(code.clone(), term.clone(), comment.clone())?;
         }
 
         // Remove the longer codes
-        for entry in &removes {
-            self.remove_entry(entry.code.as_str(), entry.term.as_str())?;
+        for code in &removes {
+            self.remove_entry(code)?;
         }
 
         Ok(())
@@ -278,15 +440,15 @@ impl CodeList {
         let mut exes = self
             .entries
             .iter()
-            .filter(|entry| entry.code.len() == 4 && entry.code.ends_with("X"))
-            .map(|entry| entry.code.clone())
+            .filter(|(code, (_, _))| code.len() == 4 && code.ends_with("X"))
+            .map(|(code, (_, _))| code.clone())
             .collect::<HashSet<String>>();
 
         let mut adds = vec![];
 
-        for entry in &self.entries {
-            if entry.code.len() == 3 {
-                let mut new_code = entry.code.clone();
+        for (code, (term, comment)) in &self.entries {
+            if code.len() == 3 {
+                let mut new_code = code.clone();
                 new_code.push('X');
 
                 if exes.contains(&new_code) {
@@ -294,12 +456,13 @@ impl CodeList {
                 }
 
                 exes.insert(new_code.clone());
-                adds.push(CodeEntry::new(new_code, entry.term.clone(), entry.comment.clone())?);
+
+                adds.push((new_code, term.clone(), comment.clone()));
             }
         }
 
-        for entry in &adds {
-            self.add_entry(entry.code.clone(), entry.term.clone(), entry.comment.clone())?;
+        for (code, term, comment) in &adds {
+            self.add_entry(code.clone(), term.clone(), comment.clone())?;
         }
 
         Ok(())
@@ -341,10 +504,11 @@ mod tests {
             Metadata::default(),
             None,
         );
-        codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
+        codelist.add_entry("R65.2".to_string(), None, None)?;
+
         codelist.add_entry(
             "A48.51".to_string(),
-            "Infant botulism".to_string(),
+            Some("Infant botulism".to_string()),
             Some("test comment".to_string()),
         )?;
 
@@ -363,7 +527,7 @@ mod tests {
         let codelist = create_test_codelist()?;
 
         assert_eq!(codelist.codelist_type(), &CodeListType::ICD10);
-        assert_eq!(codelist.full_entries().len(), 2);
+        assert_eq!(codelist.entries.len(), 2);
         assert_eq!(codelist.logs.len(), 0);
         assert_eq!(&codelist.codelist_options, &CodeListOptions::default());
 
@@ -438,7 +602,7 @@ mod tests {
         assert_eq!(codelist.metadata().validation_and_review.validation_notes, None);
 
         assert_eq!(codelist.codelist_type(), &CodeListType::ICD10);
-        assert_eq!(codelist.full_entries().len(), 0);
+        assert_eq!(codelist.entries.len(), 0);
         assert_eq!(codelist.logs.len(), 0);
 
         Ok(())
@@ -452,10 +616,10 @@ mod tests {
             Default::default(),
             None,
         );
-        codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
-        codelist.add_entry("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
+        codelist.add_entry("R65.2".to_string(), Some("Severe sepsis".to_string()), None)?;
+        codelist.add_entry("R65.2".to_string(), Some("Severe sepsis".to_string()), None)?;
 
-        assert_eq!(codelist.full_entries().len(), 1);
+        assert_eq!(codelist.entries.len(), 1);
 
         Ok(())
     }
@@ -472,28 +636,47 @@ mod tests {
     #[test]
     fn test_add_entry() -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
-        let entry1 = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
-        let entry2 = CodeEntry::new(
-            "A48.51".to_string(),
-            "Infant botulism".to_string(),
-            Some("test comment".to_string()),
-        )?;
+        let code1 = "R65.2".to_string();
+        let code2 = "A48.51".to_string();
 
-        assert_eq!(codelist.full_entries().len(), 2);
-        assert!(codelist.full_entries().contains(&entry1));
-        assert!(codelist.full_entries().contains(&entry2));
+        let first_entry = codelist.entries.get(&code1);
+        let (term1, comment1) =
+            first_entry.ok_or_else(|| CodeListError::entry_not_found(&code1))?;
+        let second_entry = codelist.entries.get(&code2);
+        let (term2, comment2) =
+            second_entry.ok_or_else(|| CodeListError::entry_not_found(&code1))?;
 
+        assert!(first_entry.is_some());
+        assert!(comment1.is_none());
+        assert_eq!(term1.as_deref(), None);
+
+        assert!(second_entry.is_some());
+        assert_eq!(comment2.as_deref(), Some("test comment"));
+        assert_eq!(term2.as_deref(), Some("Infant botulism"));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_add_entry_with_empty_code_returns_error() -> Result<(), CodeListError> {
+        let mut codelist = create_test_codelist()?;
+        let error = codelist.add_entry("".to_string(), None, None).unwrap_err();
+        let error_string = error.to_string();
+        assert_eq!(&error_string, "Empty code: Empty code supplied");
         Ok(())
     }
 
     #[test]
     fn test_remove_entry_that_exists() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist()?;
-        codelist.remove_entry("R65.2", "Severe sepsis")?;
-        let entry = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
+        codelist.remove_entry("R65.2")?;
+        let entry = codelist.entries.get("A48.51");
+        let (term, comment) = entry.ok_or_else(|| CodeListError::entry_not_found("A48.51"))?;
 
-        assert_eq!(codelist.full_entries().len(), 1);
-        assert!(!codelist.full_entries().contains(&entry));
+        assert_eq!(codelist.entries.len(), 1);
+        assert!(entry.is_some());
+        assert_eq!(comment.as_deref(), Some("test comment"));
+        assert_eq!(term.as_deref(), Some("Infant botulism"));
 
         Ok(())
     }
@@ -501,28 +684,10 @@ mod tests {
     #[test]
     fn test_remove_entry_that_doesnt_exist() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist()?;
-        let error = codelist.remove_entry("A48.52", "Infant botulism").unwrap_err();
+        let error = codelist.remove_entry("A48.52").unwrap_err();
 
         assert!(matches!(error, CodeListError::EntryNotFound { code } if code == "A48.52"));
-        assert_eq!(codelist.full_entries().len(), 2);
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_get_full_entries() -> Result<(), CodeListError> {
-        let codelist = create_test_codelist()?;
-        let entries = codelist.full_entries();
-        let test_entry_1 = CodeEntry::new("R65.2".to_string(), "Severe sepsis".to_string(), None)?;
-        let test_entry_2 = CodeEntry::new(
-            "A48.51".to_string(),
-            "Infant botulism".to_string(),
-            Some("test comment".to_string()),
-        )?;
-
-        assert_eq!(entries.len(), 2);
-        assert!(entries.contains(&test_entry_1));
-        assert!(entries.contains(&test_entry_2));
+        assert_eq!(codelist.entries.len(), 2);
 
         Ok(())
     }
@@ -531,13 +696,13 @@ mod tests {
     fn test_get_code_term_entries() -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
         let entries = codelist.code_term_entries();
-
-        let test_entry_1 = (&"R65.2".to_string(), &"Severe sepsis".to_string());
-        let test_entry_2 = (&"A48.51".to_string(), &"Infant botulism".to_string());
+        let expected_term = "Infant botulism".to_string();
+        let key1 = "R65.2".to_string();
+        let key2 = "A48.51".to_string();
 
         assert_eq!(entries.len(), 2);
-        assert!(entries.contains(&test_entry_1));
-        assert!(entries.contains(&test_entry_2));
+        assert_eq!(entries.get(&key1), Some(&None));
+        assert_eq!(entries.get(&key2), Some(&Some(&expected_term)));
 
         Ok(())
     }
@@ -572,7 +737,7 @@ mod tests {
         data_lines.sort();
 
         assert_eq!(lines[0], "code,term");
-        assert_eq!(data_lines, vec!["A48.51,Infant botulism", "R65.2,Severe sepsis"]);
+        assert_eq!(data_lines, vec!["A48.51,Infant botulism", "R65.2,"]);
 
         Ok(())
     }
@@ -634,6 +799,173 @@ mod tests {
     }
 
     #[test]
+    fn test_add_comment_when_comment_does_not_exist() -> Result<(), CodeListError> {
+        let mut codelist = create_test_codelist()?;
+        let expected_comment = "test comment";
+        let key = "R65.2";
+        codelist.add_comment(key.to_string(), expected_comment.to_string())?;
+
+        let entry = codelist.entries.get(key);
+
+        let (_, actual_comment) = entry.ok_or_else(|| CodeListError::entry_not_found(key))?;
+
+        assert_eq!(actual_comment.as_deref(), Some(expected_comment));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_add_comment_when_comment_already_exists() -> Result<(), CodeListError> {
+        let mut codelist = create_test_codelist()?;
+        let key = "A48.51";
+        let error = codelist.add_comment(key.to_string(), "test".to_string()).unwrap_err();
+        let error_string = error.to_string();
+        let entry = codelist.entries.get(key);
+        let (_, actual_comment) = entry.ok_or_else(|| CodeListError::entry_not_found(key))?;
+
+        assert_eq!(actual_comment.as_deref(), Some("test comment"));
+        assert_eq!(
+            &error_string,
+            "Comment for entry with code A48.51 already exists. Please use update comment instead."
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_update_comment_when_comment_already_exists() -> Result<(), CodeListError> {
+        let mut codelist = create_test_codelist()?;
+        let expected_comment = "new test comment";
+        let key = "A48.51";
+        codelist.update_comment(key.to_string(), expected_comment.to_string())?;
+
+        let entry = codelist.entries.get(key);
+
+        let (_, actual_comment) = entry.ok_or_else(|| CodeListError::entry_not_found(key))?;
+
+        assert_eq!(actual_comment.as_deref(), Some(expected_comment));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_update_comment_when_comment_does_not_already_exist() -> Result<(), CodeListError> {
+        let mut codelist = create_test_codelist()?;
+        let key = "R65.2";
+        let error = codelist.update_comment(key.to_string(), "test".to_string()).unwrap_err();
+        let error_string = error.to_string();
+        let entry = codelist.entries.get(key);
+        let (_, actual_comment) = entry.ok_or_else(|| CodeListError::entry_not_found(key))?;
+
+        assert_eq!(actual_comment.as_deref(), None);
+        assert_eq!(
+            &error_string,
+            "Comment for entry with code R65.2 does not exist. Please use add comment instead."
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_remove_comment_when_comment_exists() -> Result<(), CodeListError> {
+        let mut codelist = create_test_codelist()?;
+        let key = "A48.51";
+        codelist.remove_comment(key.to_string())?;
+        let entry = codelist.entries.get(key);
+        let (_, comment) = entry.ok_or_else(|| CodeListError::entry_not_found(key))?;
+
+        assert_eq!(comment.as_deref(), None);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_remove_comment_when_comment_does_not_already_exist() -> Result<(), CodeListError> {
+        let mut codelist = create_test_codelist()?;
+        let key = "R65.2";
+        let error = codelist.remove_comment(key.to_string()).unwrap_err();
+        let error_string = error.to_string();
+        let entry = codelist.entries.get(key);
+        let (_, actual_comment) = entry.ok_or_else(|| CodeListError::entry_not_found(key))?;
+
+        assert_eq!(actual_comment.as_deref(), None);
+        assert_eq!(
+            &error_string,
+            "Comment for entry with code R65.2 does not exist. Unable to remove comment."
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_add_term_when_term_does_not_exist() -> Result<(), CodeListError> {
+        let mut codelist = create_test_codelist()?;
+        let expected_term = "test term";
+        let key = "R65.2";
+        codelist.add_term(key.to_string(), expected_term.to_string())?;
+
+        let entry = codelist.entries.get(key);
+
+        let (actual_term, _) = entry.ok_or_else(|| CodeListError::entry_not_found(key))?;
+
+        assert_eq!(actual_term.as_deref(), Some(expected_term));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_add_term_when_term_already_exists() -> Result<(), CodeListError> {
+        let mut codelist = create_test_codelist()?;
+        let key = "A48.51";
+        let error = codelist.add_term(key.to_string(), "test".to_string()).unwrap_err();
+        let error_string = error.to_string();
+        let entry = codelist.entries.get(key);
+        let (actual_term, _) = entry.ok_or_else(|| CodeListError::entry_not_found(key))?;
+
+        assert_eq!(actual_term.as_deref(), Some("Infant botulism"));
+        assert_eq!(
+            &error_string,
+            "Term for entry with code A48.51 already exists. Please use update term instead."
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_update_term_when_term_already_exists() -> Result<(), CodeListError> {
+        let mut codelist = create_test_codelist()?;
+        let expected_term = "new test term";
+        let key = "A48.51";
+        codelist.update_term(key.to_string(), expected_term.to_string())?;
+
+        let entry = codelist.entries.get(key);
+
+        let (actual_term, _) = entry.ok_or_else(|| CodeListError::entry_not_found(key))?;
+
+        assert_eq!(actual_term.as_deref(), Some(expected_term));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_update_term_when_term_does_not_already_exist() -> Result<(), CodeListError> {
+        let mut codelist = create_test_codelist()?;
+        let key = "R65.2";
+        let error = codelist.update_term(key.to_string(), "test".to_string()).unwrap_err();
+        let error_string = error.to_string();
+        let entry = codelist.entries.get(key);
+        let (actual_term, _) = entry.ok_or_else(|| CodeListError::entry_not_found(key))?;
+
+        assert_eq!(actual_term.as_deref(), None);
+        assert_eq!(
+            &error_string,
+            "Term for entry with code R65.2 does not exist. Please use add term instead."
+        );
+
+        Ok(())
+    }
+
+    #[test]
     fn test_truncate_to_3_digits_snomed() -> Result<(), CodeListError> {
         let mut snomed_codelist = CodeList::new(
             "test_codelist".to_string(),
@@ -656,14 +988,18 @@ mod tests {
             CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
         expected_codelist.add_entry(
             "B01".to_string(),
-            "Varicella pneumonia".to_string(),
+            Some("Varicella pneumonia".to_string()),
             Some("B012 truncated to 3 digits".to_string()),
         )?;
 
         let mut observed_codelist =
             CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata, None);
 
-        observed_codelist.add_entry("B012".to_string(), "Varicella pneumonia".to_string(), None)?;
+        observed_codelist.add_entry(
+            "B012".to_string(),
+            Some("Varicella pneumonia".to_string()),
+            None,
+        )?;
 
         observed_codelist.truncate_to_3_digits(TermManagement::First)?;
 
@@ -680,7 +1016,7 @@ mod tests {
             CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
         expected_codelist.add_entry(
             "B01".to_string(),
-            "Varicella [chickenpox]".to_string(),
+            Some("Varicella [chickenpox]".to_string()),
             None,
         )?;
 
@@ -689,10 +1025,14 @@ mod tests {
 
         observed_codelist.add_entry(
             "B01".to_string(),
-            "Varicella [chickenpox]".to_string(),
+            Some("Varicella [chickenpox]".to_string()),
             None,
         )?;
-        observed_codelist.add_entry("B012".to_string(), "Varicella pneumonia".to_string(), None)?;
+        observed_codelist.add_entry(
+            "B012".to_string(),
+            Some("Varicella pneumonia".to_string()),
+            None,
+        )?;
 
         observed_codelist.truncate_to_3_digits(TermManagement::First)?;
 
@@ -709,23 +1049,23 @@ mod tests {
             Default::default(),
             None,
         );
-        expected_codelist.add_entry("A10".to_string(), "Cholera".to_string(), None)?;
+        expected_codelist.add_entry("A10".to_string(), Some("Cholera".to_string()), None)?;
 
         expected_codelist.add_entry(
             "B01".to_string(),
-            "Typhoid and paratyphoid fevers".to_string(),
+            Some("Typhoid and paratyphoid fevers".to_string()),
             None,
         )?;
 
-        expected_codelist.add_entry("B0111".to_string(), "TB".to_string(), None)?;
+        expected_codelist.add_entry("B0111".to_string(), Some("TB".to_string()), None)?;
 
         let mut observed_codelist = expected_codelist.clone();
 
-        expected_codelist.add_entry("A10X".to_string(), "Cholera".to_string(), None)?;
+        expected_codelist.add_entry("A10X".to_string(), Some("Cholera".to_string()), None)?;
 
         expected_codelist.add_entry(
             "B01X".to_string(),
-            "Typhoid and paratyphoid fevers".to_string(),
+            Some("Typhoid and paratyphoid fevers".to_string()),
             None,
         )?;
 
@@ -744,25 +1084,25 @@ mod tests {
             Default::default(),
             None,
         );
-        expected_codelist.add_entry("A10".to_string(), "Cholera".to_string(), None)?;
+        expected_codelist.add_entry("A10".to_string(), Some("Cholera".to_string()), None)?;
 
         expected_codelist.add_entry(
             "B01".to_string(),
-            "Typhoid and paratyphoid fevers".to_string(),
+            Some("Typhoid and paratyphoid fevers".to_string()),
             None,
         )?;
 
         expected_codelist.add_entry(
             "B01X".to_string(),
-            "Varicella [chickenpox]".to_string(),
+            Some("Varicella [chickenpox]".to_string()),
             None,
         )?;
 
-        expected_codelist.add_entry("B0111".to_string(), "TB".to_string(), None)?;
+        expected_codelist.add_entry("B0111".to_string(), Some("TB".to_string()), None)?;
 
         let mut observed_codelist = expected_codelist.clone();
 
-        expected_codelist.add_entry("A10X".to_string(), "Cholera".to_string(), None)?;
+        expected_codelist.add_entry("A10X".to_string(), Some("Cholera".to_string()), None)?;
 
         observed_codelist.add_x_codes()?;
 
@@ -785,6 +1125,61 @@ mod tests {
 
         Ok(())
     }
-}
 
-// add tests for get code, get code term entries
+    #[test]
+    fn test_remove_term_when_term_exists() -> Result<(), CodeListError> {
+        let mut codelist = create_test_codelist()?;
+        let key = "A48.51";
+        codelist.remove_term(key.to_string())?;
+        let entry = codelist.entries.get(key);
+        let (term, _) = entry.ok_or_else(|| CodeListError::entry_not_found(key))?;
+
+        assert_eq!(term.as_deref(), None);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_remove_term_when_term_does_not_already_exist() -> Result<(), CodeListError> {
+        let mut codelist = create_test_codelist()?;
+        let key = "R65.2";
+        let error = codelist.remove_term(key.to_string()).unwrap_err();
+        let error_string = error.to_string();
+        let entry = codelist.entries.get(key);
+        let (actual_term, _) = entry.ok_or_else(|| CodeListError::entry_not_found(key))?;
+
+        assert_eq!(actual_term.as_deref(), None);
+        assert_eq!(
+            &error_string,
+            "Term for entry with code R65.2 does not exist. Unable to remove term."
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn get_full_entries() -> Result<(), CodeListError> {
+        let codelist = create_test_codelist()?;
+        let entries = codelist.full_entries();
+        let expected_term1 = None;
+        let expected_comment1 = None;
+        let expected_term2 = "Infant botulism";
+        let expected_comment2 = "test comment";
+        let key1 = "R65.2".to_string();
+        let key2 = "A48.51".to_string();
+
+        let entry1 = entries.get(&key1);
+        let entry2 = entries.get(&key2);
+
+        let (term1, comment1) = entry1.ok_or_else(|| CodeListError::entry_not_found(&key1))?;
+        let (term2, comment2) = entry2.ok_or_else(|| CodeListError::entry_not_found(&key2))?;
+
+        assert_eq!(entries.len(), 2);
+        assert_eq!(term1.as_deref(), expected_term1);
+        assert_eq!(comment1.as_deref(), expected_comment1);
+        assert_eq!(term2.as_deref(), Some(expected_term2));
+        assert_eq!(comment2.as_deref(), Some(expected_comment2));
+
+        Ok(())
+    }
+}

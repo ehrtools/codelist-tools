@@ -35,8 +35,7 @@ impl CodeValidator for IcdValidator<'_> {
     fn validate_all_code(&self) -> Result<(), CodeListValidatorError> {
         let mut reasons = Vec::new();
 
-        for code_entry in self.0.entries.iter() {
-            let code = &code_entry.code;
+        for (code, _) in self.0.entries.iter() {
             if let Err(err) = self.validate_code(code) {
                 reasons.push(err.to_string());
             }
@@ -91,7 +90,7 @@ mod tests {
     #[test]
     fn test_validate_code_with_valid_code() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist()?;
-        let _ = codelist.add_entry("A100".to_string(), "test".to_string(), None);
+        let _ = codelist.add_entry("A100".to_string(), Some("test".to_string()), None);
         assert!(codelist.validate_codes().is_ok());
         Ok(())
     }
@@ -183,14 +182,18 @@ mod tests {
     #[test]
     fn test_validate_codelist_with_valid_codes() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist()?;
-        codelist.add_entry("A54".to_string(), "Gonorrhoea".to_string(), None)?;
-        codelist.add_entry("A37".to_string(), "Pertussis".to_string(), None)?;
-        codelist.add_entry("A05".to_string(), "Measles".to_string(), None)?;
-        codelist.add_entry("B74.0".to_string(), "Lymphatic filariasis".to_string(), None)?;
-        codelist.add_entry("N40".to_string(), "Benign prostatic hypertrophy".to_string(), None)?;
-        codelist.add_entry("M10".to_string(), "Gout".to_string(), None)?;
-        codelist.add_entry("Q90".to_string(), "Down Syndrome".to_string(), None)?;
-        codelist.add_entry("K02".to_string(), "Dental caries".to_string(), None)?;
+        codelist.add_entry("A54".to_string(), Some("Gonorrhoea".to_string()), None)?;
+        codelist.add_entry("A37".to_string(), Some("Pertussis".to_string()), None)?;
+        codelist.add_entry("A05".to_string(), Some("Measles".to_string()), None)?;
+        codelist.add_entry("B74.0".to_string(), Some("Lymphatic filariasis".to_string()), None)?;
+        codelist.add_entry(
+            "N40".to_string(),
+            Some("Benign prostatic hypertrophy".to_string()),
+            None,
+        )?;
+        codelist.add_entry("M10".to_string(), Some("Gout".to_string()), None)?;
+        codelist.add_entry("Q90".to_string(), Some("Down Syndrome".to_string()), None)?;
+        codelist.add_entry("K02".to_string(), Some("Dental caries".to_string()), None)?;
         assert!(codelist.validate_codes().is_ok());
         Ok(())
     }
@@ -198,14 +201,18 @@ mod tests {
     #[test]
     fn test_validate_codelist_with_all_invalid_codes() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist()?;
-        codelist.add_entry("A009000000".to_string(), "Gonorrhoea".to_string(), None)?;
-        codelist.add_entry("1009".to_string(), "Pertussis".to_string(), None)?;
-        codelist.add_entry("AA09".to_string(), "Measles".to_string(), None)?;
-        codelist.add_entry("A0A9".to_string(), "Lymphatic filariasis".to_string(), None)?;
-        codelist.add_entry("A00A".to_string(), "Benign prostatic hypertrophy".to_string(), None)?;
-        codelist.add_entry("A00.A".to_string(), "Gout".to_string(), None)?;
-        codelist.add_entry("A00X12".to_string(), "Down Syndrome".to_string(), None)?;
-        codelist.add_entry("A00.4AA".to_string(), "Dental caries".to_string(), None)?;
+        codelist.add_entry("A009000000".to_string(), Some("Gonorrhoea".to_string()), None)?;
+        codelist.add_entry("1009".to_string(), Some("Pertussis".to_string()), None)?;
+        codelist.add_entry("AA09".to_string(), Some("Measles".to_string()), None)?;
+        codelist.add_entry("A0A9".to_string(), Some("Lymphatic filariasis".to_string()), None)?;
+        codelist.add_entry(
+            "A00A".to_string(),
+            Some("Benign prostatic hypertrophy".to_string()),
+            None,
+        )?;
+        codelist.add_entry("A00.A".to_string(), Some("Gout".to_string()), None)?;
+        codelist.add_entry("A00X12".to_string(), Some("Down Syndrome".to_string()), None)?;
+        codelist.add_entry("A00.4AA".to_string(), Some("Dental caries".to_string()), None)?;
         let error = codelist.validate_codes().unwrap_err();
         let error_string = error.to_string();
 
@@ -228,14 +235,18 @@ mod tests {
     #[test]
     fn test_validate_codelist_with_mixed_invalid_and_valid_codes() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist()?;
-        codelist.add_entry("A54".to_string(), "Gonorrhoea".to_string(), None)?;
-        codelist.add_entry("1009".to_string(), "Pertussis".to_string(), None)?;
-        codelist.add_entry("A05".to_string(), "Measles".to_string(), None)?;
-        codelist.add_entry("A0A9".to_string(), "Lymphatic filariasis".to_string(), None)?;
-        codelist.add_entry("N40".to_string(), "Benign prostatic hypertrophy".to_string(), None)?;
-        codelist.add_entry("A00.A".to_string(), "Gout".to_string(), None)?;
-        codelist.add_entry("Q90".to_string(), "Down Syndrome".to_string(), None)?;
-        codelist.add_entry("A00.4AA".to_string(), "Dental caries".to_string(), None)?;
+        codelist.add_entry("A54".to_string(), Some("Gonorrhoea".to_string()), None)?;
+        codelist.add_entry("1009".to_string(), Some("Pertussis".to_string()), None)?;
+        codelist.add_entry("A05".to_string(), Some("Measles".to_string()), None)?;
+        codelist.add_entry("A0A9".to_string(), Some("Lymphatic filariasis".to_string()), None)?;
+        codelist.add_entry(
+            "N40".to_string(),
+            Some("Benign prostatic hypertrophy".to_string()),
+            None,
+        )?;
+        codelist.add_entry("A00.A".to_string(), Some("Gout".to_string()), None)?;
+        codelist.add_entry("Q90".to_string(), Some("Down Syndrome".to_string()), None)?;
+        codelist.add_entry("A00.4AA".to_string(), Some("Dental caries".to_string()), None)?;
         let error = codelist.validate_codes().unwrap_err();
         let error_string = error.to_string();
 

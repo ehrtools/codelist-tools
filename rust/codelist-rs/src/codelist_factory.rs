@@ -136,13 +136,7 @@ impl CodeListFactory {
                     ))
                 })?
                 .trim();
-            if term.is_empty() {
-                return Err(CodeListError::empty_term(format!(
-                    "Empty term field in row: {}",
-                    row_num + 2
-                )));
-            }
-            codelist.add_entry(code.to_string(), term.to_string(), None)?;
+            codelist.add_entry(code.to_string(), Some(term.to_string()), None)?;
         }
 
         Ok(codelist)
@@ -232,13 +226,6 @@ impl CodeListFactory {
                     let term_str = term_value.as_str()
                         .ok_or_else(|| CodeListError::invalid_term_type(format!("Expected string value for term at index {index}, but found invalid UTF-8 string")))?
                         .trim();
-
-                    if term_str.is_empty() {
-                        return Err(CodeListError::empty_term(format!(
-                            "Empty term at index: {index}",
-                        )));
-                    }
-
                     term_str.to_string()
                 } else {
                     return Err(CodeListError::invalid_term_type(format!(
@@ -246,7 +233,7 @@ impl CodeListFactory {
                     )));
                 };
 
-                codelist.add_entry(code, term, None)?;
+                codelist.add_entry(code, Some(term), None)?;
             }
         } else {
             return Err(CodeListError::invalid_input(
@@ -510,9 +497,18 @@ C03,Test Disease 3,Description 3";
         assert_eq!(codelist.entries.len(), 3);
 
         // Test individual entries exist
-        assert!(codelist.entries.iter().any(|e| e.code == "A01" && e.term == "Test Disease 1"));
-        assert!(codelist.entries.iter().any(|e| e.code == "B02" && e.term == "Test Disease 2"));
-        assert!(codelist.entries.iter().any(|e| e.code == "C03" && e.term == "Test Disease 3"));
+        assert!(codelist
+            .entries
+            .iter()
+            .any(|e| e.0 == "A01" && e.1 .0 == Some("Test Disease 1".to_string())));
+        assert!(codelist
+            .entries
+            .iter()
+            .any(|e| e.0 == "B02" && e.1 .0 == Some("Test Disease 2".to_string())));
+        assert!(codelist
+            .entries
+            .iter()
+            .any(|e| e.0 == "C03" && e.1 .0 == Some("Test Disease 3".to_string())));
 
         assert!(!codelist.codelist_options.allow_duplicates);
         assert_eq!(codelist.codelist_options.code_column_name, "code".to_string());
@@ -603,33 +599,6 @@ B02,Test Disease 2,Description 2";
             .unwrap_err();
         assert!(
             matches!(error, CodeListError::EmptyCode { msg } if msg.contains("Empty code field in row: 2"))
-        );
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_load_codelist_from_csv_file_empty_term() -> Result<(), CodeListError> {
-        let temp_dir = tempdir()?;
-        let file_path = temp_dir.path().join("test_codelist.csv");
-        let file_path_str = file_path.to_str().ok_or_else(|| {
-            CodeListError::invalid_file_path("Path contains invalid Unicode characters")
-        })?;
-
-        // Create CSV with empty term
-        let csv_content = "\
-code,term,description
-A01,,Description 1
-B02,Test Disease 2,Description 2";
-
-        fs::write(&file_path, csv_content)?;
-        let factory = create_test_codelist_factory();
-
-        let error = factory
-            .load_codelist_from_csv_file("test_codelist".to_string(), file_path_str)
-            .unwrap_err();
-        assert!(
-            matches!(error, CodeListError::EmptyTerm { msg } if msg.contains("Empty term field in row: 2"))
         );
 
         Ok(())
@@ -736,9 +705,18 @@ A01"; // Missing columns
         assert_eq!(codelist.entries.len(), 3);
 
         // Test individual entries exist
-        assert!(codelist.entries.iter().any(|e| e.code == "A01" && e.term == "Test Disease 1"));
-        assert!(codelist.entries.iter().any(|e| e.code == "B02" && e.term == "Test Disease 2"),);
-        assert!(codelist.entries.iter().any(|e| e.code == "C03" && e.term == "Test Disease 3"));
+        assert!(codelist
+            .entries
+            .iter()
+            .any(|e| e.0 == "A01" && e.1 .0 == Some("Test Disease 1".to_string())));
+        assert!(codelist
+            .entries
+            .iter()
+            .any(|e| e.0 == "B02" && e.1 .0 == Some("Test Disease 2".to_string())));
+        assert!(codelist
+            .entries
+            .iter()
+            .any(|e| e.0 == "C03" && e.1 .0 == Some("Test Disease 3".to_string())));
 
         assert!(!codelist.codelist_options.allow_duplicates);
         assert_eq!(codelist.codelist_options.code_column_name, "code".to_string());
@@ -812,30 +790,6 @@ A01"; // Missing columns
             .unwrap_err();
         assert!(
             matches!(error, CodeListError::EmptyCode { msg } if msg.contains("Empty code at index: 0"))
-        );
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_load_codelist_from_json_file_empty_term() -> Result<(), CodeListError> {
-        let temp_dir = tempdir()?;
-        let factory = create_test_codelist_factory();
-
-        let file_path = temp_dir.path().join("empty_term.json");
-        let file_path_str = file_path.to_str().unwrap();
-        let json_content = r#"[
-            {"code": "A01", "term": ""},
-            {"code": "B02", "term": "Test Disease 2"},
-            {"code": "C03", "term": "Test Disease 3"}
-        ]"#;
-        fs::write(&file_path, json_content)?;
-
-        let error = factory
-            .load_codelist_from_json_file("test_codelist".to_string(), file_path_str)
-            .unwrap_err();
-        assert!(
-            matches!(error, CodeListError::EmptyTerm { msg } if msg.contains("Empty term at index: 0"))
         );
 
         Ok(())
