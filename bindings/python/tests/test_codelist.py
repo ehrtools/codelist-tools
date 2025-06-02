@@ -18,7 +18,7 @@ class TestCodeListBasics(unittest.TestCase):
             source="Manually created",
         )
         codelist.add_entry("A00", "Cholera")
-        self.assertEqual(codelist.entries(), [("A00", "Cholera")])
+        self.assertEqual(codelist.entries(), [("A00", "Cholera", None)])
 
     def test_invalid_codelist_type(self):
         with self.assertRaises(ValueError) as e:
@@ -102,6 +102,83 @@ class TestCodeListBasics(unittest.TestCase):
         self.codelist.update_validation_notes("Needs more work")
         self.assertEqual("Looking good\nNeeds more work", self.codelist.get_validation_notes())
 
+    def test_add_comment(self):
+        self.codelist.add_entry("A01", "Typhoid fever")
+        self.assertEqual(self.codelist.entries(), [("A01", "Typhoid fever", None)])
+        self.codelist.add_comment("A01", "Comment 1")
+        self.assertEqual(self.codelist.entries(), [("A01", "Typhoid fever", "Comment 1")])
+
+    def test_add_comment_already_exists(self):
+        self.codelist.add_entry("A01", "Typhoid fever", "Comment 1")
+        self.assertEqual(self.codelist.entries(), [("A01", "Typhoid fever", "Comment 1")])
+        with self.assertRaises(ValueError) as e:
+            self.codelist.add_comment("A01", "Comment 2")
+        self.assertEqual(str(e.exception), "Comment for entry with code A01 already exists. Please use update comment instead.")
+
+    def test_update_comment(self):
+        self.codelist.add_entry("A01", "Typhoid fever", "Comment 1")
+        self.assertEqual(self.codelist.entries(), [("A01", "Typhoid fever", "Comment 1")])
+        self.codelist.update_comment("A01", "Comment 2")
+        self.assertEqual(self.codelist.entries(), [("A01", "Typhoid fever", "Comment 2")])
+
+    def test_update_comment_doesnt_exist(self):
+        self.codelist.add_entry("A01", "Typhoid fever")
+        self.assertEqual(self.codelist.entries(), [("A01", "Typhoid fever", None)])
+        with self.assertRaises(ValueError) as e:
+            self.codelist.update_comment("A01", "Comment 2")
+        self.assertEqual(str(e.exception), "Comment for entry with code A01 does not exist. Please use add comment instead.")
+
+    def test_remove_comment(self):
+        self.codelist.add_entry("A01", "Typhoid fever", "Comment 1")
+        self.assertEqual(self.codelist.entries(), [("A01", "Typhoid fever", "Comment 1")])
+        self.codelist.remove_comment("A01")
+        self.assertEqual(self.codelist.entries(), [("A01", "Typhoid fever", None)])
+
+    def test_remove_comment_doesnt_exist(self):
+        self.codelist.add_entry("A01", "Typhoid fever")
+        self.assertEqual(self.codelist.entries(), [("A01", "Typhoid fever", None)])
+        with self.assertRaises(ValueError) as e:
+            self.codelist.remove_comment("A01")
+        self.assertEqual(str(e.exception), "Comment for entry with code A01 does not exist. Unable to remove comment.")
+
+    def test_add_term(self):
+        self.codelist.add_entry("A01")
+        self.assertEqual(self.codelist.entries(), [("A01", None, None)])
+        self.codelist.add_term("A01", "Term 1")
+        self.assertEqual(self.codelist.entries(), [("A01", "Term 1", None)])
+
+    def test_add_term_already_exists(self):
+        self.codelist.add_entry("A01", "Typhoid fever", "Comment 1")
+        self.assertEqual(self.codelist.entries(), [("A01", "Typhoid fever", "Comment 1")])
+        with self.assertRaises(ValueError) as e:
+            self.codelist.add_term("A01", "Term 1")
+        self.assertEqual(str(e.exception), "Term for entry with code A01 already exists. Please use update term instead.")
+
+    def test_update_term(self):
+        self.codelist.add_entry("A01", "Typhoid fever")
+        self.assertEqual(self.codelist.entries(), [("A01", "Typhoid fever", None)])
+        self.codelist.update_term("A01", "Term 2")
+        self.assertEqual(self.codelist.entries(), [("A01", "Term 2", None)])
+
+    def test_update_term_doesnt_exist(self):
+        self.codelist.add_entry("A01", None)
+        self.assertEqual(self.codelist.entries(), [("A01", None, None)])
+        with self.assertRaises(ValueError) as e:
+            self.codelist.update_term("A01", "Term 2")
+        self.assertEqual(str(e.exception), "Term for entry with code A01 does not exist. Please use add term instead.")
+    
+    def test_remove_term(self):
+        self.codelist.add_entry("A01", "Typhoid fever", "Comment 1")
+        self.assertEqual(self.codelist.entries(), [("A01", "Typhoid fever", "Comment 1")])
+        self.codelist.remove_term("A01")
+        self.assertEqual(self.codelist.entries(), [("A01", None, "Comment 1")])
+    
+    def test_remove_term_doesnt_exist(self):
+        self.codelist.add_entry("A01", None, "Comment 1")
+        self.assertEqual(self.codelist.entries(), [("A01", None, "Comment 1")])
+        with self.assertRaises(ValueError) as e:
+            self.codelist.remove_term("A01")
+        self.assertEqual(str(e.exception), "Term for entry with code A01 does not exist. Unable to remove term.")
 
 class TestCodeListValidation(unittest.TestCase):
 
@@ -142,15 +219,15 @@ class TestCodeListValidation(unittest.TestCase):
         codelist.add_entry("A01.1", "Typhoid fever, intestinal more complex")
         codelist.add_entry("A01", "Typhoid fever, intestinal")
         codelist.add_entry("A02", "Salmonella infections")
-        codelist.add_entry("A0311", "Random infections, unspecified")
+        codelist.add_entry("A03", "Random infections, unspecified")
 
         codelist.truncate_to_3_digits(term_management="first")
 
         ## May be in different order so test entries to account for that
         self.assertEqual(len(codelist.entries()), 3)
-        self.assertIn(("A01", "Typhoid fever, intestinal"), codelist.entries())
-        self.assertIn(("A02", "Salmonella infections"), codelist.entries())
-        self.assertIn(("A03", "Random infections, unspecified"), codelist.entries())
+        self.assertIn(("A01", "Typhoid fever, intestinal", None), codelist.entries())
+        self.assertIn(("A02", "Salmonella infections", None), codelist.entries())
+        self.assertIn(("A03", "Random infections, unspecified", None), codelist.entries())
 
     def test_invalid_term_management_arg_for_truncate(self):
         codelist = CodeList(
@@ -182,9 +259,9 @@ class TestCodeListValidation(unittest.TestCase):
             source="Manually created",
         )
         codelist.add_entry("A01", "Typhoid fever")
-        self.assertEqual(codelist.entries(), [("A01", "Typhoid fever")])
+        self.assertEqual(codelist.entries(), [("A01", "Typhoid fever", None)])
         codelist.add_x_codes()
-        self.assertIn(("A01X", "Typhoid fever"), codelist.entries())
+        self.assertIn(("A01X", "Typhoid fever", None), codelist.entries())
 
     def test_x_code_not_added_snomed(self):
         codelist = CodeList(
@@ -193,7 +270,7 @@ class TestCodeListValidation(unittest.TestCase):
             source="Manually created",
         )
         codelist.add_entry("123456", "Valid SNOMED")
-        self.assertEqual(codelist.entries(), [("123456", "Valid SNOMED")])
+        self.assertEqual(codelist.entries(), [("123456", "Valid SNOMED", None)])
 
         with self.assertRaises(ValueError) as e:
             codelist.add_x_codes()
