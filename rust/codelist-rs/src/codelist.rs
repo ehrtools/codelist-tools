@@ -374,9 +374,9 @@ impl CodeList {
         // Keep track of all the three-digit codes
         let mut threes = self
             .entries
-            .iter()
-            .filter(|(code, (_, _))| code.len() == 3)
-            .map(|(code, (_, _))| code.clone())
+            .keys()
+            .filter(|code| code.len() == 3)
+            .cloned()
             .collect::<HashSet<String>>();
 
         let mut adds = vec![];
@@ -439,9 +439,9 @@ impl CodeList {
         // Keep track of all the four-digit codes ending in X
         let mut exes = self
             .entries
-            .iter()
-            .filter(|(code, (_, _))| code.len() == 4 && code.ends_with("X"))
-            .map(|(code, (_, _))| code.clone())
+            .keys()
+            .filter(|code| code.len() == 4 && code.ends_with("X"))
+            .cloned()
             .collect::<HashSet<String>>();
 
         let mut adds = vec![];
