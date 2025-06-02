@@ -35,7 +35,7 @@ This will build the package and install it in your local Python environment. You
 Python and use it as you would any other Python package.  You should use a virtual environment for ease of development. 
 If you run `pip list`, you should see the package listed as `codelist` with the version number. 
 
-You can also run tests using the following command:
+You can also run tests using the following command. Ensure the most up to date version of the package with the most recent changes has been built before running the tests.
 ```bash
 python -m unittest discover
 ```
