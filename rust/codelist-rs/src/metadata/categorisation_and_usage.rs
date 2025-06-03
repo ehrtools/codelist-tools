@@ -39,8 +39,14 @@ impl CategorisationAndUsage {
     /// # Arguments
     /// * `self` - The categorisation and usage to update
     /// * `tag` - The tag to add
-    pub fn add_tag(&mut self, tag: String) {
-        self.tags.insert(tag);
+    pub fn add_tag(&mut self, tag: String) -> Result<(), CodeListError> {
+        if self.tags.insert(tag.clone()) {
+            Ok(())
+        } else {
+            Err(CodeListError::tag_already_exists(format!(
+                "Unable to add tag {tag}. Tag already exists.",
+            )))
+        }
     }
 
     /// Remove a tag from the categorisation and usage
@@ -186,7 +192,7 @@ mod tests {
     #[test]
     fn test_add_tag() -> Result<(), CodeListError> {
         let mut categorisation_and_usage = test_categorisation_and_usage_all_some();
-        categorisation_and_usage.add_tag("tag3".to_string());
+        let _ = categorisation_and_usage.add_tag("tag3".to_string());
         assert_eq!(
             categorisation_and_usage.tags,
             HashSet::from(["tag1".to_string(), "tag2".to_string(), "tag3".to_string()])

@@ -31,3 +31,6 @@ __pycache__/
 venv/
 .venv/
 .codegpt
+
+# prettier node
+node_modules/

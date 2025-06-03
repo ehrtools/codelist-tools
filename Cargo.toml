@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "rust/codelist-rs",
+    "rust/codelist-validator-rs",
+    "bindings/python"
+]

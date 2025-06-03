@@ -106,6 +106,9 @@ pub enum CodeListError {
     #[error("Tag does not exist: {msg}")]
     TagDoesNotExist { msg: String },
 
+    #[error("Tag already exists: {msg}")]
+    TagAlreadyExists { msg: String },
+
     #[error("Usage does not exist: {msg}")]
     UsageDoesNotExist { msg: String },
 

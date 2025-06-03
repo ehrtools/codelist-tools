@@ -1,9 +1,14 @@
 # codelist-validator
-This is a rust package with Python bindings for validating codelists (SNOMED, ICD10, OPCS)
+
+This is a rust package with Python bindings for validating codelists (SNOMED,
+ICD10, OPCS)
 
 ## Aims
 
-`codelists-validator` is a lightweight library for validating and manipulating medical coding standards including SNOMED CT, ICD-10, and OPCS-4. Written in Rust with Python bindings (via PyO3), it provides fast and memory-efficient operations on medical codelists while maintaining a Pythonic interface.
+`codelists-validator` is a lightweight library for validating and manipulating
+medical coding standards including SNOMED CT, ICD-10, and OPCS-4. Written in
+Rust with Python bindings (via PyO3), it provides fast and memory-efficient
+operations on medical codelists while maintaining a Pythonic interface.
 
 ## Features
 

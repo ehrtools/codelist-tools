@@ -1,25 +1,31 @@
-/// This file contains the python bindings for the codelist-rs library's CodeList struct
-/// This should only contain the python bindings for the CodeList struct.
-// External imports
-use pyo3::prelude::*;
-use pyo3::types::{PyDict, PySet};
-use pyo3::{PyErr, PyResult};
-use pyo3::exceptions::PyValueError;
-use indexmap::IndexSet;
+#![allow(non_local_definitions)]
+//! This file contains the python bindings for the codelist-rs library's
+//! CodeList struct This should only contain the python bindings for the
+//! CodeList struct.
 
-// Internal imports
-use codelist_rs::codelist::{CodeList, TermManagement};
-use codelist_rs::codelist_options::CodeListOptions;
-use codelist_rs::metadata::{
-    CategorisationAndUsage, Metadata, Provenance, PurposeAndContext, Source, ValidationAndReview,
+use codelist_rs::{
+    codelist::{CodeList, TermManagement},
+    codelist_options::CodeListOptions,
+    metadata::{
+        CategorisationAndUsage, Metadata, Provenance, PurposeAndContext, Source,
+        ValidationAndReview,
+    },
+    types::CodeListType,
 };
-use codelist_rs::types::CodeListType;
 use codelist_validator_rs::validator::Validator;
+use indexmap::IndexSet;
+use pyo3::{
+    exceptions::PyValueError,
+    prelude::*,
+    types::{PyDict, PySet},
+    PyErr, PyResult,
+};
 
 /// Python wrapper for the CodeList struct
 ///
-/// This struct is a python wrapper for the CodeList struct in the codelist-rs library.
-/// It allows us to create a new CodeList object from python and interact with it.
+/// This struct is a python wrapper for the CodeList struct in the codelist-rs
+/// library. It allows us to create a new CodeList object from python and
+/// interact with it.
 #[pyclass(name = "CodeList")]
 pub struct PyCodeList {
     pub inner: CodeList,
@@ -45,23 +51,18 @@ impl PyCodeList {
             "OPCS" => CodeListType::OPCS,
             _ => {
                 return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                    "Invalid codelist type: {}",
-                    codelist_type
+                    "Invalid codelist type: {codelist_type}"
                 )))
             }
         };
 
         // Create metadata
         let source = Source::from_string(source).map_err(|_| {
-            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid source: {}", source))
+            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid source: {source}"))
         })?;
         // convert authors vec to IndexSet
         let authors_set = authors
-            .map(|authors| {
-                authors
-                    .into_iter()
-                    .collect::<IndexSet<String>>()
-            })
+            .map(|authors| authors.into_iter().collect::<IndexSet<String>>())
             .unwrap_or_default();
         let provenance = Provenance::new(source, Some(authors_set));
         let categorisation_and_usage = CategorisationAndUsage::new(None, None, None);
@@ -91,7 +92,12 @@ impl PyCodeList {
 
     /// Add an entry to the codelist
     #[pyo3(text_signature = "($self, code, term=None, comment=None)")]
-    fn add_entry(&mut self, code: String, term: Option<String>, comment: Option<String>) -> PyResult<()> {
+    fn add_entry(
+        &mut self,
+        code: String,
+        term: Option<String>,
+        comment: Option<String>,
+    ) -> PyResult<()> {
         let _ = self.inner.add_entry(code, term, comment);
         Ok(())
     }
@@ -113,7 +119,11 @@ impl PyCodeList {
 
     /// Remove a contributor from the codelist's provenance
     fn remove_contributor(&mut self, contributor: String) -> PyResult<()> {
-        self.inner.metadata.provenance.remove_contributor(contributor);
+        self.inner
+            .metadata
+            .provenance
+            .remove_contributor(contributor)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
 
@@ -150,13 +160,21 @@ impl PyCodeList {
 
     /// Add a tag to the codelist
     fn add_tag(&mut self, tag: String) -> PyResult<()> {
-        self.inner.metadata.categorisation_and_usage.add_tag(tag);
+        self.inner
+            .metadata
+            .categorisation_and_usage
+            .add_tag(tag)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
 
     /// Remove a tag from the codelist
     fn remove_tag(&mut self, tag: String) -> PyResult<()> {
-        self.inner.metadata.categorisation_and_usage.remove_tag(tag);
+        self.inner
+            .metadata
+            .categorisation_and_usage
+            .remove_tag(tag)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
 
@@ -178,30 +196,46 @@ impl PyCodeList {
 
     /// Remove usage information from the codelist
     fn remove_usage(&mut self, usage: String) -> PyResult<()> {
-        self.inner.metadata.categorisation_and_usage.remove_usage(usage);
+        self.inner
+            .metadata
+            .categorisation_and_usage
+            .remove_usage(usage)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
 
     /// Get license information (with is a OPtional String)
-    fn get_license_info(&self, py: Python) -> Option<String> {
+    fn get_license_info(&self) -> Option<String> {
         self.inner.metadata.categorisation_and_usage.license.clone()
     }
 
     /// Add license information to the codelist
     fn add_license(&mut self, license: String) -> PyResult<()> {
-        self.inner.metadata.categorisation_and_usage.add_license(license);
+        self.inner
+            .metadata
+            .categorisation_and_usage
+            .add_license(license)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
 
     /// Remove license information from the codelist
     fn remove_license(&mut self) -> PyResult<()> {
-        self.inner.metadata.categorisation_and_usage.remove_license();
+        self.inner
+            .metadata
+            .categorisation_and_usage
+            .remove_license()
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
 
     /// Update the license information
     fn update_license(&mut self, license: String) -> PyResult<()> {
-        self.inner.metadata.categorisation_and_usage.update_license(license);
+        self.inner
+            .metadata
+            .categorisation_and_usage
+            .update_license(license)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
 
@@ -212,19 +246,31 @@ impl PyCodeList {
 
     /// Add a purpose to the codelist
     fn add_purpose(&mut self, purpose: String) -> PyResult<()> {
-        self.inner.metadata.purpose_and_context.add_purpose(purpose);
+        self.inner
+            .metadata
+            .purpose_and_context
+            .add_purpose(purpose)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
 
     /// Update the purpose of the codelist
     fn update_purpose(&mut self, purpose: String) -> PyResult<()> {
-        self.inner.metadata.purpose_and_context.update_purpose(purpose);
+        self.inner
+            .metadata
+            .purpose_and_context
+            .update_purpose(purpose)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
 
     /// Remove a purpose from the codelist
     fn remove_purpose(&mut self) -> PyResult<()> {
-        self.inner.metadata.purpose_and_context.remove_purpose();
+        self.inner
+            .metadata
+            .purpose_and_context
+            .remove_purpose()
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
 
@@ -235,19 +281,31 @@ impl PyCodeList {
 
     /// Add a target audience to the codelist
     fn add_audience(&mut self, target_audience: String) -> PyResult<()> {
-        self.inner.metadata.purpose_and_context.add_target_audience(target_audience);
+        self.inner
+            .metadata
+            .purpose_and_context
+            .add_target_audience(target_audience)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
 
     /// Update the target audience of the codelist
     fn update_audience(&mut self, target_audience: String) -> PyResult<()> {
-        self.inner.metadata.purpose_and_context.update_target_audience(target_audience);
+        self.inner
+            .metadata
+            .purpose_and_context
+            .update_target_audience(target_audience)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
 
     /// Remove a target audience from the codelist
     fn remove_audience(&mut self) -> PyResult<()> {
-        self.inner.metadata.purpose_and_context.remove_target_audience();
+        self.inner
+            .metadata
+            .purpose_and_context
+            .remove_target_audience()
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
 
@@ -258,27 +316,39 @@ impl PyCodeList {
 
     /// Add a use context to the codelist
     fn add_use_context(&mut self, use_context: String) -> PyResult<()> {
-        self.inner.metadata.purpose_and_context.add_use_context(use_context);
+        self.inner
+            .metadata
+            .purpose_and_context
+            .add_use_context(use_context)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
 
     /// Update the use context of the codelist
     fn update_use_context(&mut self, use_context: String) -> PyResult<()> {
-        self.inner.metadata.purpose_and_context.update_use_context(use_context);
+        self.inner
+            .metadata
+            .purpose_and_context
+            .update_use_context(use_context)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
 
     /// Remove a use context from the codelist
     fn remove_use_context(&mut self) -> PyResult<()> {
-        self.inner.metadata.purpose_and_context.remove_use_context();
+        self.inner
+            .metadata
+            .purpose_and_context
+            .remove_use_context()
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
 
     /// Truncate to 3 digits if ICD10
     fn truncate_to_3_digits(&mut self, term_management: String) -> PyResult<()> {
-
         // Term management as string to TermManagement enum
-        let term_management = term_management.parse::<TermManagement>()
+        let term_management = term_management
+            .parse::<TermManagement>()
             .map_err(|e| PyValueError::new_err(e.to_string()))?;
 
         self.inner
@@ -286,13 +356,11 @@ impl PyCodeList {
             .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
-   
-    /// Add X Codes to the codelist. This is a convenient way to add X to 3 digit ICD10 codes.
-    fn add_x_codes(&mut self) -> PyResult<()> {
 
-        self.inner
-            .add_x_codes()
-            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    /// Add X Codes to the codelist. This is a convenient way to add X to 3
+    /// digit ICD10 codes.
+    fn add_x_codes(&mut self) -> PyResult<()> {
+        self.inner.add_x_codes().map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
 
@@ -300,28 +368,54 @@ impl PyCodeList {
     fn is_validated(&self) -> bool {
         self.inner.metadata.validation_and_review.reviewed
     }
-  
+
     /// Add Validation Information to the codelist
-    fn add_validation_info(&mut self, reviewer: String, status: Option<String>, notes: Option<String>) -> PyResult<()> {
+    fn add_validation_info(
+        &mut self,
+        reviewer: String,
+        status: Option<String>,
+        notes: Option<String>,
+    ) -> PyResult<()> {
         // Add reviewer
-        self.inner.metadata.validation_and_review.add_reviewer(reviewer);
+        self.inner
+            .metadata
+            .validation_and_review
+            .add_reviewer(reviewer)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
 
         // Add review date // TODO: Sort out datetime with pyclass
-        self.inner.metadata.validation_and_review.update_review_date(chrono::Utc::now());
-
+        self.inner
+            .metadata
+            .validation_and_review
+            .add_review_date(chrono::Utc::now())
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
 
         // Add status
         if let Some(status) = status {
-            self.inner.metadata.validation_and_review.update_status(status);
+            self.inner
+                .metadata
+                .validation_and_review
+                .update_status(status)
+                .map_err(|e| PyValueError::new_err(e.to_string()))?;
         }
 
         // Add validation notes
         if let Some(validation_notes) = notes {
             // if existing notes, append to them, otherwise just set them
-            if let Some(existing_notes) = &self.inner.metadata.validation_and_review.get_validation_notes() {
-                self.inner.metadata.validation_and_review.update_validation_notes(validation_notes);
+            if let Some(_existing_notes) =
+                &self.inner.metadata.validation_and_review.get_validation_notes()
+            {
+                self.inner
+                    .metadata
+                    .validation_and_review
+                    .update_validation_notes(validation_notes)
+                    .map_err(|e| PyValueError::new_err(e.to_string()))?;
             } else {
-                self.inner.metadata.validation_and_review.add_validation_notes(validation_notes);
+                self.inner
+                    .metadata
+                    .validation_and_review
+                    .add_validation_notes(validation_notes)
+                    .map_err(|e| PyValueError::new_err(e.to_string()))?;
             }
         }
 
@@ -333,7 +427,11 @@ impl PyCodeList {
 
     /// Update the validaation notes
     fn update_validation_notes(&mut self, notes: String) -> PyResult<()> {
-        self.inner.metadata.validation_and_review.update_validation_notes(notes);
+        self.inner
+            .metadata
+            .validation_and_review
+            .update_validation_notes(notes)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
 
@@ -354,17 +452,12 @@ impl PyCodeList {
 
     /// Validate the codelist based on the codelist type
     fn validate_codes(&self) -> PyResult<()> {
-        self.inner
-            .validate_codes()
-            .map_err(|e| PyValueError::new_err(e.to_string()))
-
+        self.inner.validate_codes().map_err(|e| PyValueError::new_err(e.to_string()))
     }
 
     /// Add a comment to the codelist
     fn add_comment(&mut self, code: String, comment: String) -> PyResult<()> {
-        self.inner
-            .add_comment(code, comment)
-            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+        self.inner.add_comment(code, comment).map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
 
@@ -378,33 +471,25 @@ impl PyCodeList {
 
     /// Remove a comment from the codelist
     fn remove_comment(&mut self, code: String) -> PyResult<()> {
-        self.inner
-            .remove_comment(code)
-            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+        self.inner.remove_comment(code).map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
 
     /// Add a term to the codelist
     fn add_term(&mut self, code: String, term: String) -> PyResult<()> {
-        self.inner
-            .add_term(code, term)
-            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+        self.inner.add_term(code, term).map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
 
     /// Update a term in the codelist
     fn update_term(&mut self, code: String, term: String) -> PyResult<()> {
-        self.inner
-            .update_term(code, term)
-            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+        self.inner.update_term(code, term).map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
 
     /// Remove a term from the codelist
     fn remove_term(&mut self, code: String) -> PyResult<()> {
-        self.inner
-            .remove_term(code)
-            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+        self.inner.remove_term(code).map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
 }
