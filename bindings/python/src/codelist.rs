@@ -90,18 +90,18 @@ impl PyCodeList {
     }
 
     /// Add an entry to the codelist
-    #[pyo3(text_signature = "($self, code, term, comment=None)")]
+    #[pyo3(text_signature = "($self, code, term=None, comment=None)")]
     fn add_entry(&mut self, code: String, term: Option<String>, comment: Option<String>) -> PyResult<()> {
         let _ = self.inner.add_entry(code, term, comment);
         Ok(())
     }
 
     /// Get all entries in the codelist
-    fn entries(&self) -> Vec<(String, Option<String>)> {
+    fn entries(&self) -> Vec<(String, Option<String>, Option<String>)> {
         self.inner
             .full_entries()
             .iter()
-            .map(|(code, (term, comment))| (code.clone(), term.clone()))
+            .map(|(code, (term, comment))| (code.clone(), term.clone(), comment.clone()))
             .collect()
     }
 
@@ -186,7 +186,6 @@ impl PyCodeList {
     fn get_license_info(&self, py: Python) -> Option<String> {
         self.inner.metadata.categorisation_and_usage.license.clone()
     }
-
 
     /// Add license information to the codelist
     fn add_license(&mut self, license: String) -> PyResult<()> {
@@ -361,4 +360,51 @@ impl PyCodeList {
 
     }
 
+    /// Add a comment to the codelist
+    fn add_comment(&mut self, code: String, comment: String) -> PyResult<()> {
+        self.inner
+            .add_comment(code, comment)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+        Ok(())
+    }
+
+    /// Update a comment in the codelist
+    fn update_comment(&mut self, code: String, comment: String) -> PyResult<()> {
+        self.inner
+            .update_comment(code, comment)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+        Ok(())
+    }
+
+    /// Remove a comment from the codelist
+    fn remove_comment(&mut self, code: String) -> PyResult<()> {
+        self.inner
+            .remove_comment(code)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+        Ok(())
+    }
+
+    /// Add a term to the codelist
+    fn add_term(&mut self, code: String, term: String) -> PyResult<()> {
+        self.inner
+            .add_term(code, term)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+        Ok(())
+    }
+
+    /// Update a term in the codelist
+    fn update_term(&mut self, code: String, term: String) -> PyResult<()> {
+        self.inner
+            .update_term(code, term)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+        Ok(())
+    }
+
+    /// Remove a term from the codelist
+    fn remove_term(&mut self, code: String) -> PyResult<()> {
+        self.inner
+            .remove_term(code)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+        Ok(())
+    }
 }
