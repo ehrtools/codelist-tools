@@ -1,0 +1,14 @@
+[package]
+name = "codelist-builder-rs"
+version = "0.1.0"
+edition = "2021"
+authors = ["Caroline Morton <caroline@parakeetconsulting.com>"]
+description = "Builder library for medical codelists"
+
+[dependencies]
+codelist-rs = { path = "../codelist-rs" }
+serde = { version = "1.0", features = ["derive"] }
+thiserror = { version = "2.0.9" }
+thiserror-ext = { version = "0.2.1" }
+
+
