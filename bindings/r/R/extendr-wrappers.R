@@ -10,7 +10,9 @@
 #' @useDynLib codelist, .registration = TRUE
 NULL
 
-hello <- function() .Call(wrap__hello)
+#' Return string `"Hello world!"` to R.
+#' @export
+hello_world <- function() .Call(wrap__hello_world)
 
 
 # nolint end
