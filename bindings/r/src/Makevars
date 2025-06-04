@@ -1,4 +1,4 @@
-LIBDIR = ../target/release
+LIBDIR = ../../../target/release
 STATLIB = $(LIBDIR)/libcodelist.a
 PKG_LIBS = -L$(LIBDIR) -lcodelist
 

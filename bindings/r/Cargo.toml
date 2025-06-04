@@ -10,4 +10,5 @@ path = "src/lib.rs"
 # Build as a dynamic library
 
 [dependencies]
-extendr-api = "0.7.1"
+extendr-api = "0.8.0"
+codelist-rs = { path = "../../rust/codelist-rs" }
