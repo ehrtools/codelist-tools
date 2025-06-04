@@ -18,7 +18,9 @@ fn codelists_rs(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_submodule(&codelist_module)?;
 
     // Register it globally under the full dotted path
-    py.import_bound("sys")?.getattr("modules")?.set_item("codelists_rs.codelist", codelist_module)?;
+    py.import_bound("sys")?
+        .getattr("modules")?
+        .set_item("codelists_rs.codelist", codelist_module)?;
 
     // Add factory submodule
     let factory_module = PyModule::new_bound(py, "factory")?;

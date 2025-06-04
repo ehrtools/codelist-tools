@@ -91,7 +91,7 @@ impl PyCodeList {
     }
 
     /// Add an entry to the codelist
-    #[pyo3(text_signature = "($self, code, term=None, comment=None)")]
+    #[pyo3(signature = (code, term=None, comment=None))]
     fn add_entry(
         &mut self,
         code: String,
@@ -370,6 +370,7 @@ impl PyCodeList {
     }
 
     /// Add Validation Information to the codelist
+    #[pyo3(signature = (reviewer, status=None, notes=None))]
     fn add_validation_info(
         &mut self,
         reviewer: String,
