@@ -11,3 +11,4 @@ name = 'codelist'
 
 [dependencies]
 extendr-api = '*'
+codelist-rs = { path = '../../../../rust/codelist-rs' }
