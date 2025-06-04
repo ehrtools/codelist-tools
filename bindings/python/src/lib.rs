@@ -13,22 +13,22 @@ use factory::PyCodeListFactory;
 #[pymodule]
 fn codelists_rs(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Add codelist submodule
-    let codelist_module = PyModule::new_bound(py, "codelist")?;
+    let codelist_module = PyModule::new(py, "codelist")?;
     codelist_module.add_class::<PyCodeList>()?;
     m.add_submodule(&codelist_module)?;
 
     // Register it globally under the full dotted path
-    py.import_bound("sys")?
+    py.import("sys")?
         .getattr("modules")?
         .set_item("codelists_rs.codelist", codelist_module)?;
 
     // Add factory submodule
-    let factory_module = PyModule::new_bound(py, "factory")?;
+    let factory_module = PyModule::new(py, "factory")?;
     factory_module.add_class::<PyCodeListFactory>()?;
     m.add_submodule(&factory_module)?;
 
     // Register it globally under the full dotted path
-    py.import_bound("sys")?.getattr("modules")?.set_item("codelists_rs.factory", factory_module)?;
+    py.import("sys")?.getattr("modules")?.set_item("codelists_rs.factory", factory_module)?;
 
     Ok(())
 }

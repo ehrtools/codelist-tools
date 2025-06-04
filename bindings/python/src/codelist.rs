@@ -129,7 +129,7 @@ impl PyCodeList {
 
     #[getter]
     fn contributors(&self, py: Python) -> PyResult<PyObject> {
-        let py_set = PySet::new_bound(py, &[] as &[String])?;
+        let py_set = PySet::new(py, &[] as &[String])?;
         for contributor in &self.inner.metadata.provenance.contributors {
             py_set.add(contributor)?;
         }
@@ -141,7 +141,7 @@ impl PyCodeList {
         let date_created = self.inner.metadata.provenance.created_date;
         let last_modified_date = self.inner.metadata.provenance.last_modified_date;
 
-        let dict = PyDict::new_bound(py);
+        let dict = PyDict::new(py);
         dict.set_item("date_created", date_created.to_string())?;
         dict.set_item("last_modified_date", last_modified_date.to_string())?;
 
@@ -151,7 +151,7 @@ impl PyCodeList {
     /// Get tag information
     fn get_tags(&self, py: Python) -> PyResult<PyObject> {
         let tags = self.inner.metadata.categorisation_and_usage.tags.clone();
-        let py_set = PySet::new_bound(py, &[] as &[String])?;
+        let py_set = PySet::new(py, &[] as &[String])?;
         for tag in tags {
             py_set.add(tag)?;
         }
@@ -181,7 +181,7 @@ impl PyCodeList {
     /// Get usage information
     fn get_usage(&self, py: Python) -> PyResult<PyObject> {
         let usage = self.inner.metadata.categorisation_and_usage.usage.clone();
-        let py_set = PySet::new_bound(py, &[] as &[String])?;
+        let py_set = PySet::new(py, &[] as &[String])?;
         for usage_item in usage {
             py_set.add(usage_item)?;
         }
