@@ -11,4 +11,4 @@ name = 'codelist'
 
 [dependencies]
 extendr-api = '*'
-codelist-rs = { path = '../../../../rust/codelist-rs' }
+codelist-rs = { git = 'https://github.com/albersonmiranda/codelist-tools.git', package = 'codelist-rs' }
