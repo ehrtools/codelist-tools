@@ -1,10 +1,16 @@
-use pyo3::prelude::*;
-use pyo3::exceptions::PyValueError;
-use codelist_rs::codelist_factory::CodeListFactory;
-use codelist_rs::types::CodeListType;
+#![allow(non_local_definitions)]
+use codelist_rs::{
+    codelist_factory::CodeListFactory,
+    codelist_options::CodeListOptions,
+    metadata::{
+        CategorisationAndUsage, Metadata, Provenance, PurposeAndContext, Source,
+        ValidationAndReview,
+    },
+    types::CodeListType,
+};
+use pyo3::{exceptions::PyValueError, prelude::*};
+
 use crate::codelist::PyCodeList;
-use codelist_rs::metadata::{Metadata, Provenance, Source, CategorisationAndUsage, PurposeAndContext, ValidationAndReview};
-use codelist_rs::codelist_options::CodeListOptions;
 
 #[pyclass(name = "CodeListFactory")]
 pub struct PyCodeListFactory {
@@ -13,7 +19,6 @@ pub struct PyCodeListFactory {
 
 #[pymethods]
 impl PyCodeListFactory {
-
     #[new]
     #[pyo3(signature = (codelist_type))]
     fn new(codelist_type: &str) -> PyResult<Self> {
@@ -21,7 +26,11 @@ impl PyCodeListFactory {
             "ICD10" => CodeListType::ICD10,
             "SNOMED" => CodeListType::SNOMED,
             "OPCS" => CodeListType::OPCS,
-            _ => return Err(PyValueError::new_err(format!("Invalid codelist type: {}", codelist_type))),
+            _ => {
+                return Err(PyValueError::new_err(format!(
+                    "Invalid codelist type: {codelist_type}"
+                )))
+            }
         };
 
         let metadata = Metadata::new(
@@ -36,7 +45,6 @@ impl PyCodeListFactory {
 
         Ok(Self { inner: factory })
     }
-
 
     #[pyo3(signature = (name, path))]
     fn load_from_file(&self, name: String, path: String) -> PyResult<PyCodeList> {

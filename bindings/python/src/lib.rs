@@ -9,7 +9,6 @@ pub mod factory;
 use codelist::PyCodeList;
 use factory::PyCodeListFactory;
 
-
 /// Top-level Python module `codelists_rs`
 #[pymodule]
 fn codelists_rs(py: Python, m: &PyModule) -> PyResult<()> {
@@ -19,9 +18,7 @@ fn codelists_rs(py: Python, m: &PyModule) -> PyResult<()> {
     m.add_submodule(codelist_module)?;
 
     // Register it globally under the full dotted path
-    py.import("sys")?
-        .getattr("modules")?
-        .set_item("codelists_rs.codelist", codelist_module)?;
+    py.import("sys")?.getattr("modules")?.set_item("codelists_rs.codelist", codelist_module)?;
 
     // Add factory submodule
     let factory_module = PyModule::new(py, "factory")?;
@@ -29,9 +26,7 @@ fn codelists_rs(py: Python, m: &PyModule) -> PyResult<()> {
     m.add_submodule(factory_module)?;
 
     // Register it globally under the full dotted path
-    py.import("sys")?
-        .getattr("modules")?
-        .set_item("codelists_rs.factory", factory_module)?;
+    py.import("sys")?.getattr("modules")?.set_item("codelists_rs.factory", factory_module)?;
 
     Ok(())
 }

@@ -1,11 +1,14 @@
 //! This file contains the core functionality for the codelist
 
 // External imports
+use std::{
+    collections::{BTreeMap, HashSet},
+    io::Write,
+    str::FromStr,
+};
+
 use csv::Writer;
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, HashSet};
-use std::io::Write;
-use std::str::FromStr;
 
 // Internal imports
 use crate::{
@@ -104,11 +107,12 @@ impl CodeList {
         }
     }
 
-    /// Get the full entries of the codelist, including code, optional term and optional
-    /// comment
+    /// Get the full entries of the codelist, including code, optional term and
+    /// optional comment
     ///
     /// # Returns
-    /// * `&BTreeMap<String, (Option<String>, Option<String>)` - The entries of the codelist
+    /// * `&BTreeMap<String, (Option<String>, Option<String>)` - The entries of
+    ///   the codelist
     pub fn full_entries(&self) -> &BTreeMap<String, (Option<String>, Option<String>)> {
         &self.entries
     }
@@ -116,7 +120,8 @@ impl CodeList {
     /// Get the code and term of the codelist
     ///
     /// # Returns
-    /// * `BTreeMap<&String, Option<&String>>` - The codes and terms of the codelist
+    /// * `BTreeMap<&String, Option<&String>>` - The codes and terms of the
+    ///   codelist
     pub fn code_term_entries(&self) -> BTreeMap<&String, Option<&String>> {
         self.entries.iter().map(|(code, (term_opt, _))| (code, term_opt.as_ref())).collect()
     }
@@ -287,7 +292,8 @@ impl CodeList {
     /// * `term` - The term to add
     ///
     /// # Errors
-    /// * `CodeListError::CodeEntryTermAlreadyExists` - If the term already exists
+    /// * `CodeListError::CodeEntryTermAlreadyExists` - If the term already
+    ///   exists
     pub fn add_term(&mut self, code: String, term: String) -> Result<(), CodeListError> {
         match self.entries.get_mut(&code) {
             Some((term_opt, _)) => {
@@ -312,7 +318,8 @@ impl CodeList {
     /// * `term` - The term to update
     ///
     /// # Errors
-    /// * `CodeListError::CodeEntryTermDoesNotExist` - If the term does not exist
+    /// * `CodeListError::CodeEntryTermDoesNotExist` - If the term does not
+    ///   exist
     pub fn update_term(&mut self, code: String, term: String) -> Result<(), CodeListError> {
         match self.entries.get_mut(&code) {
             Some((term_opt, _)) => {
@@ -336,7 +343,8 @@ impl CodeList {
     /// * `code` - The code of the entry to remove the term from
     ///
     /// # Errors
-    /// * `CodeListError::CodeEntryTermDoesNotExist` - If there is no term to remove
+    /// * `CodeListError::CodeEntryTermDoesNotExist` - If there is no term to
+    ///   remove
     pub fn remove_term(&mut self, code: String) -> Result<(), CodeListError> {
         match self.entries.get_mut(&code) {
             Some((term_opt, _)) => {
@@ -405,7 +413,7 @@ impl CodeList {
             // The term and comment that goes with it to make the
             // entry depends on the term_management
             let comment = match term_management {
-                TermManagement::First => Some(format!("{} truncated to 3 digits", code)),
+                TermManagement::First => Some(format!("{code} truncated to 3 digits")),
             };
 
             // We'll add this one later
