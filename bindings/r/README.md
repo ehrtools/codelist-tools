@@ -1,8 +1,6 @@
 # R Bindings
 
-This package demonstrates how to call Rust functions from R using extendr. I
-(@CarolineMorton) have not yet implemented this with our Codelist library but
-rather with a simple "hello world" function.
+This package demonstrates how to call Rust functions from R using extendr.
 
 ## Prerequisites
 
@@ -35,19 +33,15 @@ which i said no to.
 
 ## Building and Installing
 
-1. First build the Rust library:
+1. First go into R folder and build the package.
 
 ```bash
-cd r
-cargo build --release
+cd bindings/r
 ```
 
-This will create a shared library in `target/release/libcodelist.dylib` (macOS)
-or `target/release/libcodelist.so` (Linux).
-
-2. Open R with the terminal command `R` and install required packages. If you
-   get an error message when running this, you may also need to install package
-   dependencies for `devtools` first if not already installed:
+You will need to go into R at this point and install required packages of
+`rextendr`. If you get an error message when running this, you may also need to
+install package dependencies for `devtools` first if not already installed:
 
 ```r
 install.packages("devtools")
@@ -60,8 +54,6 @@ I picked `64` as the mirror I wanted to use.
 
 ```r
 rextendr::document()
-devtools::document()
-devtools::load_all()
 ```
 
 4. Test that it works:
@@ -70,18 +62,22 @@ devtools::load_all()
 hello()
 ```
 
-## Installing Permanently
-
-To install the package permanently:
-
-```r
-devtools::build()
-devtools::install()
-```
-
-After installation, you can use it like any other R package:
+Everytime you make changes to the Rust code, you will need to run the following
+commands in R:
 
 ```r
+rextendr::document()
 library(codelist)
-hello()
 ```
+
+The `library(codelist)` command loads the package, so you can use the functions
+and structs within in so it is important to run this after you have made changes
+to the Rust code.
+
+#### Tips for non-R users
+
+- You can create R scripts by making a file that ends with `.R` and then running
+  it in R. It is probably easier at this point to opne in RStudio and run in the
+  console or by clicking at the script. Remember to save.
+- Exit the R console with `q()` and then type `n` to not save the workspace
+  image.

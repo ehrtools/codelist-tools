@@ -1,10 +1,11 @@
+#![allow(clippy::incompatible_msrv)]
 use codelist_rs::{codelist::CodeList as BaseCodelist, metadata::Metadata, types::CodeListType};
 use extendr_api::prelude::*;
 
 #[extendr]
 fn hello() -> &'static str {
     println!("hello function called");
-    "hello there"
+    "hello there!"
 }
 
 #[extendr]
@@ -42,22 +43,21 @@ impl Codelist {
     }
 
     fn get_entries(&self) -> List {
-        let entries: Vec<List> = self.inner
+        let entries: Vec<List> = self
+            .inner
             .entries
             .iter()
             .map(|(code, (description, comment))| {
                 list!(
-                code = code.clone(),
-                description = description.clone().unwrap_or_default(),
-                comment = comment.clone().unwrap_or_default()
-            )
+                    code = code.clone(),
+                    description = description.clone().unwrap_or_default(),
+                    comment = comment.clone().unwrap_or_default()
+                )
             })
             .collect();
 
         List::from_values(entries)
     }
-
-
 }
 
 extendr_module! {

@@ -34,3 +34,16 @@ venv/
 
 # prettier node
 node_modules/
+
+# R specific
+.Rhistory
+.RData
+bindings/r/src/rust/vendor
+bindings/r/src/Makevars
+bindings/r/src/Makevars.win
+*.o
+*.so
+*.dll
+target
+.cargo
+.Rproj.user
