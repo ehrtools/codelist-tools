@@ -1,11 +1,11 @@
-use extendr_api::prelude::*;
+#![allow(clippy::incompatible_msrv)]
 use codelist_rs::{codelist::CodeList as BaseCodelist, metadata::Metadata, types::CodeListType};
+use extendr_api::prelude::*;
 
-/// Return string `"Hello world!"` to R.
-/// @export
 #[extendr]
-fn hello_world() -> &'static str {
-    "Hello world!"
+fn hello() -> &'static str {
+    println!("hello function called");
+    "hello there!"
 }
 
 #[extendr]
@@ -43,29 +43,25 @@ impl Codelist {
     }
 
     fn get_entries(&self) -> List {
-        let entries: Vec<List> = self.inner
+        let entries: Vec<List> = self
+            .inner
             .entries
             .iter()
             .map(|(code, (description, comment))| {
                 list!(
-                code = code.clone(),
-                description = description.clone().unwrap_or_default(),
-                comment = comment.clone().unwrap_or_default()
-            )
+                    code = code.clone(),
+                    description = description.clone().unwrap_or_default(),
+                    comment = comment.clone().unwrap_or_default()
+                )
             })
             .collect();
 
         List::from_values(entries)
     }
-
-
 }
 
-// Macro to generate exports.
-// This ensures exported functions are registered with R.
-// See corresponding C code in `entrypoint.c`.
 extendr_module! {
     mod codelist;
     impl Codelist;
-    fn hello_world;
+    fn hello;
 }

@@ -10,9 +10,21 @@
 #' @useDynLib codelist, .registration = TRUE
 NULL
 
-#' Return string `"Hello world!"` to R.
+hello <- function() .Call(wrap__hello)
+
+Codelist <- new.env(parent = emptyenv())
+
+Codelist$new <- function(name) .Call(wrap__Codelist__new, name)
+
+Codelist$set_name <- function(new_name) .Call(wrap__Codelist__set_name, self, new_name)
+
+Codelist$get_entries <- function() .Call(wrap__Codelist__get_entries, self)
+
 #' @export
-hello_world <- function() .Call(wrap__hello_world)
+`$.Codelist` <- function (self, name) { func <- Codelist[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.Codelist` <- `$.Codelist`
 
 
 # nolint end
