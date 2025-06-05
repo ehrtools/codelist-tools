@@ -3,5 +3,5 @@ members = [
     "rust/codelist-rs",
     "rust/codelist-validator-rs",
     "bindings/python",
-    "bindings/r",
+    "bindings/r/src/rust"
 ]
