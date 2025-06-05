@@ -4,6 +4,19 @@ This is a Rust library for working with medical codelists (SNOMED, ICD10, OPCS).
 It provides fast and memory-efficient operations on medical codelists. There is
 a Python and R interface that researchers can use.
 
+## What is a codelist?
+
+Clinical codes, terminology systems, and codelists play a foundational role in structuring healthcare data within electronic health records (EHRs), enabling consistent recording, analysis, and research. Systems like 
+SNOMED CT, ICD-10, and dm+d provide standardised ways to represent clinical concepts, from diagnoses to prescriptions, across diverse healthcare settings. 
+
+Understanding how these codes work, and how to build accurate codelists from them, is essential for ensuring valid, reproducible research and effective use of platforms such as OpenSAFELY. 
+
+The articles listed below explore the function of coding systems, the intricacies of SNOMED, and the careful methodology behind constructing reliable codelists.
+
+https://www.carolinemorton.co.uk/blog/what-is-snomed/
+https://www.bennett.ox.ac.uk/blog/2023/09/what-are-codelists-and-how-are-they-constructed/
+https://www.bennett.ox.ac.uk/blog/2023/06/an-introduction-to-clinical-codes-and-terminology-systems/
+
 ### Structure of Project
 
 The project is divided into two main components:
