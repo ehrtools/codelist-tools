@@ -412,12 +412,19 @@ impl CodeList {
 
             // The term and comment that goes with it to make the
             // entry depends on the term_management
-            let comment = match term_management {
-                TermManagement::First => Some(format!("{code} truncated to 3 digits")),
+            let (term, comment) = match term_management {
+                TermManagement::DropTerm => {
+                    (None, Some(format!("Truncated to 3 digits, term discarded")))
+                }
+
+                TermManagement::First => (
+                    term.clone(),
+                    Some(format!("{code} truncated to 3 digits, term first encountered")),
+                ),
             };
 
             // We'll add this one later
-            adds.push((truncated_code, term.clone(), comment));
+            adds.push((truncated_code, term, comment));
         }
 
         // Add the new three-digit codes
@@ -479,6 +486,7 @@ impl CodeList {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum TermManagement {
+    DropTerm,
     First,
 }
 
@@ -488,6 +496,7 @@ impl FromStr for TermManagement {
     /// Map TermManagement from a string
     fn from_str(s: &str) -> Result<Self, CodeListError> {
         match s.to_lowercase().as_str() {
+            "drop_term" => Ok(TermManagement::DropTerm),
             "first" => Ok(TermManagement::First),
             _ => Err(CodeListError::TermManagementNotKnown { term_management: s.to_string() }),
         }
@@ -989,7 +998,68 @@ mod tests {
     }
 
     #[test]
-    fn test_truncate_to_3_digits_icd10_4_digits() -> Result<(), CodeListError> {
+    fn test_truncate_to_3_digits_icd10_4_digits_drop_term() -> Result<(), CodeListError> {
+        let metadata: Metadata = Default::default();
+
+        let mut expected_codelist =
+            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
+        expected_codelist.add_entry(
+            "B01".to_string(),
+            None,
+            Some("Truncated to 3 digits, term discarded".to_string()),
+        )?;
+
+        let mut observed_codelist =
+            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata, None);
+
+        observed_codelist.add_entry(
+            "B012".to_string(),
+            Some("Varicella pneumonia".to_string()),
+            None,
+        )?;
+
+        observed_codelist.truncate_to_3_digits(TermManagement::DropTerm)?;
+
+        assert_eq!(observed_codelist, expected_codelist);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_truncate_to_3_digits_3_and_4_digits_drop_term() -> Result<(), CodeListError> {
+        let metadata: Metadata = Default::default();
+
+        let mut expected_codelist =
+            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
+        expected_codelist.add_entry(
+            "B01".to_string(),
+            Some("Varicella [chickenpox]".to_string()),
+            None,
+        )?;
+
+        let mut observed_codelist =
+            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata, None);
+
+        observed_codelist.add_entry(
+            "B01".to_string(),
+            Some("Varicella [chickenpox]".to_string()),
+            None,
+        )?;
+        observed_codelist.add_entry(
+            "B012".to_string(),
+            Some("Varicella pneumonia".to_string()),
+            None,
+        )?;
+
+        observed_codelist.truncate_to_3_digits(TermManagement::DropTerm)?;
+
+        assert_eq!(observed_codelist, expected_codelist);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_truncate_to_3_digits_icd10_4_digits_first() -> Result<(), CodeListError> {
         let metadata: Metadata = Default::default();
 
         let mut expected_codelist =
@@ -997,7 +1067,7 @@ mod tests {
         expected_codelist.add_entry(
             "B01".to_string(),
             Some("Varicella pneumonia".to_string()),
-            Some("B012 truncated to 3 digits".to_string()),
+            Some("B012 truncated to 3 digits, term first encountered".to_string()),
         )?;
 
         let mut observed_codelist =
@@ -1017,7 +1087,7 @@ mod tests {
     }
 
     #[test]
-    fn test_truncate_to_3_digits_3_and_4_digits() -> Result<(), CodeListError> {
+    fn test_truncate_to_3_digits_3_and_4_digits_first() -> Result<(), CodeListError> {
         let metadata: Metadata = Default::default();
 
         let mut expected_codelist =
