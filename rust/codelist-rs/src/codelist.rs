@@ -414,7 +414,7 @@ impl CodeList {
             // entry depends on the term_management
             let (term, comment) = match term_management {
                 TermManagement::DropTerm => {
-                    (None, Some(format!("Truncated to 3 digits, term discarded")))
+                    (None, Some("Truncated to 3 digits, term discarded".to_string()))
                 }
 
                 TermManagement::First => (
