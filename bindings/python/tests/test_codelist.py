@@ -209,7 +209,7 @@ class TestCodeListValidation(unittest.TestCase):
             codelist.validate_codes()
         self.assertIn("Code 11 is an invalid length for type SNOMED", str(e.exception))
 
-    def test_truncate_icd10_to_3_digits(self):
+    def test_truncate_icd10_to_3_digits_first(self):
         codelist = CodeList(
             name="Test Codelist",
             codelist_type="ICD10",
@@ -227,7 +227,27 @@ class TestCodeListValidation(unittest.TestCase):
         self.assertEqual(len(codelist.entries()), 3)
         self.assertIn(("A01", "Typhoid fever, intestinal", None), codelist.entries())
         self.assertIn(("A02", "Salmonella infections", None), codelist.entries())
-        self.assertIn(("A03", "Random infections, unspecified", "A0311 truncated to 3 digits"), codelist.entries())
+        self.assertIn(("A03", "Random infections, unspecified", "A0311 truncated to 3 digits, term first encountered"), codelist.entries())
+
+    def test_truncate_icd10_to_3_digits_drop_term(self):
+        codelist = CodeList(
+            name="Test Codelist",
+            codelist_type="ICD10",
+            source="Manually created",
+        )
+        # codelist of various lengths
+        codelist.add_entry("A01.1", "Typhoid fever, intestinal more complex")
+        codelist.add_entry("A01", "Typhoid fever, intestinal")
+        codelist.add_entry("A02", "Salmonella infections")
+        codelist.add_entry("A0311", "Random infections, unspecified")
+
+        codelist.truncate_to_3_digits(term_management="drop_term")
+
+        ## May be in different order so test entries to account for that
+        self.assertEqual(len(codelist.entries()), 3)
+        self.assertIn(("A01", "Typhoid fever, intestinal", None), codelist.entries())
+        self.assertIn(("A02", "Salmonella infections", None), codelist.entries())
+        self.assertIn(("A03", None, "Truncated to 3 digits, term discarded"), codelist.entries())
 
     def test_invalid_term_management_arg_for_truncate(self):
         codelist = CodeList(
@@ -238,7 +258,7 @@ class TestCodeListValidation(unittest.TestCase):
         codelist.add_entry("A01.1", "Typhoid fever, intestinal more complex")
         with self.assertRaises(ValueError) as e:
             codelist.truncate_to_3_digits(term_management="invalid")
-        self.assertEqual(str(e.exception), "invalid is not known. Valid values are 'first'")
+        self.assertEqual(str(e.exception), "invalid is not known. Valid values are 'first', 'drop_term'")
 
     def test_cannot_truncate_snomed(self):
         codelist = CodeList(
