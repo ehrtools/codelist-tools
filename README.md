@@ -6,16 +6,28 @@ a Python and R interface that researchers can use.
 
 ## What is a codelist?
 
-Clinical codes, terminology systems, and codelists play a foundational role in structuring healthcare data within electronic health records (EHRs), enabling consistent recording, analysis, and research. Systems like 
-SNOMED CT, ICD-10, and dm+d provide standardised ways to represent clinical concepts, from diagnoses to prescriptions, across diverse healthcare settings. 
+Clinical codes, terminology systems, and codelists play a foundational role in
+structuring healthcare data within electronic health records (EHRs), enabling
+consistent recording, analysis, and research. Systems like SNOMED CT, ICD-10,
+and dm+d provide standardised ways to represent clinical concepts, from
+diagnoses to prescriptions, across diverse healthcare settings.
 
-Understanding how these codes work, and how to build accurate codelists from them, is essential for ensuring valid, reproducible research and effective use of platforms such as OpenSAFELY. 
+Understanding how these codes work, and how to build accurate codelists from
+them, is essential for ensuring valid, reproducible research and effective use
+of platforms such as OpenSAFELY.
 
-The articles listed below explore the function of coding systems, the intricacies of SNOMED, and the careful methodology behind constructing reliable codelists.
+The articles listed below explore the function of coding systems, the
+intricacies of SNOMED, and the careful methodology behind constructing reliable
+codelists.
 
 - [Blog on SNOMED](https://www.carolinemorton.co.uk/blog/what-is-snomed)
 - [What is a codelist?](https://www.bennett.ox.ac.uk/blog/2023/09/what-are-codelists-and-how-are-they-constructed/)
 - [Quick guide to clinical terminology servers](https://www.bennett.ox.ac.uk/blog/2023/06/an-introduction-to-clinical-codes-and-terminology-systems/)
+
+Caroline Morton gave a talk at [RustWeek 2025](https://2025.rustweek.org/) where
+she described this project.
+
+- [Healthy Data, Rusty Code: Epidemiology Meets Modern Systems Programming](https://www.youtube.com/watch?v=gV55o0FmG2U)
 
 ## Structure of Project
 
@@ -33,7 +45,8 @@ The Rust library is a collection of modules for working with medical codelists:
 - **codelists-rs**: Base library for working with codelists. This has basic
   structs and functions for working with codelists.
 - **codelist-validator-rs**: Library for validating codelists.
-- **codelist-builder-rs**: Library for building codelists. 🚧 **Under Construction** 🚧
+- **codelist-builder-rs**: Library for building codelists. 🚧 **Under
+  Construction** 🚧
 
 ## Development Utilities
 
