@@ -4,6 +4,11 @@ This is a Rust library for working with medical codelists (SNOMED, ICD10, OPCS).
 It provides fast and memory-efficient operations on medical codelists. There is
 a Python and R interface that researchers can use.
 
+Caroline Morton gave a talk at [RustWeek 2025](https://2025.rustweek.org/) where
+she described this project.
+
+- [Healthy Data, Rusty Code: Epidemiology Meets Modern Systems Programming](https://www.youtube.com/watch?v=gV55o0FmG2U)
+
 ## What is a codelist?
 
 Clinical codes, terminology systems, and codelists play a foundational role in
@@ -23,11 +28,6 @@ codelists.
 - [Blog on SNOMED](https://www.carolinemorton.co.uk/blog/what-is-snomed)
 - [What is a codelist?](https://www.bennett.ox.ac.uk/blog/2023/09/what-are-codelists-and-how-are-they-constructed/)
 - [Quick guide to clinical terminology servers](https://www.bennett.ox.ac.uk/blog/2023/06/an-introduction-to-clinical-codes-and-terminology-systems/)
-
-Caroline Morton gave a talk at [RustWeek 2025](https://2025.rustweek.org/) where
-she described this project.
-
-- [Healthy Data, Rusty Code: Epidemiology Meets Modern Systems Programming](https://www.youtube.com/watch?v=gV55o0FmG2U)
 
 ## Structure of Project
 
