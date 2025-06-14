@@ -3,12 +3,7 @@
 //! Validation Rules
 //! 1. The code must be exactly 5 characters in length.
 //! 2. Only alphanumeric characters (a-z, A-Z, 0-9) and dots (.) are allowed.
-//! 3. The code must match one of these patterns:
-//!    - 5 alphanumeric characters (e.g. "Af918")
-//!    - 4 alphanumeric characters followed by a dot (e.g. "ABb1.")
-//!    - 3 alphanumeric characters followed by two dots (e.g. "Me4..")
-//!    - 2 alphanumeric characters followed by three dots (e.g. "Fb...")
-//!    - 1 alphanumeric character followed by four dots (e.g. "F....")
+//! 3. The code starts with 0-5 alphanumeric characters followed by dots to pad to 5 characters.
 use std::sync::LazyLock;
 
 use codelist_rs::codelist::CodeList;
@@ -19,7 +14,7 @@ use crate::{errors::CodeListValidatorError, validator::CodeValidator};
 pub struct Ctv3Validator<'a>(pub &'a CodeList);
 
 static REGEX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^(?:[a-zA-Z0-9]{5}|[a-zA-Z0-9]{4}\.|[a-zA-Z0-9]{3}\.\.|[a-zA-Z0-9]{2}\.\.\.|[a-zA-Z0-9]{1}\.\.\.\.)$").expect("Unable to create regex")
+    Regex::new(r"^(?:[a-zA-Z0-9]{5}|[a-zA-Z0-9]{4}\.|[a-zA-Z0-9]{3}\.\.|[a-zA-Z0-9]{2}\.\.\.|[a-zA-Z0-9]{1}\.\.\.\.|\.{5})$").expect("Unable to create regex")
 });
 
 impl CodeValidator for Ctv3Validator<'_> {
@@ -175,7 +170,7 @@ mod tests {
         codelist.add_entry("bn89.".to_string(), None, None)?;
         codelist.add_entry("Me...".to_string(), None, None)?;
         codelist.add_entry("99999".to_string(), None, None)?;
-        codelist.add_entry("kk98.".to_string(), None, None)?;
+        codelist.add_entry(".....".to_string(), None, None)?;
         assert!(codelist.validate_codes().is_ok());
         Ok(())
     }
