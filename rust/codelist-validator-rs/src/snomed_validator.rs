@@ -1,12 +1,11 @@
 //! SNOMED validator for validating SNOMED codes in a codelist
-//! 
+//!
 //! Validation Rules
 //! 1. The code consist of numbers only.
 //! 2. The code must be between 6 and 18 numbers in length.
 use codelist_rs::codelist::CodeList;
 
 use crate::{errors::CodeListValidatorError, validator::CodeValidator};
-
 
 pub struct SnomedValidator<'a>(pub &'a CodeList);
 

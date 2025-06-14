@@ -1,5 +1,5 @@
 //! CTV3 validator for validating CTV3 codes in a codelist
-//! 
+//!
 //! Validation Rules
 //! 1. The code must be exactly 5 characters in length.
 //! 2. Only alphanumeric characters (a-z, A-Z, 0-9) and dots (.) are allowed.

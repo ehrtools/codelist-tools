@@ -1,5 +1,5 @@
 //! OPCS validator for validating OPCS codes in a codelist
-//! 
+//!
 //! Validation Rules
 //! 1. The code must be 3-5 characters long.
 //! 2. The first character must be a letter.

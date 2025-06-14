@@ -1,5 +1,5 @@
 //! ICD10 validator for validating ICD10 codes in a codelist
-//! 
+//!
 //! Validation Rules
 //! 1. The code must be 7 characters or less.
 //! 2. The first character must be a letter.
@@ -190,8 +190,7 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_invalid_code_lowercase_letter(
-    ) -> Result<(), CodeListError> {
+    fn test_validate_invalid_code_lowercase_letter() -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
         let validator = IcdValidator(&codelist);
         let code = "a54";
