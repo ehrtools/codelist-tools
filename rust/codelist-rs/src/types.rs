@@ -19,6 +19,7 @@ pub enum CodeListType {
     ICD10,
     SNOMED,
     OPCS,
+    CTV3,
 }
 
 impl CodeListType {
@@ -56,6 +57,7 @@ impl FromStr for CodeListType {
             "icd10" => Ok(CodeListType::ICD10),
             "snomed" => Ok(CodeListType::SNOMED),
             "opcs" => Ok(CodeListType::OPCS),
+            "ctv3" => Ok(CodeListType::CTV3),
             invalid_string => Err(CodeListError::invalid_code_list_type(invalid_string)),
         }
     }
@@ -71,6 +73,7 @@ impl fmt::Display for CodeListType {
             CodeListType::ICD10 => "ICD10",
             CodeListType::SNOMED => "SNOMED",
             CodeListType::OPCS => "OPCS",
+            CodeListType::CTV3 => "CTV3",
         };
         write!(f, "{s}")
     }
@@ -85,6 +88,7 @@ mod tests {
         assert!(matches!(CodeListType::from_str("icd10"), Ok(CodeListType::ICD10)));
         assert!(matches!(CodeListType::from_str("snomed"), Ok(CodeListType::SNOMED)));
         assert!(matches!(CodeListType::from_str("opcs"), Ok(CodeListType::OPCS)));
+        assert!(matches!(CodeListType::from_str("ctv3"), Ok(CodeListType::CTV3)));
         assert!(matches!(CodeListType::from_str("invalid"), 
             Err(CodeListError::InvalidCodeListType { name }) if name == "invalid"));
     }
@@ -94,6 +98,7 @@ mod tests {
         assert!(matches!(CodeListType::from_str("ICD10"), Ok(CodeListType::ICD10)));
         assert!(matches!(CodeListType::from_str("SNOMED"), Ok(CodeListType::SNOMED)));
         assert!(matches!(CodeListType::from_str("OPCS"), Ok(CodeListType::OPCS)));
+        assert!(matches!(CodeListType::from_str("ctv3"), Ok(CodeListType::CTV3)));
     }
 
     #[test]
@@ -101,5 +106,6 @@ mod tests {
         assert_eq!(CodeListType::ICD10.to_string(), "ICD10");
         assert_eq!(CodeListType::SNOMED.to_string(), "SNOMED");
         assert_eq!(CodeListType::OPCS.to_string(), "OPCS");
+        assert_eq!(CodeListType::CTV3.to_string(), "CTV3");
     }
 }
