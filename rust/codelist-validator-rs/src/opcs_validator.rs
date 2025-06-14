@@ -1,3 +1,11 @@
+//! OPCS validator for validating OPCS codes in a codelist
+//! 
+//! Validation Rules
+//! 1. The code must be 3-5 characters long.
+//! 2. The first character must be a letter.
+//! 3. The second and third characters must be numbers.
+//! 4. If there is a fourth character and it is a dot, there must be a number after the dot.
+//! 5. The fifth character, if present, is a number.
 use std::sync::LazyLock;
 
 use codelist_rs::codelist::CodeList;

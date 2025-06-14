@@ -1,3 +1,14 @@
+//! CTV3 validator for validating CTV3 codes in a codelist
+//! 
+//! Validation Rules
+//! 1. The code must be exactly 5 characters in length.
+//! 2. Only alphanumeric characters (a-z, A-Z, 0-9) and dots (.) are allowed.
+//! 3. The code must match one of these patterns:
+//!    - 5 alphanumeric characters (e.g. "Af918")
+//!    - 4 alphanumeric characters followed by a dot (e.g. "ABb1.")
+//!    - 3 alphanumeric characters followed by two dots (e.g. "Me4..")
+//!    - 2 alphanumeric characters followed by three dots (e.g. "Fb...")
+//!    - 1 alphanumeric character followed by four dots (e.g. "F....")
 use std::sync::LazyLock;
 
 use codelist_rs::codelist::CodeList;
