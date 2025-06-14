@@ -1,6 +1,7 @@
 //! This file contains the codelist options for the codelist
 
 use serde::{Deserialize, Serialize};
+use regex::Regex;
 
 /// Struct to represent a codelist options
 ///
@@ -14,7 +15,8 @@ pub struct CodeListOptions {
     pub code_column_name: String, // for csv files
     pub term_column_name: String, // for csv files
     pub code_field_name: String,  // for json files
-    pub term_field_name: String,  // for json files
+    pub term_field_name: String,
+    pub custom_regex: Option<Regex>, // for custom validation
 }
 
 impl Default for CodeListOptions {
@@ -29,6 +31,7 @@ impl Default for CodeListOptions {
             term_column_name: "term".to_string(),
             code_field_name: "code".to_string(),
             term_field_name: "term".to_string(),
+            custom_regex: None,
         }
     }
 }

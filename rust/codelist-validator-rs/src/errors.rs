@@ -27,4 +27,7 @@ pub enum CodeListValidatorError {
 
     #[error("CodeType {code_type} is not supported")]
     UnsupportedCodeType { code_type: String },
+
+    #[error("Custom validation failed. Reason: {reason}")]
+    CustomValidationFailed { reason: String },
 }
