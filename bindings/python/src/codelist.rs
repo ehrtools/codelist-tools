@@ -80,7 +80,9 @@ impl PyCodeList {
         let codelist_options = CodeListOptions::default();
 
         // Create codelist
-        let codelist = CodeList::new(name, codelist_type, metadata, Some(codelist_options))?;
+        let codelist = CodeList::new(name, codelist_type, metadata, Some(codelist_options))
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+
         Ok(PyCodeList { inner: codelist })
     }
 
