@@ -98,7 +98,7 @@ mod tests {
         assert!(matches!(CodeListType::from_str("ICD10"), Ok(CodeListType::ICD10)));
         assert!(matches!(CodeListType::from_str("SNOMED"), Ok(CodeListType::SNOMED)));
         assert!(matches!(CodeListType::from_str("OPCS"), Ok(CodeListType::OPCS)));
-        assert!(matches!(CodeListType::from_str("ctv3"), Ok(CodeListType::CTV3)));
+        assert!(matches!(CodeListType::from_str("CTV3"), Ok(CodeListType::CTV3)));
     }
 
     #[test]
