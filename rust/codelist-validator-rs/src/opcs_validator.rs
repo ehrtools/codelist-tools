@@ -91,7 +91,7 @@ mod tests {
             CodeListType::OPCS,
             create_test_metadata(),
             None,
-        );
+        )?;
         Ok(codelist)
     }
 

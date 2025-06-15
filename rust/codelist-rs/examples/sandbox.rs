@@ -6,7 +6,7 @@ use codelist_rs::{
 fn main() -> Result<(), CodeListError> {
     // Create a new codelist
     let mut codelist =
-        CodeList::new("test_codelist".to_string(), CodeListType::ICD10, Metadata::default(), None);
+        CodeList::new("test_codelist".to_string(), CodeListType::ICD10, Metadata::default(), None)?;
 
     codelist.add_entry("A00".to_string(), Some("Cholera".to_string()), None)?;
     codelist.add_entry(

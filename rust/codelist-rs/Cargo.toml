@@ -14,4 +14,4 @@ thiserror = "2.0.9"
 thiserror-ext = "0.3.0"
 chrono = { version = "0.4", features = ["serde"] }
 indexmap = { version = "2.9.0", features = ["serde"] }
-regex = = "1.11.1"
+regex = "1.11.1"

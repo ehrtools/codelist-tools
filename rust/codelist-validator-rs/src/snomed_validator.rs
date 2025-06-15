@@ -77,7 +77,7 @@ mod tests {
             CodeListType::SNOMED,
             create_test_metadata(),
             None,
-        );
+        )?;
         Ok(codelist)
     }
 

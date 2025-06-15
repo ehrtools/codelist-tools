@@ -1,7 +1,6 @@
 //! This file contains the codelist options for the codelist
 
 use serde::{Deserialize, Serialize};
-use regex::Regex;
 
 /// Struct to represent a codelist options
 ///
@@ -16,7 +15,7 @@ pub struct CodeListOptions {
     pub term_column_name: String, // for csv files
     pub code_field_name: String,  // for json files
     pub term_field_name: String,
-    pub custom_regex: Option<Regex>, // for custom validation
+    pub custom_regex: Option<String>, // for custom validation
 }
 
 impl Default for CodeListOptions {
@@ -48,5 +47,6 @@ mod tests {
         assert_eq!(options.term_column_name, "term");
         assert_eq!(options.code_field_name, "code");
         assert_eq!(options.term_field_name, "term");
+        assert_eq!(options.custom_regex, None);
     }
 }

@@ -83,7 +83,7 @@ mod tests {
             CodeListType::ICD10,
             create_test_metadata(),
             None,
-        );
+        )?;
         Ok(codelist)
     }
 

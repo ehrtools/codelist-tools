@@ -3,6 +3,7 @@
 use std::io;
 
 use csv;
+use regex;
 use serde_json;
 
 /// Enum to represent the different types of errors that can occur in the
@@ -138,4 +139,8 @@ pub enum CodeListError {
 
     #[error("{codelist_type} cannot be transformed by having X added to the end of it")]
     CodeListNotXAddable { codelist_type: String },
+
+    #[error("Invalid custom regex pattern: {0}")]
+    #[construct(skip)]
+    InvalidRegexPattern(#[from] regex::Error),
 }
