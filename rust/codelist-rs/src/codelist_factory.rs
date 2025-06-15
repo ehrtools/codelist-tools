@@ -68,7 +68,7 @@ impl CodeListFactory {
             self.codelist_type.clone(),
             self.metadata.clone(),
             Some(self.codelist_options.clone()),
-        );
+        )?;
 
         let code_column: Vec<_> = headers
             .iter()
@@ -179,7 +179,7 @@ impl CodeListFactory {
             self.codelist_type.clone(),
             self.metadata.clone(),
             Some(self.codelist_options.clone()),
-        );
+        )?;
 
         let file = std::fs::File::open(file_path)?;
         let reader = std::io::BufReader::new(file);
@@ -446,13 +446,13 @@ mod tests {
             CodeListType::ICD10,
             factory.metadata.clone(),
             Some(factory.codelist_options.clone()),
-        );
+        )?;
         let codelist2 = CodeList::new(
             "test_codelist2".to_string(),
             CodeListType::ICD10,
             factory.metadata.clone(),
             Some(factory.codelist_options.clone()),
-        );
+        )?;
         let codelists = factory.load_codelists(Some(vec![codelist1, codelist2]), None)?;
         Ok(codelists)
     }
@@ -1016,13 +1016,13 @@ B02,Test Disease 2,Description 2";
             CodeListType::ICD10,
             factory.metadata.clone(),
             Some(factory.codelist_options.clone()),
-        );
+        )?;
         let codelist2 = CodeList::new(
             "test_codelist2".to_string(),
             CodeListType::ICD10,
             factory.metadata.clone(),
             Some(factory.codelist_options.clone()),
-        );
+        )?;
         let codelists = factory.load_codelists(Some(vec![codelist1, codelist2]), None)?;
 
         // load codelists from folder
