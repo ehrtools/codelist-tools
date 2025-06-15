@@ -31,7 +31,7 @@ pub enum CodeListValidatorError {
     #[error("Custom validation failed. Reason: {reason}")]
     CustomValidationFailed { reason: String },
 
-     #[error("Invalid custom regex pattern: {0}")]
+    #[error("Invalid custom regex pattern: {0}")]
     #[construct(skip)]
     InvalidRegexPattern(#[from] regex::Error),
 }

@@ -1,14 +1,15 @@
-use regex::Regex;
-use codelist_rs::codelist::CodeList;
 use crate::errors::CodeListValidatorError;
 use crate::validator::CustomCodeValidator;
+use codelist_rs::codelist::CodeList;
+use regex::Regex;
 
 impl CustomCodeValidator for CodeList {
     fn custom_validate_all_code(&self) -> Result<(), CodeListValidatorError> {
         let mut reasons = Vec::new();
 
-        let re_str = self.codelist_options.custom_regex.as_ref()
-            .ok_or_else(|| CodeListValidatorError::custom_validation_failed("Custom regex pattern not provided"))?;
+        let re_str = self.codelist_options.custom_regex.as_ref().ok_or_else(|| {
+            CodeListValidatorError::custom_validation_failed("Custom regex pattern not provided")
+        })?;
 
         // regex is compiled once when this method is called and used for validation of all codes
         let re = Regex::new(re_str)?;
@@ -38,6 +39,7 @@ impl CustomCodeValidator for CodeList {
 mod tests {
     use codelist_rs::{
         codelist::CodeList,
+        codelist_options::CodeListOptions,
         errors::CodeListError,
         metadata::{
             categorisation_and_usage::CategorisationAndUsage, metadata_source::Source,
@@ -45,7 +47,6 @@ mod tests {
             validation_and_review::ValidationAndReview, Metadata,
         },
         types::CodeListType,
-        codelist_options::CodeListOptions,
     };
 
     use super::*;
