@@ -417,7 +417,6 @@ mod tests {
     use tempfile::tempdir;
 
     use super::*;
-    
 
     fn create_test_codelist_factory() -> CodeListFactory {
         let metadata = Metadata::default();

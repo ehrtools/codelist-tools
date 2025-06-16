@@ -62,10 +62,7 @@ impl CodeValidator for IcdValidator<'_> {
 #[cfg(test)]
 mod tests {
     use codelist_rs::{
-        codelist::CodeList,
-        errors::CodeListError,
-        metadata::Metadata,
-        types::CodeListType,
+        codelist::CodeList, errors::CodeListError, metadata::Metadata, types::CodeListType,
     };
 
     use super::*;
