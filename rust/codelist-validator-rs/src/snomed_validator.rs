@@ -1,4 +1,8 @@
-// SNOMED validator for validating SNOMED codes in a codelist
+//! SNOMED validator for validating SNOMED codes in a codelist
+//!
+//! Validation Rules
+//! 1. The code consist of numbers only.
+//! 2. The code must be between 6 and 18 numbers in length.
 use codelist_rs::codelist::CodeList;
 
 use crate::{errors::CodeListValidatorError, validator::CodeValidator};
@@ -46,28 +50,11 @@ impl CodeValidator for SnomedValidator<'_> {
 #[cfg(test)]
 mod tests {
     use codelist_rs::{
-        codelist::CodeList,
-        errors::CodeListError,
-        metadata::{
-            categorisation_and_usage::CategorisationAndUsage, metadata_source::Source,
-            provenance::Provenance, purpose_and_context::PurposeAndContext,
-            validation_and_review::ValidationAndReview, Metadata,
-        },
-        types::CodeListType,
+        codelist::CodeList, errors::CodeListError, metadata::Metadata, types::CodeListType,
     };
 
     use super::*;
     use crate::validator::Validator;
-
-    // Helper function to create test metadata
-    fn create_test_metadata() -> Metadata {
-        Metadata::new(
-            Provenance::new(Source::ManuallyCreated, None),
-            CategorisationAndUsage::new(None, None, None),
-            PurposeAndContext::new(None, None, None),
-            ValidationAndReview::new(None, None, None, None, None),
-        )
-    }
 
     // Helper function to create a test codelist with two entries, default options
     // and test metadata
@@ -75,7 +62,7 @@ mod tests {
         let codelist = CodeList::new(
             "test_codelist".to_string(),
             CodeListType::SNOMED,
-            create_test_metadata(),
+            Metadata::default(),
             None,
         )?;
         Ok(codelist)

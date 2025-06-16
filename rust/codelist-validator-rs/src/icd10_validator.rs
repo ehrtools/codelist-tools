@@ -1,3 +1,13 @@
+//! ICD10 validator for validating ICD10 codes in a codelist
+//!
+//! Validation Rules
+//! 1. The code must be 7 characters or less.
+//! 2. The first character must be a letter.
+//! 3. The second and third characters must be numbers.
+//! 4. The fourth character must be a dot, or a number or X.
+//! 5. If the fourth character is a dot, there must be at least 1 number after the dot.
+//! 6. If the fourth character is a X, there are no further characters.
+//! 7. The fifth to seventh characters must be numbers if present.
 use std::sync::LazyLock;
 
 use codelist_rs::codelist::CodeList;
@@ -52,28 +62,11 @@ impl CodeValidator for IcdValidator<'_> {
 #[cfg(test)]
 mod tests {
     use codelist_rs::{
-        codelist::CodeList,
-        errors::CodeListError,
-        metadata::{
-            categorisation_and_usage::CategorisationAndUsage, metadata_source::Source,
-            provenance::Provenance, purpose_and_context::PurposeAndContext,
-            validation_and_review::ValidationAndReview, Metadata,
-        },
-        types::CodeListType,
+        codelist::CodeList, errors::CodeListError, metadata::Metadata, types::CodeListType,
     };
 
     use super::*;
     use crate::validator::Validator;
-
-    // Helper function to create test metadata
-    fn create_test_metadata() -> Metadata {
-        Metadata::new(
-            Provenance::new(Source::ManuallyCreated, None),
-            CategorisationAndUsage::new(None, None, None),
-            PurposeAndContext::new(None, None, None),
-            ValidationAndReview::new(None, None, None, None, None),
-        )
-    }
 
     // Helper function to create a test codelist with two entries, default options
     // and test metadata
@@ -81,7 +74,7 @@ mod tests {
         let codelist = CodeList::new(
             "test_codelist".to_string(),
             CodeListType::ICD10,
-            create_test_metadata(),
+            Metadata::default(),
             None,
         )?;
         Ok(codelist)
@@ -176,6 +169,16 @@ mod tests {
         let code = "A00.4AA";
         let error = validator.validate_code(code).unwrap_err().to_string();
         assert_eq!(error, "Code A00.4AA contents is invalid for type ICD10. Reason: Code does not match the expected format");
+        Ok(())
+    }
+
+    #[test]
+    fn test_validate_invalid_code_lowercase_letter() -> Result<(), CodeListError> {
+        let codelist = create_test_codelist()?;
+        let validator = IcdValidator(&codelist);
+        let code = "a54";
+        let error = validator.validate_code(code).unwrap_err().to_string();
+        assert_eq!(error, "Code a54 contents is invalid for type ICD10. Reason: Code does not match the expected format");
         Ok(())
     }
 

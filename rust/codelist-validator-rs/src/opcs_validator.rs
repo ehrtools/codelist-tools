@@ -1,3 +1,11 @@
+//! OPCS validator for validating OPCS codes in a codelist
+//!
+//! Validation Rules
+//! 1. The code must be 3-5 characters long.
+//! 2. The first character must be a letter.
+//! 3. The second and third characters must be numbers.
+//! 4. If there is a fourth character and it is a dot, there must be a number after the dot.
+//! 5. The fifth character, if present, is a number.
 use std::sync::LazyLock;
 
 use codelist_rs::codelist::CodeList;
@@ -60,28 +68,11 @@ impl CodeValidator for OpcsValidator<'_> {
 #[cfg(test)]
 mod tests {
     use codelist_rs::{
-        codelist::CodeList,
-        errors::CodeListError,
-        metadata::{
-            categorisation_and_usage::CategorisationAndUsage, metadata_source::Source,
-            provenance::Provenance, purpose_and_context::PurposeAndContext,
-            validation_and_review::ValidationAndReview, Metadata,
-        },
-        types::CodeListType,
+        codelist::CodeList, errors::CodeListError, metadata::Metadata, types::CodeListType,
     };
 
     use super::*;
     use crate::validator::Validator;
-
-    // Helper function to create test metadata
-    fn create_test_metadata() -> Metadata {
-        Metadata::new(
-            Provenance::new(Source::ManuallyCreated, None),
-            CategorisationAndUsage::new(None, None, None),
-            PurposeAndContext::new(None, None, None),
-            ValidationAndReview::new(None, None, None, None, None),
-        )
-    }
 
     // Helper function to create a test codelist with two entries, default options
     // and test metadata
@@ -89,7 +80,7 @@ mod tests {
         let codelist = CodeList::new(
             "test_codelist".to_string(),
             CodeListType::OPCS,
-            create_test_metadata(),
+            Metadata::default(),
             None,
         )?;
         Ok(codelist)
