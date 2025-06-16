@@ -35,7 +35,7 @@ impl Validator for CodeList {
                 CodeListType::SNOMED => SnomedValidator(self).validate_all_code(),
                 CodeListType::OPCS => OpcsValidator(self).validate_all_code(),
                 CodeListType::CTV3 => Ctv3Validator(self).validate_all_code(),
-            }
+            },
         }
     }
 }

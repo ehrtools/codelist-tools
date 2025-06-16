@@ -80,7 +80,8 @@ mod tests {
             CodeListType::CTV3,
             Metadata::default(),
             None,
-        );
+        )?;
+
         Ok(codelist)
     }
 
