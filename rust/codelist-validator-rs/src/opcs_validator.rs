@@ -81,23 +81,13 @@ mod tests {
     use super::*;
     use crate::validator::Validator;
 
-    // Helper function to create test metadata
-    fn create_test_metadata() -> Metadata {
-        Metadata::new(
-            Provenance::new(Source::ManuallyCreated, None),
-            CategorisationAndUsage::new(None, None, None),
-            PurposeAndContext::new(None, None, None),
-            ValidationAndReview::new(None, None, None, None, None),
-        )
-    }
-
     // Helper function to create a test codelist with two entries, default options
     // and test metadata
     fn create_test_codelist() -> Result<CodeList, CodeListError> {
         let codelist = CodeList::new(
             "test_codelist".to_string(),
             CodeListType::OPCS,
-            create_test_metadata(),
+            Metadata::default(),
             None,
         );
         Ok(codelist)
