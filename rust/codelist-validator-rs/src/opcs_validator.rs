@@ -70,11 +70,7 @@ mod tests {
     use codelist_rs::{
         codelist::CodeList,
         errors::CodeListError,
-        metadata::{
-            categorisation_and_usage::CategorisationAndUsage, metadata_source::Source,
-            provenance::Provenance, purpose_and_context::PurposeAndContext,
-            validation_and_review::ValidationAndReview, Metadata,
-        },
+        metadata::Metadata,
         types::CodeListType,
     };
 

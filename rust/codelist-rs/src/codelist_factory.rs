@@ -417,11 +417,7 @@ mod tests {
     use tempfile::tempdir;
 
     use super::*;
-    use crate::metadata::{
-        categorisation_and_usage::CategorisationAndUsage, metadata_source::Source,
-        provenance::Provenance, purpose_and_context::PurposeAndContext,
-        validation_and_review::ValidationAndReview,
-    };
+    
 
     fn create_test_codelist_factory() -> CodeListFactory {
         let metadata = Metadata::default();
