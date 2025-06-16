@@ -8,6 +8,7 @@ use std::{
 };
 
 use csv::Writer;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 // Internal imports
@@ -52,15 +53,22 @@ impl CodeList {
         codelist_type: CodeListType,
         metadata: Metadata,
         options: Option<CodeListOptions>,
-    ) -> Self {
-        CodeList {
+    ) -> Result<Self, CodeListError> {
+        let options = options.unwrap_or_default();
+
+        // Validate custom regex if it has been set
+        if let Some(regex_str) = &options.custom_regex {
+            Regex::new(regex_str)?;
+        }
+
+        Ok(CodeList {
             name,
             entries: BTreeMap::new(),
             codelist_type,
             metadata,
             logs: Vec::new(),
-            codelist_options: options.unwrap_or_default(),
-        }
+            codelist_options: options,
+        })
     }
 
     /// Get the type of the codelist
@@ -520,7 +528,7 @@ mod tests {
             CodeListType::ICD10,
             Metadata::default(),
             None,
-        );
+        )?;
         codelist.add_entry("R65.2".to_string(), None, None)?;
 
         codelist.add_entry(
@@ -581,6 +589,7 @@ mod tests {
             term_column_name: "test_term".to_string(),
             code_field_name: "test_code".to_string(),
             term_field_name: "test_term".to_string(),
+            custom_regex: None,
         };
 
         let codelist = CodeList::new(
@@ -588,13 +597,14 @@ mod tests {
             CodeListType::ICD10,
             Default::default(),
             Some(codelist_options),
-        );
+        )?;
 
         assert!(codelist.codelist_options.allow_duplicates);
         assert_eq!(codelist.codelist_options.code_field_name, "test_code".to_string());
         assert_eq!(codelist.codelist_options.term_field_name, "test_term".to_string());
         assert_eq!(codelist.codelist_options.code_column_name, "test_code".to_string());
         assert_eq!(codelist.codelist_options.term_column_name, "test_term".to_string());
+        assert_eq!(codelist.codelist_options.custom_regex, None);
 
         assert_eq!(codelist.metadata().provenance.source, Source::ManuallyCreated);
         let time_difference = get_time_difference(codelist.metadata().provenance.created_date);
@@ -632,7 +642,7 @@ mod tests {
             CodeListType::ICD10,
             Default::default(),
             None,
-        );
+        )?;
         codelist.add_entry("R65.2".to_string(), Some("Severe sepsis".to_string()), None)?;
         codelist.add_entry("R65.2".to_string(), Some("Severe sepsis".to_string()), None)?;
 
@@ -807,12 +817,14 @@ mod tests {
     }
 
     #[test]
-    fn test_get_metadata() {
+    fn test_get_metadata() -> Result<(), CodeListError> {
         let metadata: Metadata = Default::default();
         let codelist =
-            CodeList::new("test".to_string(), CodeListType::ICD10, metadata.clone(), None);
+            CodeList::new("test".to_string(), CodeListType::ICD10, metadata.clone(), None)?;
 
         assert_eq!(codelist.metadata(), &metadata);
+
+        Ok(())
     }
 
     #[test]
@@ -989,7 +1001,7 @@ mod tests {
             CodeListType::SNOMED,
             Default::default(),
             None,
-        );
+        )?;
 
         // A SNOMED list is not truncatable
         assert!(snomed_codelist.truncate_to_3_digits(TermManagement::First).is_err());
@@ -1001,8 +1013,12 @@ mod tests {
     fn test_truncate_to_3_digits_icd10_4_digits_drop_term() -> Result<(), CodeListError> {
         let metadata: Metadata = Default::default();
 
-        let mut expected_codelist =
-            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
+        let mut expected_codelist = CodeList::new(
+            "test_codelist".to_string(),
+            CodeListType::ICD10,
+            metadata.clone(),
+            None,
+        )?;
         expected_codelist.add_entry(
             "B01".to_string(),
             None,
@@ -1010,7 +1026,7 @@ mod tests {
         )?;
 
         let mut observed_codelist =
-            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata, None);
+            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata, None)?;
 
         observed_codelist.add_entry(
             "B012".to_string(),
@@ -1029,8 +1045,12 @@ mod tests {
     fn test_truncate_to_3_digits_3_and_4_digits_drop_term() -> Result<(), CodeListError> {
         let metadata: Metadata = Default::default();
 
-        let mut expected_codelist =
-            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
+        let mut expected_codelist = CodeList::new(
+            "test_codelist".to_string(),
+            CodeListType::ICD10,
+            metadata.clone(),
+            None,
+        )?;
         expected_codelist.add_entry(
             "B01".to_string(),
             Some("Varicella [chickenpox]".to_string()),
@@ -1038,7 +1058,7 @@ mod tests {
         )?;
 
         let mut observed_codelist =
-            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata, None);
+            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata, None)?;
 
         observed_codelist.add_entry(
             "B01".to_string(),
@@ -1062,8 +1082,12 @@ mod tests {
     fn test_truncate_to_3_digits_icd10_4_digits_first() -> Result<(), CodeListError> {
         let metadata: Metadata = Default::default();
 
-        let mut expected_codelist =
-            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
+        let mut expected_codelist = CodeList::new(
+            "test_codelist".to_string(),
+            CodeListType::ICD10,
+            metadata.clone(),
+            None,
+        )?;
         expected_codelist.add_entry(
             "B01".to_string(),
             Some("Varicella pneumonia".to_string()),
@@ -1071,7 +1095,7 @@ mod tests {
         )?;
 
         let mut observed_codelist =
-            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata, None);
+            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata, None)?;
 
         observed_codelist.add_entry(
             "B012".to_string(),
@@ -1090,8 +1114,12 @@ mod tests {
     fn test_truncate_to_3_digits_3_and_4_digits_first() -> Result<(), CodeListError> {
         let metadata: Metadata = Default::default();
 
-        let mut expected_codelist =
-            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata.clone(), None);
+        let mut expected_codelist = CodeList::new(
+            "test_codelist".to_string(),
+            CodeListType::ICD10,
+            metadata.clone(),
+            None,
+        )?;
         expected_codelist.add_entry(
             "B01".to_string(),
             Some("Varicella [chickenpox]".to_string()),
@@ -1099,7 +1127,7 @@ mod tests {
         )?;
 
         let mut observed_codelist =
-            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata, None);
+            CodeList::new("test_codelist".to_string(), CodeListType::ICD10, metadata, None)?;
 
         observed_codelist.add_entry(
             "B01".to_string(),
@@ -1126,7 +1154,7 @@ mod tests {
             CodeListType::ICD10,
             Default::default(),
             None,
-        );
+        )?;
         expected_codelist.add_entry("A10".to_string(), Some("Cholera".to_string()), None)?;
 
         expected_codelist.add_entry(
@@ -1161,7 +1189,7 @@ mod tests {
             CodeListType::ICD10,
             Default::default(),
             None,
-        );
+        )?;
         expected_codelist.add_entry("A10".to_string(), Some("Cholera".to_string()), None)?;
 
         expected_codelist.add_entry(
@@ -1196,7 +1224,7 @@ mod tests {
             CodeListType::SNOMED,
             Default::default(),
             None,
-        );
+        )?;
 
         // A SNOMED list is not x_appendable
         assert!(snomed_codelist.add_x_codes().is_err());

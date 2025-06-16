@@ -22,9 +22,16 @@ pub enum CodeListValidatorError {
     #[error("Code {code} contents is invalid for type {codelist_type}. Reason: {reason}")]
     InvalidCodeContents { code: String, reason: String, codelist_type: String },
 
-    #[error("Some codes in the list are invalid. Details: {reasons:?}")]
+    #[error("Some codes in the list are invalid. Details: {}", reasons.join(", "))]
     InvalidCodelist { reasons: Vec<String> },
 
     #[error("CodeType {code_type} is not supported")]
     UnsupportedCodeType { code_type: String },
+
+    #[error("Custom validation failed. Reason: {reason}")]
+    CustomValidationFailed { reason: String },
+
+    #[error("Invalid custom regex pattern: {0}")]
+    #[construct(skip)]
+    InvalidRegexPattern(#[from] regex::Error),
 }

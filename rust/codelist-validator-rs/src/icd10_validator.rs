@@ -76,7 +76,7 @@ mod tests {
             CodeListType::ICD10,
             Metadata::default(),
             None,
-        );
+        )?;
         Ok(codelist)
     }
 

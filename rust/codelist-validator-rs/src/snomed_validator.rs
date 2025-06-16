@@ -64,7 +64,7 @@ mod tests {
             CodeListType::SNOMED,
             Metadata::default(),
             None,
-        );
+        )?;
         Ok(codelist)
     }
 

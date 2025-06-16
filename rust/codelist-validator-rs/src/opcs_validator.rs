@@ -82,7 +82,7 @@ mod tests {
             CodeListType::OPCS,
             Metadata::default(),
             None,
-        );
+        )?;
         Ok(codelist)
     }
 
