@@ -417,24 +417,9 @@ mod tests {
     use tempfile::tempdir;
 
     use super::*;
-    use crate::metadata::{
-        categorisation_and_usage::CategorisationAndUsage, metadata_source::Source,
-        provenance::Provenance, purpose_and_context::PurposeAndContext,
-        validation_and_review::ValidationAndReview,
-    };
-
-    // Helper function to create test metadata
-    fn create_test_metadata() -> Metadata {
-        Metadata {
-            provenance: Provenance::new(Source::ManuallyCreated, None),
-            categorisation_and_usage: CategorisationAndUsage::new(None, None, None),
-            purpose_and_context: PurposeAndContext::new(None, None, None),
-            validation_and_review: ValidationAndReview::new(None, None, None, None, None),
-        }
-    }
 
     fn create_test_codelist_factory() -> CodeListFactory {
-        let metadata = create_test_metadata();
+        let metadata = Metadata::default();
         let codelist_type = CodeListType::ICD10;
         let codelist_options = CodeListOptions::default();
         CodeListFactory::new(codelist_options, metadata, codelist_type)
@@ -459,7 +444,7 @@ mod tests {
 
     #[test]
     fn test_new_codelist_factory() {
-        let metadata = create_test_metadata();
+        let metadata = Metadata::default();
         let codelist_type = CodeListType::ICD10;
         let codelist_options = CodeListOptions::default();
         let metadata_clone = metadata.clone(); // Clone before moving

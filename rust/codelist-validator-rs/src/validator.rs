@@ -2,14 +2,14 @@
 use codelist_rs::{codelist::CodeList, types::CodeListType};
 
 use crate::{
-    errors::CodeListValidatorError, icd10_validator::IcdValidator, opcs_validator::OpcsValidator,
-    snomed_validator::SnomedValidator,
+    ctv3_validator::Ctv3Validator, errors::CodeListValidatorError, icd10_validator::IcdValidator,
+    opcs_validator::OpcsValidator, snomed_validator::SnomedValidator,
 };
 
 /// Validator trait for validating a codelist.
 ///
-/// `validate_code`: validates a single OPCS code
-/// `validate_all_code`: validates all OPCS codes in the codelist
+/// `validate_code`: validates a single code
+/// `validate_all_code`: validates all codes in the codelist
 pub(crate) trait CodeValidator {
     fn validate_code(&self, code: &str) -> Result<(), CodeListValidatorError>; // for 1 code
     fn validate_all_code(&self) -> Result<(), CodeListValidatorError>;
@@ -26,6 +26,7 @@ impl Validator for CodeList {
             CodeListType::ICD10 => IcdValidator(self).validate_all_code(),
             CodeListType::SNOMED => SnomedValidator(self).validate_all_code(),
             CodeListType::OPCS => OpcsValidator(self).validate_all_code(),
+            CodeListType::CTV3 => Ctv3Validator(self).validate_all_code(),
         }
     }
 }
