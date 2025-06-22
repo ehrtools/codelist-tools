@@ -25,7 +25,7 @@ pub trait Validator {
 impl Validator for CodeList {
     fn validate_codes(&self, custom_regex: Option<&Regex>) -> Result<(), CodeListValidatorError> {
         match custom_regex {
-            Some(regex) => custom_validate_all_code(self, &regex),
+            Some(regex) => custom_validate_all_code(self, regex),
             None => match self.codelist_type {
                 CodeListType::ICD10 => IcdValidator(self).validate_all_code(),
                 CodeListType::SNOMED => SnomedValidator(self).validate_all_code(),
@@ -69,11 +69,8 @@ fn custom_validate_all_code(codelist: &CodeList, re: &Regex) -> Result<(), CodeL
 #[cfg(test)]
 mod tests {
     use codelist_rs::{
-        codelist::CodeList,
-        codelist_options::CodeListOptions,
-        errors::CodeListError,
-        metadata::Metadata,
-        types::CodeListType,
+        codelist::CodeList, codelist_options::CodeListOptions, errors::CodeListError,
+        metadata::Metadata, types::CodeListType,
     };
 
     use super::*;
@@ -81,9 +78,8 @@ mod tests {
     use regex::Regex;
     use std::sync::LazyLock;
 
-    static TEST_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-        Regex::new(r"^[A-Z]{3}[!]{1}$").expect("Failed to compile test regex")
-    });
+    static TEST_REGEX: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"^[A-Z]{3}[!]{1}$").expect("Failed to compile test regex"));
 
     // Helper function to create a test codelist with two entries, default options
     // and test metadata
@@ -203,4 +199,3 @@ mod tests {
         Ok(())
     }
 }
-

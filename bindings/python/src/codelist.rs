@@ -14,13 +14,13 @@ use codelist_rs::{
 };
 use codelist_validator_rs::validator::Validator;
 use indexmap::IndexSet;
-use regex::Regex;
 use pyo3::{
     exceptions::PyValueError,
     prelude::*,
     types::{PyDict, PySet},
     PyErr, PyResult,
 };
+use regex::Regex;
 
 /// Python wrapper for the CodeList struct
 ///
@@ -459,11 +459,13 @@ impl PyCodeList {
             Some(regex_str) => {
                 let regex = Regex::new(&regex_str)
                     .map_err(|e| PyValueError::new_err(format!("Invalid regex: {}", e)))?;
-                self.inner.validate_codes(Some(&regex))
+                self.inner
+                    .validate_codes(Some(&regex))
                     .map_err(|e| PyValueError::new_err(e.to_string()))?
             }
-            None => self.inner.validate_codes(None)
-                .map_err(|e| PyValueError::new_err(e.to_string()))?,
+            None => {
+                self.inner.validate_codes(None).map_err(|e| PyValueError::new_err(e.to_string()))?
+            }
         }
         Ok(())
     }
