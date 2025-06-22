@@ -296,7 +296,18 @@ class TestCodeListValidation(unittest.TestCase):
             codelist.add_x_codes()
         self.assertEqual(str(e.exception), "SNOMED cannot be transformed by having X added to the end of it")
 
-
+    def test_validate_codes_with_custom_regex(self):
+        codelist = CodeList(
+            name="Test Codelist",
+            codelist_type="ICD10",
+            source="Manually created",
+        )
+        codelist.add_entry("ABC", "Salmonella infections")
+        codelist.validate_codes("^[A-Z]{3}$")
+        codelist.add_entry("ABCD", "Invalid code")
+        with self.assertRaises(ValueError) as e:
+            codelist.validate_codes("^[A-Z]{3}$")
+        self.assertIn("Code ABCD contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern", str(e.exception))
 
         
 

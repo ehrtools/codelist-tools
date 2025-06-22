@@ -84,7 +84,7 @@ mod tests {
     fn test_validate_code_with_valid_code() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist()?;
         let _ = codelist.add_entry("A100".to_string(), Some("test".to_string()), None);
-        assert!(codelist.validate_codes().is_ok());
+        assert!(codelist.validate_codes(None).is_ok());
         Ok(())
     }
 
@@ -197,7 +197,7 @@ mod tests {
         codelist.add_entry("M10".to_string(), Some("Gout".to_string()), None)?;
         codelist.add_entry("Q90".to_string(), Some("Down Syndrome".to_string()), None)?;
         codelist.add_entry("K02".to_string(), Some("Dental caries".to_string()), None)?;
-        assert!(codelist.validate_codes().is_ok());
+        assert!(codelist.validate_codes(None).is_ok());
         Ok(())
     }
 
@@ -216,7 +216,7 @@ mod tests {
         codelist.add_entry("A00.A".to_string(), Some("Gout".to_string()), None)?;
         codelist.add_entry("A00X12".to_string(), Some("Down Syndrome".to_string()), None)?;
         codelist.add_entry("A00.4AA".to_string(), Some("Dental caries".to_string()), None)?;
-        let error = codelist.validate_codes().unwrap_err();
+        let error = codelist.validate_codes(None).unwrap_err();
         let error_string = error.to_string();
 
         assert!(error_string.contains("Some codes in the list are invalid. Details:"));
@@ -250,7 +250,7 @@ mod tests {
         codelist.add_entry("A00.A".to_string(), Some("Gout".to_string()), None)?;
         codelist.add_entry("Q90".to_string(), Some("Down Syndrome".to_string()), None)?;
         codelist.add_entry("A00.4AA".to_string(), Some("Dental caries".to_string()), None)?;
-        let error = codelist.validate_codes().unwrap_err();
+        let error = codelist.validate_codes(None).unwrap_err();
         let error_string = error.to_string();
 
         assert!(error_string.contains("Some codes in the list are invalid. Details:"));
