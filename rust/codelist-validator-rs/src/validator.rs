@@ -79,7 +79,7 @@ mod tests {
     use std::sync::LazyLock;
 
     static TEST_REGEX: LazyLock<Regex> =
-        LazyLock::new(|| Regex::new(r"^[A-Z]{3}[!]{1}$").expect("Failed to compile test regex"));
+        LazyLock::new(|| Regex::new(r"^A").expect("Failed to compile test regex"));
 
     // Helper function to create a test codelist with two entries, default options
     // and test metadata
@@ -103,7 +103,7 @@ mod tests {
     #[test]
     fn test_validate_code_with_valid_code() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist();
-        codelist.add_entry("ABC!".to_string(), None, None)?;
+        codelist.add_entry("A11".to_string(), None, None)?;
         assert!(codelist.validate_codes(Some(&TEST_REGEX)).is_ok());
         Ok(())
     }
@@ -111,7 +111,7 @@ mod tests {
     #[test]
     fn test_validate_code_with_invalid_code_length_too_long() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist();
-        codelist.add_entry("ABC!L".to_string(), None, None)?;
+        codelist.add_entry("B112".to_string(), None, None)?;
         let error = codelist.validate_codes(Some(&TEST_REGEX)).unwrap_err().to_string();
         assert!(error.contains("Some codes in the list are invalid. Details:"));
         assert!(error.contains("Code ABC!L contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));

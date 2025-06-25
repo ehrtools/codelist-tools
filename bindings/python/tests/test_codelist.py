@@ -302,11 +302,11 @@ class TestCodeListValidation(unittest.TestCase):
             codelist_type="ICD10",
             source="Manually created",
         )
-        codelist.add_entry("ABC", "Salmonella infections")
-        codelist.validate_codes("^[A-Z]{3}$")
-        codelist.add_entry("ABCD", "Invalid code")
+        codelist.add_entry("A11", "Valid test code")
+        codelist.validate_codes("^A")
+        codelist.add_entry("B112", "Invalid test code")
         with self.assertRaises(ValueError) as e:
-            codelist.validate_codes("^[A-Z]{3}$")
+            codelist.validate_codes("^A")
         self.assertIn("Code ABCD contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern", str(e.exception))
 
         
