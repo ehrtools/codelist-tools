@@ -79,7 +79,7 @@ mod tests {
     use std::sync::LazyLock;
 
     static TEST_REGEX: LazyLock<Regex> =
-        LazyLock::new(|| Regex::new(r"^A").expect("Failed to compile test regex"));
+        LazyLock::new(|| Regex::new(r"^B\d{2}$").expect("Failed to compile test regex"));
 
     // Helper function to create a test codelist with two entries, default options
     // and test metadata
@@ -103,7 +103,7 @@ mod tests {
     #[test]
     fn test_validate_code_with_valid_code() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist();
-        codelist.add_entry("A11".to_string(), None, None)?;
+        codelist.add_entry("B11".to_string(), None, None)?;
         assert!(codelist.validate_codes(Some(&TEST_REGEX)).is_ok());
         Ok(())
     }
@@ -111,34 +111,34 @@ mod tests {
     #[test]
     fn test_validate_code_with_invalid_code_length_too_long() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist();
-        codelist.add_entry("B112".to_string(), None, None)?;
+        codelist.add_entry("B1123".to_string(), None, None)?;
         let error = codelist.validate_codes(Some(&TEST_REGEX)).unwrap_err().to_string();
         assert!(error.contains("Some codes in the list are invalid. Details:"));
-        assert!(error.contains("Code ABC!L contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
+        assert!(error.contains("Code B1123 contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
         Ok(())
     }
 
     #[test]
     fn test_validate_invalid_code_invalid_contents() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist();
-        codelist.add_entry("100!".to_string(), None, None)?;
+        codelist.add_entry("!!!".to_string(), None, None)?;
         let error = codelist.validate_codes(Some(&TEST_REGEX)).unwrap_err().to_string();
         assert!(error.contains("Some codes in the list are invalid. Details:"));
-        assert!(error.contains("Code 100! contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
+        assert!(error.contains("Code !!! contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
         Ok(())
     }
 
     #[test]
     fn test_validate_codelist_with_valid_codes() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist();
-        codelist.add_entry("ABC!".to_string(), None, None)?;
-        codelist.add_entry("CDE!".to_string(), None, None)?;
-        codelist.add_entry("ZOE!".to_string(), None, None)?;
-        codelist.add_entry("FQH!".to_string(), None, None)?;
-        codelist.add_entry("OKL!".to_string(), None, None)?;
-        codelist.add_entry("MYP!".to_string(), None, None)?;
-        codelist.add_entry("QNM!".to_string(), None, None)?;
-        codelist.add_entry("KPL!".to_string(), None, None)?;
+        codelist.add_entry("B01".to_string(), None, None)?;
+        codelist.add_entry("B02".to_string(), None, None)?;
+        codelist.add_entry("B03".to_string(), None, None)?;
+        codelist.add_entry("B04".to_string(), None, None)?;
+        codelist.add_entry("B05".to_string(), None, None)?;
+        codelist.add_entry("B06".to_string(), None, None)?;
+        codelist.add_entry("B07".to_string(), None, None)?;
+        codelist.add_entry("B08".to_string(), None, None)?;
         assert!(codelist.validate_codes(Some(&TEST_REGEX)).is_ok());
         Ok(())
     }
@@ -146,26 +146,26 @@ mod tests {
     #[test]
     fn test_validate_codelist_with_all_invalid_codes() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist();
-        codelist.add_entry("A0P!".to_string(), Some("Gonorrhoea".to_string()), None)?;
-        codelist.add_entry("AaB!".to_string(), Some("Pertussis".to_string()), None)?;
-        codelist.add_entry("AAAAAAA!".to_string(), Some("Measles".to_string()), None)?;
-        codelist.add_entry("AB".to_string(), Some("Lymphatic filariasis".to_string()), None)?;
-        codelist.add_entry("abcd".to_string(), None, None)?;
-        codelist.add_entry("abC!".to_string(), Some("Gout".to_string()), None)?;
-        codelist.add_entry("OPP!!".to_string(), Some("Down Syndrome".to_string()), None)?;
-        codelist.add_entry("!!PP".to_string(), Some("Dental caries".to_string()), None)?;
+        codelist.add_entry("B011!".to_string(), None, None)?;
+        codelist.add_entry("B0A".to_string(), None, None)?;
+        codelist.add_entry("A03".to_string(), None, None)?;
+        codelist.add_entry("BK4".to_string(), None, None)?;
+        codelist.add_entry("B".to_string(), None, None)?;
+        codelist.add_entry("BA907".to_string(), None, None)?;
+        codelist.add_entry("B07x".to_string(), None, None)?;
+        codelist.add_entry("b08".to_string(), None, None)?;
         let error = codelist.validate_codes(Some(&TEST_REGEX)).unwrap_err();
         let error_string = error.to_string();
 
         assert!(error_string.contains("Some codes in the list are invalid. Details:"));
-        assert!(error_string.contains("Code A0P! contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
-        assert!(error_string.contains("Code AaB! contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
-        assert!(error_string.contains("Code AAAAAAA! contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
-        assert!(error_string.contains("Code AB contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
-        assert!(error_string.contains("Code abcd contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
-        assert!(error_string.contains("Code abC! contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
-        assert!(error_string.contains("Code OPP!! contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
-        assert!(error_string.contains("Code !!PP contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
+        assert!(error_string.contains("Code B011! contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
+        assert!(error_string.contains("Code B0A contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
+        assert!(error_string.contains("Code A03 contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
+        assert!(error_string.contains("Code BK4 contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
+        assert!(error_string.contains("Code B contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
+        assert!(error_string.contains("Code BA907 contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
+        assert!(error_string.contains("Code B07x contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
+        assert!(error_string.contains("Code b08 contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
 
         assert!(
             matches!(error, CodeListValidatorError::InvalidCodelist { reasons } if reasons.len() == 8)
@@ -176,22 +176,22 @@ mod tests {
     #[test]
     fn test_validate_codelist_with_mixed_invalid_and_valid_codes() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist();
-        codelist.add_entry("A54!p".to_string(), None, None)?;
-        codelist.add_entry("1009!".to_string(), None, None)?;
-        codelist.add_entry("A0p5!".to_string(), None, None)?;
-        codelist.add_entry("aab!".to_string(), None, None)?;
-        codelist.add_entry("ABC!".to_string(), None, None)?;
-        codelist.add_entry("LPK!".to_string(), None, None)?;
-        codelist.add_entry("FLP!".to_string(), None, None)?;
-        codelist.add_entry("GVM!".to_string(), None, None)?;
+        codelist.add_entry("B01".to_string(), None, None)?;
+        codelist.add_entry("B02".to_string(), None, None)?;
+        codelist.add_entry("B03".to_string(), None, None)?;
+        codelist.add_entry("B04".to_string(), None, None)?;
+        codelist.add_entry("B".to_string(), None, None)?;
+        codelist.add_entry("BA907".to_string(), None, None)?;
+        codelist.add_entry("B07x".to_string(), None, None)?;
+        codelist.add_entry("b08".to_string(), None, None)?;
         let error = codelist.validate_codes(Some(&TEST_REGEX)).unwrap_err();
         let error_string = error.to_string();
 
         assert!(error_string.contains("Some codes in the list are invalid. Details:"));
-        assert!(error_string.contains("Code A54!p contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
-        assert!(error_string.contains("Code 1009! contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
-        assert!(error_string.contains("Code A0p5! contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
-        assert!(error_string.contains("Code aab! contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
+        assert!(error_string.contains("Code B contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
+        assert!(error_string.contains("Code BA907 contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
+        assert!(error_string.contains("Code B07x contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
+        assert!(error_string.contains("Code b08 contents is invalid for type ICD10. Reason: Code does not match the custom regex pattern"));
 
         assert!(
             matches!(error, CodeListValidatorError::InvalidCodelist { reasons } if reasons.len() == 4)
