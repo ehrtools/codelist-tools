@@ -88,7 +88,7 @@ mod tests {
     fn test_validate_codelist_with_valid_code() -> Result<(), CodeListError> {
         let mut codelist = create_test_codelist()?;
         let _ = codelist.add_entry("A9f..".to_string(), None, None);
-        assert!(codelist.validate_codes().is_ok());
+        assert!(codelist.validate_codes(None).is_ok());
         Ok(())
     }
 
@@ -154,7 +154,7 @@ mod tests {
         codelist.add_entry("Me...".to_string(), None, None)?;
         codelist.add_entry("99999".to_string(), None, None)?;
         codelist.add_entry(".....".to_string(), None, None)?;
-        assert!(codelist.validate_codes().is_ok());
+        assert!(codelist.validate_codes(None).is_ok());
         Ok(())
     }
 
@@ -169,7 +169,7 @@ mod tests {
         codelist.add_entry("*unf.".to_string(), None, None)?;
         codelist.add_entry("..j..".to_string(), None, None)?;
         codelist.add_entry("9874ji".to_string(), None, None)?;
-        let error = codelist.validate_codes().unwrap_err();
+        let error = codelist.validate_codes(None).unwrap_err();
         let error_string = error.to_string();
 
         assert!(error_string.contains("Some codes in the list are invalid. Details:"));
@@ -199,7 +199,7 @@ mod tests {
         codelist.add_entry("A00.l".to_string(), None, None)?;
         codelist.add_entry("Q90.....".to_string(), None, None)?;
         codelist.add_entry("A..9k".to_string(), None, None)?;
-        let error = codelist.validate_codes().unwrap_err();
+        let error = codelist.validate_codes(None).unwrap_err();
         let error_string = error.to_string();
 
         assert!(error_string.contains("Some codes in the list are invalid. Details:"));

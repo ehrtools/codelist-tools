@@ -13,3 +13,4 @@ chrono = { version = "0.4.39", features = ["serde"] }
 codelist-rs = { path = "../../rust/codelist-rs" }
 codelist-validator-rs = { path = "../../rust/codelist-validator-rs" }
 indexmap = "2.9.0"
+regex = "1.11.1"

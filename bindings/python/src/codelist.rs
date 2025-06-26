@@ -20,6 +20,7 @@ use pyo3::{
     types::{PyDict, PySet},
     PyErr, PyResult,
 };
+use regex::Regex;
 
 /// Python wrapper for the CodeList struct
 ///
@@ -452,8 +453,21 @@ impl PyCodeList {
     }
 
     /// Validate the codelist based on the codelist type
-    fn validate_codes(&self) -> PyResult<()> {
-        self.inner.validate_codes().map_err(|e| PyValueError::new_err(e.to_string()))
+    #[pyo3(signature = (custom_regex=None))]
+    fn validate_codes(&self, custom_regex: Option<String>) -> PyResult<()> {
+        match custom_regex {
+            Some(regex_str) => {
+                let regex = Regex::new(&regex_str)
+                    .map_err(|e| PyValueError::new_err(format!("Invalid regex: {}", e)))?;
+                self.inner
+                    .validate_codes(Some(&regex))
+                    .map_err(|e| PyValueError::new_err(e.to_string()))?
+            }
+            None => {
+                self.inner.validate_codes(None).map_err(|e| PyValueError::new_err(e.to_string()))?
+            }
+        }
+        Ok(())
     }
 
     /// Add a comment to the codelist
