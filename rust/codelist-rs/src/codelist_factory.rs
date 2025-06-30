@@ -366,9 +366,9 @@ impl CodeListFactory {
     pub fn save_codelists_to_json(
         &self,
         folder_path: &str,
-        codelists: Vec<CodeList>,
+        mut codelists: Vec<CodeList>,
     ) -> Result<(), CodeListError> {
-        for (index, codelist) in codelists.iter().enumerate() {
+        for (index, codelist) in codelists.iter_mut().enumerate() {
             let filename = format!("{}.json", index + 1);
             let full_path = std::path::Path::new(folder_path).join(filename);
             let path_str = full_path.to_str().ok_or_else(|| {
@@ -396,9 +396,9 @@ impl CodeListFactory {
     pub fn save_codelists_to_csv(
         &self,
         folder_path: &str,
-        codelists: Vec<CodeList>,
+        mut codelists: Vec<CodeList>,
     ) -> Result<(), CodeListError> {
-        for (index, codelist) in codelists.iter().enumerate() {
+        for (index, codelist) in codelists.iter_mut().enumerate() {
             let filename = format!("{}.csv", index + 1);
             let full_path = std::path::Path::new(folder_path).join(filename);
             let path_str = full_path.to_str().ok_or_else(|| {

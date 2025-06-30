@@ -4,3 +4,4 @@ pub mod codelist_options;
 pub mod errors;
 pub mod metadata;
 pub mod types;
+pub mod logging;
