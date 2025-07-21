@@ -458,7 +458,7 @@ impl PyCodeList {
         match custom_regex {
             Some(regex_str) => {
                 let regex = Regex::new(&regex_str)
-                .map_err(|e| PyValueError::new_err(format!("Invalid regex: {e}")))?;
+                    .map_err(|e| PyValueError::new_err(format!("Invalid regex: {e}")))?;
                 self.inner
                     .validate_codes(Some(&regex))
                     .map_err(|e| PyValueError::new_err(e.to_string()))?
