@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 /// * `snomed_concept_id` - The snomed concept id
 /// * `description` - The description
 /// * `usage` - The usage
-/// * `active_at_start` - Whether the concept was active at the sstart of the usage period
+/// * `active_at_start` - Whether the concept was active at the start of the usage period
 /// * `active_at_end` - Whether the concept was active at the end of the usage period
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct SnomedUsageDataEntry {
