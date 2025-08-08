@@ -73,21 +73,27 @@ impl SnomedUsageData {
     /// # Returns
     /// Self or an error if the download fails
     pub async fn download_usage(
-        base_url: &str,
-        usage_year: UsageYear,
-    ) -> Result<Self, CodeListBuilderError> {
-        let url = format!(
-            "{}/{}",
-            base_url.trim_end_matches('/'),
-            usage_year.path().trim_start_matches('/')
-        );
+    base_url: &str,
+    usage_year: UsageYear,
+) -> Result<Self, CodeListBuilderError> {
+    let url = format!(
+        "{}/{}",
+        base_url.trim_end_matches('/'),
+        usage_year.path().trim_start_matches('/')
+    );
 
-        let body = reqwest::get(&url).await?.text().await?;
-
-        let usage_data = Self::parse_from_string(&body)?;
-
-        Ok(SnomedUsageData { usage_data, usage_year })
+    let response = reqwest::get(&url).await.map_err(CodeListBuilderError::from)?;
+    if !response.status().is_success() {
+        let status = response.status().to_string();
+        let body = response.text().await.unwrap_or_default();
+        return Err(CodeListBuilderError::http_error_code(status, body));
     }
+    let body = response.text().await.map_err(CodeListBuilderError::from)?;
+
+    let usage_data = Self::parse_from_string(&body)?;
+
+    Ok(SnomedUsageData { usage_data, usage_year })
+}
 
     /// Parse snomed usage data from a string
     ///
@@ -411,6 +417,25 @@ mod tests {
         assert!(!usage_data[9].active_at_end);
 
         assert_eq!(usage_year, UsageYear::Y2020_21);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_download_usage_from_url_error_response() -> Result<(), CodeListBuilderError> {
+        let mock_server = MockServer::start().await;
+        let usage_year = UsageYear::Y2020_21;
+
+        Mock::given(method("GET"))
+            .and(path(usage_year.path()))
+            .respond_with(ResponseTemplate::new(500))
+            .mount(&mock_server)
+            .await;
+
+        let error = SnomedUsageData::download_usage(&mock_server.uri(), usage_year).await.unwrap_err();
+        let error_string = error.to_string();
+
+        assert_eq!(&error_string, "HTTP error code: 500 Internal Server Error: ");
 
         Ok(())
     }

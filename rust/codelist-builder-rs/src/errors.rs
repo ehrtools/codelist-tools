@@ -11,6 +11,9 @@ pub enum CodeListBuilderError {
     #[error("Invalid usage data: {name}")]
     InvalidUsageData { name: String },
 
+    #[error("HTTP error code: {code}: {body}")]
+    HttpErrorCode { code: String, body: String },
+
     #[error("HTTP request error: {0}")]
     #[construct(skip)]
     ReqwestError(#[from] reqwest::Error),
