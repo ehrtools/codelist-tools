@@ -1,4 +1,30 @@
 //! This file contains the snomed usage data struct and its implementation
+//! It contains functionality for downloading and parsing SNOMED usage data files from NHS Digital. See https://digital.nhs.uk/data-and-information/publications/statistical/mi-snomed-code-usage-in-primary-care.
+//! 
+//! Components of the file:
+//! 
+//! SNOMED_Concept_ID:
+//! SNOMED concepts which have been added to a patient record in a general practice system during the reporting period.
+//! 
+//! Description:
+//! The fully specified name associated with the SNOMED_Concept_ID on the final day of the reporting period (31 July).
+//! 
+//! Usage:
+//! The number of times that the SNOMED_Concept_ID was added into any patient record within the reporting period, rounded to the nearerst 10. Usage of 1 to 4 is displayed as *. SNOMED concepts with no code usage are not included.
+//! Important notes:
+//! - Data prior to 2019 was originally submitted mostly in READ V2 or CTV3, but in the usage files, these codes have been mapped to corresponding SNOMED codes using final 2020 version of the mapping tables published by NHS England.
+//! - The usage does not show how many patients had each code added to their record - each addition regardless of whether it is the same patient increments the count by 1. Therefore it is not possible to infer the number of individual patients with a particular code.
+//! - For the 2011-12 to 2017-18 data, it is stated that "Current maximum value is approximately 250,000,000" - no such maximum is stated for the 2018-19 onwards data.
+//! 
+//! Active_at_Start:
+//! Active status of the SNOMED_Concept_ID on the first day of the reporting period. This is taken from the most recent UK clinical extension, or associated International extention, which was published up to the start of the reporting year (1 August).
+//! 1 = SNOMED concept was published and was active.
+//! 0 = SNOMED concept was either not yet available or was inactive.
+//! 
+//! Active_at_End:
+//! Active status of the SNOMED_Concept_ID on the last day of the reporting period. This is taken from the most recent UK clinical extension, or associated International extention, which was published up to the end of the reporting year (31 July).
+//! 1 = SNOMED concept was published and was active.
+//! 0 = SNOMED concept was either not yet available or was inactive.
 
 // Internal imports
 use crate::errors::CodeListBuilderError;
@@ -14,14 +40,14 @@ use serde::{Deserialize, Serialize};
 /// # Fields
 /// * `snomed_concept_id` - The snomed concept id
 /// * `description` - The description
-/// * `usage` - The usage
+/// * `usage` - The usage. A count of 1-4 is denoted by a *. Counts above 4 are denoted by a number rounded to the nearest 10.
 /// * `active_at_start` - Whether the concept was active at the start of the usage period
 /// * `active_at_end` - Whether the concept was active at the end of the usage period
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct SnomedUsageDataEntry {
     pub snomed_concept_id: String,
     pub description: String,
-    pub usage: String, // allows for * for count of 1-4
+    pub usage: String,
     pub active_at_start: bool,
     pub active_at_end: bool,
 }
