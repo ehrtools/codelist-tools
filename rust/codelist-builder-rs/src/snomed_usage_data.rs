@@ -80,7 +80,7 @@ impl SnomedUsageData {
     ) -> Result<Self, CodeListBuilderError> {
         let config_string = match config_path {
             Some(path) => fs::read_to_string(path)?,
-            None => include_str!("config/snomed_usage_data_urls.json").to_string(),
+            None => include_str!("config/snomed_usage_config.json").to_string(),
         };
 
         let config: HashMap<String, String> = serde_json::from_str(&config_string)?;
