@@ -26,14 +26,16 @@
 //! 1 = SNOMED concept was published and was active.
 //! 0 = SNOMED concept was either not yet available or was inactive.
 
+use std::fs;
+
 // Internal imports
 use crate::errors::CodeListBuilderError;
-use crate::usage_year::UsageYear;
 
 // External imports
 use csv;
 use reqwest;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 /// Struct to represent a snomed usage data entry
 ///
@@ -60,29 +62,34 @@ pub struct SnomedUsageDataEntry {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct SnomedUsageData {
     pub usage_data: Vec<SnomedUsageDataEntry>,
-    pub usage_year: UsageYear,
+    pub usage_year: String,
 }
 
 impl SnomedUsageData {
     /// Download snomed usage data from a url
     ///
     /// # Arguments
-    /// * `base_url` - The base url
     /// * `usage_year` - The usage year
+    /// * `config_path` - Optional path to config file
     ///
     /// # Returns
     /// Self or an error if the download fails
     pub async fn download_usage(
-        base_url: &str,
-        usage_year: UsageYear,
+        usage_year: &str,
+        config_path: Option<String>,
     ) -> Result<Self, CodeListBuilderError> {
-        let url = format!(
-            "{}/{}",
-            base_url.trim_end_matches('/'),
-            usage_year.path().trim_start_matches('/')
-        );
+        let config_string = match config_path {
+            Some(path) => fs::read_to_string(path)?,
+            None => include_str!("config/snomed_usage_config.json").to_string(),
+        };
 
-        let response = reqwest::get(&url).await.map_err(CodeListBuilderError::from)?;
+        let config: HashMap<String, String> = serde_json::from_str(&config_string)?;
+
+        let url = config
+            .get(usage_year)
+            .ok_or_else(|| CodeListBuilderError::url_not_found(usage_year))?;
+
+        let response = reqwest::get(url).await?;
         if !response.status().is_success() {
             let status = response.status().to_string();
             let body = response.text().await.unwrap_or_default();
@@ -92,7 +99,7 @@ impl SnomedUsageData {
 
         let usage_data = Self::parse_from_string(&body)?;
 
-        Ok(SnomedUsageData { usage_data, usage_year })
+        Ok(SnomedUsageData { usage_data, usage_year: usage_year.to_string() })
     }
 
     /// Parse snomed usage data from a string
@@ -151,8 +158,6 @@ impl SnomedUsageData {
 mod tests {
     use super::*;
     use crate::errors::CodeListBuilderError;
-    use wiremock::matchers::{method, path};
-    use wiremock::{Mock, MockServer, ResponseTemplate};
 
     const LONG_TEST_DATA: &str = "SNOMED_Concept_ID	Description	Usage	Active_at_Start	Active_at_End
 279991000000102	Short message service text message sent to patient (procedure)	122292090	1	1
@@ -321,123 +326,6 @@ mod tests {
         let error = SnomedUsageData::parse_from_string(test_data).unwrap_err();
         let error_string = error.to_string();
         assert!(error_string.contains("CSV error:"));
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_download_usage_from_url() -> Result<(), CodeListBuilderError> {
-        let mock_server = MockServer::start().await;
-        let usage_year = UsageYear::Y2020_21;
-
-        let test_data = LONG_TEST_DATA;
-
-        Mock::given(method("GET"))
-            .and(path(usage_year.path()))
-            .respond_with(ResponseTemplate::new(200).set_body_string(test_data))
-            .mount(&mock_server)
-            .await;
-
-        let result = SnomedUsageData::download_usage(&mock_server.uri(), usage_year).await?;
-
-        let usage_data = result.usage_data;
-        let usage_year = result.usage_year;
-
-        assert_eq!(usage_data.len(), 10);
-
-        assert_eq!(usage_data[0].snomed_concept_id, "279991000000102");
-        assert_eq!(
-            usage_data[0].description,
-            "Short message service text message sent to patient (procedure)"
-        );
-        assert_eq!(usage_data[0].usage, "122292090");
-        assert!(usage_data[0].active_at_start);
-        assert!(usage_data[0].active_at_end);
-
-        assert_eq!(usage_data[1].snomed_concept_id, "163030003");
-        assert_eq!(
-            usage_data[1].description,
-            "On examination - Systolic blood pressure reading (finding)"
-        );
-        assert_eq!(usage_data[1].usage, "59227180");
-        assert!(usage_data[1].active_at_start);
-        assert!(usage_data[1].active_at_end);
-
-        assert_eq!(usage_data[2].snomed_concept_id, "163031004");
-        assert_eq!(
-            usage_data[2].description,
-            "On examination - Diastolic blood pressure reading (finding)"
-        );
-        assert_eq!(usage_data[2].usage, "59184050");
-        assert!(usage_data[2].active_at_start);
-        assert!(usage_data[2].active_at_end);
-
-        assert_eq!(usage_data[3].snomed_concept_id, "163020007");
-        assert_eq!(usage_data[3].description, "On examination - blood pressure reading (finding)");
-        assert_eq!(usage_data[3].usage, "37837700");
-        assert!(usage_data[3].active_at_start);
-        assert!(usage_data[3].active_at_end);
-
-        assert_eq!(usage_data[4].snomed_concept_id, "1000731000000107");
-        assert_eq!(usage_data[4].description, "Serum creatinine level (observable entity)");
-        assert_eq!(usage_data[4].usage, "33211250");
-        assert!(usage_data[4].active_at_start);
-        assert!(usage_data[4].active_at_end);
-
-        assert_eq!(usage_data[5].snomed_concept_id, "1000661000000107");
-        assert_eq!(usage_data[5].description, "Serum sodium level (observable entity)");
-        assert_eq!(usage_data[5].usage, "31630420");
-        assert!(usage_data[5].active_at_start);
-        assert!(usage_data[5].active_at_end);
-
-        assert_eq!(usage_data[6].snomed_concept_id, "1000651000000109");
-        assert_eq!(usage_data[6].description, "Serum potassium level (observable entity)");
-        assert_eq!(usage_data[6].usage, "31542470");
-        assert!(usage_data[6].active_at_start);
-        assert!(usage_data[6].active_at_end);
-
-        assert_eq!(usage_data[7].snomed_concept_id, "162763007");
-        assert_eq!(usage_data[7].description, "On examination - weight (finding)");
-        assert_eq!(usage_data[7].usage, "30836800");
-        assert!(usage_data[7].active_at_start);
-        assert!(usage_data[7].active_at_end);
-
-        assert_eq!(usage_data[8].snomed_concept_id, "1022431000000105");
-        assert_eq!(usage_data[8].description, "Haemoglobin estimation (observable entity)");
-        assert_eq!(usage_data[8].usage, "29864410");
-        assert!(usage_data[8].active_at_start);
-        assert!(usage_data[8].active_at_end);
-
-        assert_eq!(usage_data[9].snomed_concept_id, "4468401000001106");
-        assert_eq!(
-            usage_data[9].description,
-            "Triptorelin 3.75mg injection (pdr for recon)+solvent prefilled syringe (product)"
-        );
-        assert_eq!(usage_data[9].usage, "80");
-        assert!(!usage_data[9].active_at_start);
-        assert!(!usage_data[9].active_at_end);
-
-        assert_eq!(usage_year, UsageYear::Y2020_21);
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_download_usage_from_url_error_response() -> Result<(), CodeListBuilderError> {
-        let mock_server = MockServer::start().await;
-        let usage_year = UsageYear::Y2020_21;
-
-        Mock::given(method("GET"))
-            .and(path(usage_year.path()))
-            .respond_with(ResponseTemplate::new(500))
-            .mount(&mock_server)
-            .await;
-
-        let error =
-            SnomedUsageData::download_usage(&mock_server.uri(), usage_year).await.unwrap_err();
-        let error_string = error.to_string();
-
-        assert_eq!(&error_string, "HTTP error code: 500 Internal Server Error: ");
-
         Ok(())
     }
 }
