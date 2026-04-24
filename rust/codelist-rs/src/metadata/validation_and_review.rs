@@ -395,7 +395,10 @@ mod tests {
         let mut validation_and_review = test_validation_and_review_all_params_are_some_or_true();
         let error = validation_and_review.add_review_date(chrono::Utc::now()).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Review date already exists: Unable to add review date. Please use update review date instead.");
+        assert_eq!(
+            error_string,
+            "Review date already exists: Unable to add review date. Please use update review date instead."
+        );
         Ok(())
     }
 
@@ -414,7 +417,10 @@ mod tests {
         let mut validation_and_review = test_validation_and_review_all_params_are_none();
         let error = validation_and_review.update_review_date(chrono::Utc::now()).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Review date does not exist: Unable to update review date. Please use add review date instead.");
+        assert_eq!(
+            error_string,
+            "Review date does not exist: Unable to update review date. Please use add review date instead."
+        );
         Ok(())
     }
 
@@ -513,7 +519,10 @@ mod tests {
         let error =
             validation_and_review.add_validation_notes("Validation Notes".to_string()).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Validation notes already exist: Unable to add validation notes. Please use update validation notes instead.");
+        assert_eq!(
+            error_string,
+            "Validation notes already exist: Unable to add validation notes. Please use update validation notes instead."
+        );
         Ok(())
     }
 
@@ -536,7 +545,10 @@ mod tests {
             .update_validation_notes("Validation Notes".to_string())
             .unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Validation notes do not exist: Unable to update validation notes. Please use add validation notes instead.");
+        assert_eq!(
+            error_string,
+            "Validation notes do not exist: Unable to update validation notes. Please use add validation notes instead."
+        );
         Ok(())
     }
 

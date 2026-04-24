@@ -290,17 +290,16 @@ impl CodeListFactory {
             let path = entry.path();
 
             // Skips if not csv/json
-            if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
-                if ext == "csv" || ext == "json" {
-                    if let Some(path_str) = path.to_str() {
-                        // TODO: We are using the file name as the codelist name, but this may not
-                        // be the best approach
-                        if let Ok(codelist) =
-                            self.load_codelist_from_file(folder_path.to_string(), path_str)
-                        {
-                            codelists.push(codelist);
-                        }
-                    }
+            if let Some(ext) = path.extension().and_then(|e| e.to_str())
+                && (ext == "csv" || ext == "json")
+                && let Some(path_str) = path.to_str()
+            {
+                // TODO: We are using the file name as the codelist name, but this may not
+                // be the best approach
+                if let Ok(codelist) =
+                    self.load_codelist_from_file(folder_path.to_string(), path_str)
+                {
+                    codelists.push(codelist);
                 }
             }
         }
@@ -482,18 +481,24 @@ C03,Test Disease 3,Description 3";
         assert_eq!(codelist.entries.len(), 3);
 
         // Test individual entries exist
-        assert!(codelist
-            .entries
-            .iter()
-            .any(|e| e.0 == "A01" && e.1 .0 == Some("Test Disease 1".to_string())));
-        assert!(codelist
-            .entries
-            .iter()
-            .any(|e| e.0 == "B02" && e.1 .0 == Some("Test Disease 2".to_string())));
-        assert!(codelist
-            .entries
-            .iter()
-            .any(|e| e.0 == "C03" && e.1 .0 == Some("Test Disease 3".to_string())));
+        assert!(
+            codelist
+                .entries
+                .iter()
+                .any(|e| e.0 == "A01" && e.1.0 == Some("Test Disease 1".to_string()))
+        );
+        assert!(
+            codelist
+                .entries
+                .iter()
+                .any(|e| e.0 == "B02" && e.1.0 == Some("Test Disease 2".to_string()))
+        );
+        assert!(
+            codelist
+                .entries
+                .iter()
+                .any(|e| e.0 == "C03" && e.1.0 == Some("Test Disease 3".to_string()))
+        );
 
         assert!(!codelist.codelist_options.allow_duplicates);
         assert_eq!(codelist.codelist_options.code_column_name, "code".to_string());
@@ -690,18 +695,24 @@ A01"; // Missing columns
         assert_eq!(codelist.entries.len(), 3);
 
         // Test individual entries exist
-        assert!(codelist
-            .entries
-            .iter()
-            .any(|e| e.0 == "A01" && e.1 .0 == Some("Test Disease 1".to_string())));
-        assert!(codelist
-            .entries
-            .iter()
-            .any(|e| e.0 == "B02" && e.1 .0 == Some("Test Disease 2".to_string())));
-        assert!(codelist
-            .entries
-            .iter()
-            .any(|e| e.0 == "C03" && e.1 .0 == Some("Test Disease 3".to_string())));
+        assert!(
+            codelist
+                .entries
+                .iter()
+                .any(|e| e.0 == "A01" && e.1.0 == Some("Test Disease 1".to_string()))
+        );
+        assert!(
+            codelist
+                .entries
+                .iter()
+                .any(|e| e.0 == "B02" && e.1.0 == Some("Test Disease 2".to_string()))
+        );
+        assert!(
+            codelist
+                .entries
+                .iter()
+                .any(|e| e.0 == "C03" && e.1.0 == Some("Test Disease 3".to_string()))
+        );
 
         assert!(!codelist.codelist_options.allow_duplicates);
         assert_eq!(codelist.codelist_options.code_column_name, "code".to_string());

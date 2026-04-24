@@ -15,7 +15,9 @@ pub enum CodeListValidatorError {
     #[error("Code {code} is an invalid length for type {codelist_type}. Reason: {reason}")]
     InvalidCodeLength { code: String, reason: String, codelist_type: String },
 
-    #[error("Code {code} is not composed of all numerical characters for type {codelist_type}. Reason: {reason}")]
+    #[error(
+        "Code {code} is not composed of all numerical characters for type {codelist_type}. Reason: {reason}"
+    )]
     #[construct(skip)]
     ParseIntError { code: String, reason: String, codelist_type: String },
 

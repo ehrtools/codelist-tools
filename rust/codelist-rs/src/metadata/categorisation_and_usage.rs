@@ -259,7 +259,10 @@ mod tests {
         let mut categorisation_and_usage = test_categorisation_and_usage_all_some();
         let error = categorisation_and_usage.add_license("license1".to_string()).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "License already exists: Unable to add license license1. Please use update license instead.");
+        assert_eq!(
+            error_string,
+            "License already exists: Unable to add license license1. Please use update license instead."
+        );
         Ok(())
     }
 
@@ -277,7 +280,10 @@ mod tests {
         let mut categorisation_and_usage = test_categorisation_and_usage_all_none();
         let error = categorisation_and_usage.update_license("example".to_string()).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "License does not exist: Unable to update license example. Please use add license instead.");
+        assert_eq!(
+            error_string,
+            "License does not exist: Unable to update license example. Please use add license instead."
+        );
         Ok(())
     }
 

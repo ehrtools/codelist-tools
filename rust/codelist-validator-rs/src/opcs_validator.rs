@@ -95,98 +95,122 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_code_with_invalid_code_length_less_than_3_characters(
-    ) -> Result<(), CodeListError> {
+    fn test_validate_code_with_invalid_code_length_less_than_3_characters()
+    -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
         let validator = OpcsValidator(&codelist);
         let code = "A0";
         let error = validator.validate_code(code).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Code A0 is an invalid length for type OPCS. Reason: Code is less than 3 characters in length");
+        assert_eq!(
+            error_string,
+            "Code A0 is an invalid length for type OPCS. Reason: Code is less than 3 characters in length"
+        );
         Ok(())
     }
 
     #[test]
-    fn test_validate_code_with_invalid_code_length_greater_than_5_characters(
-    ) -> Result<(), CodeListError> {
+    fn test_validate_code_with_invalid_code_length_greater_than_5_characters()
+    -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
         let validator = OpcsValidator(&codelist);
         let code = "A01000";
         let error = validator.validate_code(code).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Code A01000 is an invalid length for type OPCS. Reason: Code is greater than 5 characters in length");
+        assert_eq!(
+            error_string,
+            "Code A01000 is an invalid length for type OPCS. Reason: Code is greater than 5 characters in length"
+        );
         Ok(())
     }
 
     #[test]
-    fn test_validate_code_with_invalid_code_first_character_not_a_letter(
-    ) -> Result<(), CodeListError> {
+    fn test_validate_code_with_invalid_code_first_character_not_a_letter()
+    -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
         let validator = OpcsValidator(&codelist);
         let code = "101";
         let error = validator.validate_code(code).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Code 101 contents is invalid for type OPCS. Reason: Code does not match the expected format");
+        assert_eq!(
+            error_string,
+            "Code 101 contents is invalid for type OPCS. Reason: Code does not match the expected format"
+        );
         Ok(())
     }
 
     #[test]
-    fn test_validate_code_with_invalid_code_second_character_not_a_number(
-    ) -> Result<(), CodeListError> {
+    fn test_validate_code_with_invalid_code_second_character_not_a_number()
+    -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
         let validator = OpcsValidator(&codelist);
         let code = "AA1";
         let error = validator.validate_code(code).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Code AA1 contents is invalid for type OPCS. Reason: Code does not match the expected format");
+        assert_eq!(
+            error_string,
+            "Code AA1 contents is invalid for type OPCS. Reason: Code does not match the expected format"
+        );
         Ok(())
     }
 
     #[test]
-    fn test_validate_code_with_invalid_code_third_character_not_a_number(
-    ) -> Result<(), CodeListError> {
+    fn test_validate_code_with_invalid_code_third_character_not_a_number()
+    -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
         let validator = OpcsValidator(&codelist);
         let code = "A0A";
         let error = validator.validate_code(code).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Code A0A contents is invalid for type OPCS. Reason: Code does not match the expected format");
+        assert_eq!(
+            error_string,
+            "Code A0A contents is invalid for type OPCS. Reason: Code does not match the expected format"
+        );
         Ok(())
     }
 
     #[test]
-    fn test_validate_code_with_invalid_code_no_fifth_character_after_dot(
-    ) -> Result<(), CodeListError> {
+    fn test_validate_code_with_invalid_code_no_fifth_character_after_dot()
+    -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
         let validator = OpcsValidator(&codelist);
         let code = "A01.";
         let error = validator.validate_code(code).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Code A01. contents is invalid for type OPCS. Reason: Code does not match the expected format");
+        assert_eq!(
+            error_string,
+            "Code A01. contents is invalid for type OPCS. Reason: Code does not match the expected format"
+        );
         Ok(())
     }
 
     #[test]
-    fn test_validate_code_with_invalid_code_fifth_character_after_dot_not_a_number(
-    ) -> Result<(), CodeListError> {
+    fn test_validate_code_with_invalid_code_fifth_character_after_dot_not_a_number()
+    -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
         let validator = OpcsValidator(&codelist);
         let code = "A01.A";
         let error = validator.validate_code(code).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Code A01.A contents is invalid for type OPCS. Reason: Code does not match the expected format");
+        assert_eq!(
+            error_string,
+            "Code A01.A contents is invalid for type OPCS. Reason: Code does not match the expected format"
+        );
         Ok(())
     }
 
     #[test]
-    fn test_validate_code_with_invalid_code_fifth_character_not_a_number(
-    ) -> Result<(), CodeListError> {
+    fn test_validate_code_with_invalid_code_fifth_character_not_a_number()
+    -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
         let validator = OpcsValidator(&codelist);
         let code = "A010A";
         let error = validator.validate_code(code).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Code A010A contents is invalid for type OPCS. Reason: Code does not match the expected format");
+        assert_eq!(
+            error_string,
+            "Code A010A contents is invalid for type OPCS. Reason: Code does not match the expected format"
+        );
         Ok(())
     }
 

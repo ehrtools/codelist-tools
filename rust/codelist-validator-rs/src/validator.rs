@@ -59,11 +59,7 @@ fn custom_validate_all_code(codelist: &CodeList, re: &Regex) -> Result<(), CodeL
         }
     }
 
-    if reasons.is_empty() {
-        Ok(())
-    } else {
-        Err(CodeListValidatorError::invalid_codelist(reasons))
-    }
+    if reasons.is_empty() { Ok(()) } else { Err(CodeListValidatorError::invalid_codelist(reasons)) }
 }
 
 #[cfg(test)]

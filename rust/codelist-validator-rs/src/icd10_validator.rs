@@ -95,7 +95,10 @@ mod tests {
         let validator = IcdValidator(&codelist);
         let code = "A009000000";
         let error = validator.validate_code(code).unwrap_err().to_string();
-        assert_eq!(error, "Code A009000000 is an invalid length for type ICD10. Reason: Code is greater than 7 characters in length");
+        assert_eq!(
+            error,
+            "Code A009000000 is an invalid length for type ICD10. Reason: Code is greater than 7 characters in length"
+        );
         Ok(())
     }
 
@@ -105,7 +108,10 @@ mod tests {
         let validator = IcdValidator(&codelist);
         let code = "1009";
         let error = validator.validate_code(code).unwrap_err().to_string();
-        assert_eq!(error, "Code 1009 contents is invalid for type ICD10. Reason: Code does not match the expected format");
+        assert_eq!(
+            error,
+            "Code 1009 contents is invalid for type ICD10. Reason: Code does not match the expected format"
+        );
         Ok(())
     }
 
@@ -115,7 +121,10 @@ mod tests {
         let validator = IcdValidator(&codelist);
         let code = "AA09";
         let error = validator.validate_code(code).unwrap_err().to_string();
-        assert_eq!(error, "Code AA09 contents is invalid for type ICD10. Reason: Code does not match the expected format");
+        assert_eq!(
+            error,
+            "Code AA09 contents is invalid for type ICD10. Reason: Code does not match the expected format"
+        );
         Ok(())
     }
 
@@ -125,18 +134,24 @@ mod tests {
         let validator = IcdValidator(&codelist);
         let code = "A0A9";
         let error = validator.validate_code(code).unwrap_err().to_string();
-        assert_eq!(error, "Code A0A9 contents is invalid for type ICD10. Reason: Code does not match the expected format");
+        assert_eq!(
+            error,
+            "Code A0A9 contents is invalid for type ICD10. Reason: Code does not match the expected format"
+        );
         Ok(())
     }
 
     #[test]
-    fn test_validate_invalid_code_fourth_character_not_a_dot_number_or_x(
-    ) -> Result<(), CodeListError> {
+    fn test_validate_invalid_code_fourth_character_not_a_dot_number_or_x()
+    -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
         let validator = IcdValidator(&codelist);
         let code = "A00A";
         let error = validator.validate_code(code).unwrap_err().to_string();
-        assert_eq!(error, "Code A00A contents is invalid for type ICD10. Reason: Code does not match the expected format");
+        assert_eq!(
+            error,
+            "Code A00A contents is invalid for type ICD10. Reason: Code does not match the expected format"
+        );
         Ok(())
     }
 
@@ -147,7 +162,10 @@ mod tests {
         let validator = IcdValidator(&codelist);
         let code = "A00.A";
         let error = validator.validate_code(code).unwrap_err().to_string();
-        assert_eq!(error, "Code A00.A contents is invalid for type ICD10. Reason: Code does not match the expected format");
+        assert_eq!(
+            error,
+            "Code A00.A contents is invalid for type ICD10. Reason: Code does not match the expected format"
+        );
         Ok(())
     }
 
@@ -158,18 +176,24 @@ mod tests {
         let validator = IcdValidator(&codelist);
         let code = "A00X12";
         let error = validator.validate_code(code).unwrap_err().to_string();
-        assert_eq!(error, "Code A00X12 contents is invalid for type ICD10. Reason: Code does not match the expected format");
+        assert_eq!(
+            error,
+            "Code A00X12 contents is invalid for type ICD10. Reason: Code does not match the expected format"
+        );
         Ok(())
     }
 
     #[test]
-    fn test_validate_invalid_code_fifth_to_seventh_characters_not_numbers(
-    ) -> Result<(), CodeListError> {
+    fn test_validate_invalid_code_fifth_to_seventh_characters_not_numbers()
+    -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
         let validator = IcdValidator(&codelist);
         let code = "A00.4AA";
         let error = validator.validate_code(code).unwrap_err().to_string();
-        assert_eq!(error, "Code A00.4AA contents is invalid for type ICD10. Reason: Code does not match the expected format");
+        assert_eq!(
+            error,
+            "Code A00.4AA contents is invalid for type ICD10. Reason: Code does not match the expected format"
+        );
         Ok(())
     }
 
@@ -179,7 +203,10 @@ mod tests {
         let validator = IcdValidator(&codelist);
         let code = "a54";
         let error = validator.validate_code(code).unwrap_err().to_string();
-        assert_eq!(error, "Code a54 contents is invalid for type ICD10. Reason: Code does not match the expected format");
+        assert_eq!(
+            error,
+            "Code a54 contents is invalid for type ICD10. Reason: Code does not match the expected format"
+        );
         Ok(())
     }
 

@@ -29,7 +29,7 @@ impl PyCodeListFactory {
             _ => {
                 return Err(PyValueError::new_err(format!(
                     "Invalid codelist type: {codelist_type}"
-                )))
+                )));
             }
         };
 
