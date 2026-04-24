@@ -8,6 +8,7 @@ pub mod capabilities;
 pub mod core;
 pub mod errors;
 pub mod icd10;
+pub mod opcs;
 pub mod snomed;
 
 pub use crate::{
