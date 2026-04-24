@@ -290,17 +290,16 @@ impl CodeListFactory {
             let path = entry.path();
 
             // Skips if not csv/json
-            if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
-                if ext == "csv" || ext == "json" {
-                    if let Some(path_str) = path.to_str() {
-                        // TODO: We are using the file name as the codelist name, but this may not
-                        // be the best approach
-                        if let Ok(codelist) =
-                            self.load_codelist_from_file(folder_path.to_string(), path_str)
-                        {
-                            codelists.push(codelist);
-                        }
-                    }
+            if let Some(ext) = path.extension().and_then(|e| e.to_str())
+                && (ext == "csv" || ext == "json")
+                && let Some(path_str) = path.to_str()
+            {
+                // TODO: We are using the file name as the codelist name, but this may not
+                // be the best approach
+                if let Ok(codelist) =
+                    self.load_codelist_from_file(folder_path.to_string(), path_str)
+                {
+                    codelists.push(codelist);
                 }
             }
         }
