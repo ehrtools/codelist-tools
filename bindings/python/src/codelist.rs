@@ -15,10 +15,10 @@ use codelist_rs::{
 use codelist_validator_rs::validator::Validator;
 use indexmap::IndexSet;
 use pyo3::{
+    PyErr, PyResult,
     exceptions::PyValueError,
     prelude::*,
     types::{PyDict, PySet},
-    PyErr, PyResult,
 };
 use regex::Regex;
 
@@ -53,7 +53,7 @@ impl PyCodeList {
             _ => {
                 return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
                     "Invalid codelist type: {codelist_type}"
-                )))
+                )));
             }
         };
 

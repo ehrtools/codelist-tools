@@ -1,4 +1,5 @@
 [workspace]
+resolver = "3"
 members = [
     "rust/codelist-rs",
     "rust/codelist-systems-rs",

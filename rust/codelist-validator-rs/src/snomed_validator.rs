@@ -81,55 +81,70 @@ mod tests {
         let code = "11A6BB789A";
         let error = validator.validate_code(code).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Code 11A6BB789A is not composed of all numerical characters for type SNOMED. Reason: invalid digit found in string");
+        assert_eq!(
+            error_string,
+            "Code 11A6BB789A is not composed of all numerical characters for type SNOMED. Reason: invalid digit found in string"
+        );
         Ok(())
     }
 
     #[test]
-    fn test_validate_code_with_invalid_code_length_less_than_min_length_of_3(
-    ) -> Result<(), CodeListError> {
+    fn test_validate_code_with_invalid_code_length_less_than_min_length_of_3()
+    -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
         let validator = SnomedValidator(&codelist);
         let code = "11";
         let error = validator.validate_code(code).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Code 11 is an invalid length for type SNOMED. Reason: Code is not between 6 and 18 numbers in length");
+        assert_eq!(
+            error_string,
+            "Code 11 is an invalid length for type SNOMED. Reason: Code is not between 6 and 18 numbers in length"
+        );
         Ok(())
     }
 
     #[test]
-    fn test_validate_code_with_invalid_code_length_greater_than_max_length_of_18(
-    ) -> Result<(), CodeListError> {
+    fn test_validate_code_with_invalid_code_length_greater_than_max_length_of_18()
+    -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
         let validator = SnomedValidator(&codelist);
         let code = "1111111111111111111111111111";
         let error = validator.validate_code(code).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Code 1111111111111111111111111111 is an invalid length for type SNOMED. Reason: Code is not between 6 and 18 numbers in length");
+        assert_eq!(
+            error_string,
+            "Code 1111111111111111111111111111 is an invalid length for type SNOMED. Reason: Code is not between 6 and 18 numbers in length"
+        );
         Ok(())
     }
 
     #[test]
-    fn test_validate_code_with_invalid_code_length_less_than_default_min_length(
-    ) -> Result<(), CodeListError> {
+    fn test_validate_code_with_invalid_code_length_less_than_default_min_length()
+    -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
         let validator = SnomedValidator(&codelist);
         let code = "2043";
         let error = validator.validate_code(code).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Code 2043 is an invalid length for type SNOMED. Reason: Code is not between 6 and 18 numbers in length");
+        assert_eq!(
+            error_string,
+            "Code 2043 is an invalid length for type SNOMED. Reason: Code is not between 6 and 18 numbers in length"
+        );
         Ok(())
     }
 
     #[test]
-    fn test_validate_code_with_invalid_code_length_greater_than_default_max_length(
-    ) -> Result<(), CodeListError> {
+    fn test_validate_code_with_invalid_code_length_greater_than_default_max_length()
+    -> Result<(), CodeListError> {
         let codelist = create_test_codelist()?;
         let validator = SnomedValidator(&codelist);
         let code = "2043510071234567890";
         let error = validator.validate_code(code).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Code 2043510071234567890 is an invalid length for type SNOMED. Reason: Code is not between 6 and 18 numbers in length");
+        assert_eq!(
+            error_string,
+            "Code 2043510071234567890 is an invalid length for type SNOMED. Reason: Code is not between 6 and 18 numbers in length"
+        );
         Ok(())
     }
 

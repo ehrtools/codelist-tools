@@ -1,5 +1,5 @@
 use codelist_rs::types::Code;
-use codelist_systems_rs::{icd10::Icd10, CodingSystem};
+use codelist_systems_rs::{CodingSystem, icd10::Icd10};
 
 #[test]
 fn valid_icd10_codes_pass_syntax() {

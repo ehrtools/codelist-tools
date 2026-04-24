@@ -285,7 +285,10 @@ mod tests {
         let error =
             purpose_and_context.add_target_audience("Target Audience".to_string()).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Target audience already exists: Unable to add target audience. Please use update target audience instead.");
+        assert_eq!(
+            error_string,
+            "Target audience already exists: Unable to add target audience. Please use update target audience instead."
+        );
         Ok(())
     }
 
@@ -303,7 +306,10 @@ mod tests {
         let error =
             purpose_and_context.update_target_audience("Target Audience".to_string()).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Target audience does not exist: Unable to update target audience. Please use add target audience instead.");
+        assert_eq!(
+            error_string,
+            "Target audience does not exist: Unable to update target audience. Please use add target audience instead."
+        );
         Ok(())
     }
 
@@ -340,7 +346,10 @@ mod tests {
         let mut purpose_and_context = create_test_purpose_and_context_all_params_are_some();
         let error = purpose_and_context.add_use_context("Use Context".to_string()).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Use context already exists: Unable to add use context. Please use update use context instead.");
+        assert_eq!(
+            error_string,
+            "Use context already exists: Unable to add use context. Please use update use context instead."
+        );
         Ok(())
     }
 
@@ -357,7 +366,10 @@ mod tests {
         let mut purpose_and_context = create_test_purpose_and_context_all_params_are_none();
         let error = purpose_and_context.update_use_context("Use Context".to_string()).unwrap_err();
         let error_string = error.to_string();
-        assert_eq!(error_string, "Use context does not exist: Unable to update use context. Please use add use context instead.");
+        assert_eq!(
+            error_string,
+            "Use context does not exist: Unable to update use context. Please use add use context instead."
+        );
         Ok(())
     }
 

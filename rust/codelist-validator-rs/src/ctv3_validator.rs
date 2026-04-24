@@ -99,7 +99,10 @@ mod tests {
         let validator = Ctv3Validator(&codelist);
         let code: &'static str = "A009000000";
         let error = validator.validate_code(code).unwrap_err().to_string();
-        assert_eq!(error, "Code A009000000 is an invalid length for type CTV3. Reason: Code is greater than 5 characters in length");
+        assert_eq!(
+            error,
+            "Code A009000000 is an invalid length for type CTV3. Reason: Code is greater than 5 characters in length"
+        );
         Ok(())
     }
 
@@ -109,7 +112,10 @@ mod tests {
         let validator = Ctv3Validator(&codelist);
         let code = "Af.";
         let error = validator.validate_code(code).unwrap_err().to_string();
-        assert_eq!(error, "Code Af. is an invalid length for type CTV3. Reason: Code is less than 5 characters in length");
+        assert_eq!(
+            error,
+            "Code Af. is an invalid length for type CTV3. Reason: Code is less than 5 characters in length"
+        );
         Ok(())
     }
 
@@ -119,7 +125,10 @@ mod tests {
         let validator = Ctv3Validator(&codelist);
         let code = ".a009";
         let error = validator.validate_code(code).unwrap_err().to_string();
-        assert_eq!(error, "Code .a009 contents is invalid for type CTV3. Reason: Code does not match the expected format");
+        assert_eq!(
+            error,
+            "Code .a009 contents is invalid for type CTV3. Reason: Code does not match the expected format"
+        );
         Ok(())
     }
 
@@ -130,7 +139,10 @@ mod tests {
         let validator = Ctv3Validator(&codelist);
         let code = "10a.f";
         let error = validator.validate_code(code).unwrap_err().to_string();
-        assert_eq!(error, "Code 10a.f contents is invalid for type CTV3. Reason: Code does not match the expected format");
+        assert_eq!(
+            error,
+            "Code 10a.f contents is invalid for type CTV3. Reason: Code does not match the expected format"
+        );
         Ok(())
     }
 
@@ -140,7 +152,10 @@ mod tests {
         let validator = Ctv3Validator(&codelist);
         let code = "Af!!!";
         let error = validator.validate_code(code).unwrap_err().to_string();
-        assert_eq!(error, "Code Af!!! contents is invalid for type CTV3. Reason: Code does not match the expected format");
+        assert_eq!(
+            error,
+            "Code Af!!! contents is invalid for type CTV3. Reason: Code does not match the expected format"
+        );
         Ok(())
     }
 

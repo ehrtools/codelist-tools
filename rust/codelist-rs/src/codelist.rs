@@ -100,11 +100,7 @@ impl CodeList {
     ///   found
     pub fn remove_entry(&mut self, code: &str) -> Result<(), CodeListError> {
         let removed = self.entries.remove(code);
-        if removed.is_some() {
-            Ok(())
-        } else {
-            Err(CodeListError::entry_not_found(code))
-        }
+        if removed.is_some() { Ok(()) } else { Err(CodeListError::entry_not_found(code)) }
     }
 
     /// Get the full entries of the codelist, including code, optional term and
