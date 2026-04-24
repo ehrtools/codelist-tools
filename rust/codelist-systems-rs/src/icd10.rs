@@ -15,6 +15,7 @@ use codelist_rs::types::{Code, CodeSystemId, NormalizedCode};
 use regex::Regex;
 
 use crate::{
+    capabilities::{Truncatable, XExtensible},
     core::CodingSystem,
     errors::{SystemError, ValidationError},
 };
@@ -54,5 +55,26 @@ impl CodingSystem for Icd10 {
             ));
         }
         Ok(())
+    }
+}
+
+impl Truncatable for Icd10 {
+    fn is_truncatable(code: &NormalizedCode) -> bool {
+        code.as_str().len() > 3
+    }
+
+    fn truncate(code: &NormalizedCode) -> NormalizedCode {
+        let s: String = code.as_str().chars().take(3).collect();
+        NormalizedCode::from(s)
+    }
+}
+
+impl XExtensible for Icd10 {
+    fn is_x_addable(code: &NormalizedCode) -> bool {
+        code.as_str().len() == 3
+    }
+
+    fn add_x(code: &NormalizedCode) -> NormalizedCode {
+        NormalizedCode::from(format!("{}X", code.as_str()))
     }
 }

@@ -59,3 +59,32 @@ proptest! {
         prop_assert_eq!(regex_ok, validate_ok);
     }
 }
+
+use codelist_systems_rs::{Truncatable, XExtensible};
+
+#[test]
+fn icd10_is_truncatable_when_longer_than_three() {
+    let n = Icd10::normalize(&Code::from("A00.4")).unwrap();
+    assert!(Icd10::is_truncatable(&n));
+    let short = Icd10::normalize(&Code::from("A00")).unwrap();
+    assert!(!Icd10::is_truncatable(&short));
+}
+
+#[test]
+fn icd10_truncate_to_three_chars() {
+    let n = Icd10::normalize(&Code::from("A00.4")).unwrap();
+    let t = Icd10::truncate(&n);
+    assert_eq!(t.as_str(), "A00");
+}
+
+#[test]
+fn icd10_is_x_addable_for_three_char_codes() {
+    let n = Icd10::normalize(&Code::from("A00")).unwrap();
+    assert!(Icd10::is_x_addable(&n));
+}
+
+#[test]
+fn icd10_add_x_appends_x() {
+    let n = Icd10::normalize(&Code::from("A00")).unwrap();
+    assert_eq!(Icd10::add_x(&n).as_str(), "A00X");
+}

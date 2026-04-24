@@ -4,11 +4,13 @@
 //! [`core::CodingSystem`]. Optional capabilities (truncation, hierarchy,
 //! mapping) are expressed as subtraits in [`capabilities`].
 
+pub mod capabilities;
 pub mod core;
 pub mod errors;
 pub mod icd10;
 
 pub use crate::{
+    capabilities::{Truncatable, XExtensible},
     core::CodingSystem,
     errors::{SystemError, ValidationError},
 };
