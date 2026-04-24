@@ -10,7 +10,7 @@ use codelist_rs::{
         CategorisationAndUsage, Metadata, Provenance, PurposeAndContext, Source,
         ValidationAndReview,
     },
-    types::CodeListType,
+    types::{CodeListType, Contributor},
 };
 use codelist_validator_rs::validator::Validator;
 use indexmap::IndexSet;
@@ -63,7 +63,9 @@ impl PyCodeList {
         })?;
         // convert authors vec to IndexSet
         let authors_set = authors
-            .map(|authors| authors.into_iter().collect::<IndexSet<String>>())
+            .map(|authors| {
+                authors.into_iter().map(Contributor::from).collect::<IndexSet<Contributor>>()
+            })
             .unwrap_or_default();
         let provenance = Provenance::new(source, Some(authors_set));
         let categorisation_and_usage = CategorisationAndUsage::new(None, None, None);
@@ -114,7 +116,7 @@ impl PyCodeList {
 
     /// Add a contributor to the codelist's provenance
     fn add_contributor(&mut self, contributor: String) -> PyResult<()> {
-        self.inner.metadata.provenance.add_contributor(contributor);
+        self.inner.metadata.provenance.add_contributor(Contributor::from(contributor));
         Ok(())
     }
 
@@ -123,7 +125,7 @@ impl PyCodeList {
         self.inner
             .metadata
             .provenance
-            .remove_contributor(contributor)
+            .remove_contributor(Contributor::from(contributor))
             .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(())
     }
@@ -132,7 +134,7 @@ impl PyCodeList {
     fn contributors(&self, py: Python) -> PyResult<PyObject> {
         let py_set = PySet::new(py, &[] as &[String])?;
         for contributor in &self.inner.metadata.provenance.contributors {
-            py_set.add(contributor)?;
+            py_set.add(contributor.as_str())?;
         }
         Ok(py_set.into())
     }
