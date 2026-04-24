@@ -1,12 +1,63 @@
-//! This file defines the different types of codelists that can be used
+//! Public types for the codelist crate.
+//!
+//! Includes:
+//! - [`CodeListType`] — the runtime tag identifying which coding system a
+//!   [`crate::codelist::CodeList`] belongs to.
+//! - Newtype wrappers such as [`Code`] that give compile-time type safety to
+//!   values that would otherwise just be `String`.
+//!
+//! The newtypes do NOT implement `Deref<Target = str>`. Callers convert
+//! explicitly with `as_str()` (or via `String::from(x)` when they need an
+//! owned `String`). This keeps "is this a `Term` or a `Code`?" answerable
+//! at compile time.
 
-/// External imports
-use std::str::FromStr;
+use std::{fmt, str::FromStr};
 
 use serde::{Deserialize, Serialize};
 
-/// Internal imports
 use crate::errors::CodeListError;
+
+/// A raw clinical code as given by a caller, before any coding-system
+/// specific normalisation.
+///
+/// Construction is infallible — `Code` carries no content invariants
+/// beyond "it is a `String` that a caller intended as a code". Content
+/// validation happens later, against the relevant `CodingSystem` (see the
+/// `codelist-systems-rs` crate) or at the point it's added to a `CodeList`.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct Code(String);
+
+impl Code {
+    /// Borrow the inner string slice.
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl From<String> for Code {
+    fn from(s: String) -> Self {
+        Self(s)
+    }
+}
+
+impl From<&str> for Code {
+    fn from(s: &str) -> Self {
+        Self(s.to_string())
+    }
+}
+
+impl From<Code> for String {
+    fn from(c: Code) -> Self {
+        c.0
+    }
+}
+
+impl fmt::Display for Code {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.0)
+    }
+}
 
 /// Enum to represent the different types of codelists
 ///
@@ -63,8 +114,6 @@ impl FromStr for CodeListType {
     }
 }
 
-use std::fmt;
-
 /// Implement `Display` for `CodeListType` so it automatically supports
 /// `to_string()`
 impl fmt::Display for CodeListType {
@@ -82,6 +131,34 @@ impl fmt::Display for CodeListType {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn code_round_trips_string_borrow_and_owned() {
+        let c = Code::from("A54".to_string());
+        assert_eq!(c.as_str(), "A54");
+        assert_eq!(String::from(c), "A54");
+    }
+
+    #[test]
+    fn code_from_str_and_string_are_equivalent() {
+        assert_eq!(Code::from("A54"), Code::from("A54".to_string()));
+        assert_eq!(Code::from("A54").as_str(), "A54");
+        assert_eq!(Code::from("A54".to_string()).as_str(), "A54");
+    }
+
+    #[test]
+    fn code_serialises_transparently_as_json_string() {
+        let c = Code::from("A54");
+        let json = serde_json::to_string(&c).unwrap();
+        assert_eq!(json, "\"A54\"");
+        let back: Code = serde_json::from_str("\"A54\"").unwrap();
+        assert_eq!(back, c);
+    }
+
+    #[test]
+    fn code_displays_as_inner() {
+        assert_eq!(Code::from("A54").to_string(), "A54");
+    }
 
     #[test]
     fn test_from_str() {
