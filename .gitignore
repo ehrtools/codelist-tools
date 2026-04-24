@@ -26,6 +26,9 @@ Cargo.lock
 .DS_Store
 todo.txt
 
+# Claude Code
+.claude/
+
 ## Python ##
 __pycache__/
 venv/
