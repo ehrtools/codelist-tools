@@ -21,11 +21,12 @@ prettier-check:
 # CI task: check formatting and linting and all tests
 ci: fmt-check clippy prettier-check test-python test-rust
 
-# Run python tests
+# Run python tests.
+# Requires an active Python venv (run `source bindings/python/.venv/bin/activate`
+# first). `maturin develop` builds the extension and installs it into the
+# active venv so the tests exercise the current Rust code, not a stale wheel.
 test-python:
-    echo "Build python library"
-    maturin build --manifest-path bindings/python/Cargo.toml
-    echo "Run python tests"
+    maturin develop --manifest-path bindings/python/Cargo.toml
     sh bindings/python/tests/run.sh
 
 # Run rust tests
