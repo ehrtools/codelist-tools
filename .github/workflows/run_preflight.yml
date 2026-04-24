@@ -37,3 +37,6 @@ jobs:
       - name: Clippy check
         working-directory: rust
         run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Unused dependency check
+        uses: bnjbvr/cargo-machete@main
