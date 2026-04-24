@@ -5,7 +5,8 @@
 //! 2. The first character must be a letter.
 //! 3. The second and third characters must be numbers.
 //! 4. The fourth character must be a dot, or a number or X.
-//! 5. If the fourth character is a dot, there must be at least 1 number after the dot.
+//! 5. If the fourth character is a dot, there must be at least 1 number after
+//!    the dot.
 //! 6. If the fourth character is a X, there are no further characters.
 //! 7. The fifth to seventh characters must be numbers if present.
 use std::sync::LazyLock;

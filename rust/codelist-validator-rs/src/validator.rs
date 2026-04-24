@@ -1,7 +1,6 @@
 //! Generic trait for validating a codelist
-use regex::Regex;
-
 use codelist_rs::{codelist::CodeList, types::CodeListType};
+use regex::Regex;
 
 use crate::{
     ctv3_validator::Ctv3Validator, errors::CodeListValidatorError, icd10_validator::IcdValidator,
@@ -43,7 +42,8 @@ impl Validator for CodeList {
 /// * `regex` - The regex to use to validate the codes
 ///
 /// # Returns
-/// * `Result<(), CodeListValidatorError>` - Ok(()) if all codes match the custom regex pattern, Err(CodeListValidatorError) otherwise
+/// * `Result<(), CodeListValidatorError>` - Ok(()) if all codes match the
+///   custom regex pattern, Err(CodeListValidatorError) otherwise
 fn custom_validate_all_code(codelist: &CodeList, re: &Regex) -> Result<(), CodeListValidatorError> {
     let mut reasons = Vec::new();
     for (code, _) in codelist.entries.iter() {
@@ -68,15 +68,16 @@ fn custom_validate_all_code(codelist: &CodeList, re: &Regex) -> Result<(), CodeL
 
 #[cfg(test)]
 mod tests {
+    use std::sync::LazyLock;
+
     use codelist_rs::{
         codelist::CodeList, codelist_options::CodeListOptions, errors::CodeListError,
         metadata::Metadata, types::CodeListType,
     };
+    use regex::Regex;
 
     use super::*;
     use crate::validator::Validator;
-    use regex::Regex;
-    use std::sync::LazyLock;
 
     static TEST_REGEX: LazyLock<Regex> =
         LazyLock::new(|| Regex::new(r"^B\d{2}$").expect("Failed to compile test regex"));
