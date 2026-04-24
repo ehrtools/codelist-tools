@@ -63,8 +63,10 @@ impl CodingSystem for Ctv3 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use codelist_rs::types::Code;
+    use proptest::prelude::*;
+
+    use super::*;
 
     #[test]
     fn valid_ctv3_codes_pass_syntax() {
@@ -135,5 +137,58 @@ mod tests {
     fn ctv3_normalize_rejects_empty_after_trim() {
         let c = Code::from("   ");
         assert!(Ctv3::normalize(&c).is_err());
+    }
+
+    fn valid_ctv3() -> impl Strategy<Value = String> {
+        (0u32..=5).prop_flat_map(|n| {
+            proptest::string::string_regex(&format!("[a-zA-Z0-9]{{{n}}}"))
+                .unwrap()
+                .prop_map(move |s| format!("{s}{}", ".".repeat((5 - n) as usize)))
+        })
+    }
+
+    proptest! {
+        #[test]
+        fn valid_shape_ctv3_validates_ok(s in valid_ctv3()) {
+            let c = Code::from(s.as_str());
+            let n = Ctv3::normalize(&c).unwrap();
+            prop_assert!(Ctv3::validate_syntax(&n).is_ok());
+        }
+
+        #[test]
+        fn ctv3_disallowed_chars_fail_invalid_contents(
+            illegal in r"[!@#$%]",
+            suffix in r"[a-zA-Z0-9.]{4}",
+        ) {
+            let s = format!("{illegal}{suffix}");
+            let c = Code::from(s.as_str());
+            let n = Ctv3::normalize(&c).unwrap();
+            let err = Ctv3::validate_syntax(&n).unwrap_err();
+            let is_invalid_contents = matches!(err, ValidationError::InvalidContents { .. });
+            prop_assert!(is_invalid_contents);
+        }
+
+        #[test]
+        fn ctv3_out_of_range_length_fails_invalid_length(
+            s in prop_oneof![r"[a-zA-Z0-9.]{1,4}", r"[a-zA-Z0-9.]{6,12}"],
+        ) {
+            let c = Code::from(s.as_str());
+            let n = Ctv3::normalize(&c).unwrap();
+            let err = Ctv3::validate_syntax(&n).unwrap_err();
+            let is_invalid_length = matches!(err, ValidationError::InvalidLength { .. });
+            prop_assert!(is_invalid_length);
+        }
+
+        #[test]
+        fn ctv3_trim_idempotent(
+            s in valid_ctv3(),
+            left in 0usize..5,
+            right in 0usize..5,
+        ) {
+            let padded = format!("{}{s}{}", " ".repeat(left), " ".repeat(right));
+            let base = Ctv3::normalize(&Code::from(s.as_str())).unwrap();
+            let pad = Ctv3::normalize(&Code::from(padded.as_str())).unwrap();
+            prop_assert_eq!(base.as_str(), pad.as_str());
+        }
     }
 }

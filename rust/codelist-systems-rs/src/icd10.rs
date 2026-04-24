@@ -81,9 +81,10 @@ impl XExtensible for Icd10 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use codelist_rs::types::Code;
     use proptest::prelude::*;
+
+    use super::*;
 
     #[test]
     fn valid_icd10_codes_pass_syntax() {
@@ -129,6 +130,10 @@ mod tests {
         assert!(Icd10::normalize(&c).is_err());
     }
 
+    fn valid_icd10() -> &'static str {
+        r"[A-Z][0-9]{2}(X|(\.[0-9]{1,3})?|[0-9]{1,4})?"
+    }
+
     proptest! {
         #[test]
         fn arbitrary_strings_match_regex_iff_validate_ok(s in "[A-Za-z0-9. X]{0,10}") {
@@ -139,6 +144,47 @@ mod tests {
                 .is_match(n.as_str()) && n.as_str().len() <= 7;
             let validate_ok = Icd10::validate_syntax(&n).is_ok();
             prop_assert_eq!(regex_ok, validate_ok);
+        }
+
+        #[test]
+        fn valid_shape_icd10_validates_ok(s in valid_icd10()) {
+            let c = Code::from(s.as_str());
+            let n = Icd10::normalize(&c).unwrap();
+            prop_assert!(Icd10::validate_syntax(&n).is_ok());
+        }
+
+        #[test]
+        fn icd10_disallowed_chars_fail_invalid_contents(
+            prefix in r"[A-Z][0-9]{2}",
+            illegal in r"[!@#$%]",
+        ) {
+            let s = format!("{prefix}{illegal}");
+            let c = Code::from(s.as_str());
+            let n = Icd10::normalize(&c).unwrap();
+            let err = Icd10::validate_syntax(&n).unwrap_err();
+            let is_invalid_contents = matches!(err, ValidationError::InvalidContents { .. });
+            prop_assert!(is_invalid_contents);
+        }
+
+        #[test]
+        fn icd10_out_of_range_length_fails_invalid_length(s in r"[A-Z0-9.X]{8,15}") {
+            let c = Code::from(s.as_str());
+            let n = Icd10::normalize(&c).unwrap();
+            let err = Icd10::validate_syntax(&n).unwrap_err();
+            let is_invalid_length = matches!(err, ValidationError::InvalidLength { .. });
+            prop_assert!(is_invalid_length);
+        }
+
+        #[test]
+        fn icd10_trim_idempotent(
+            s in valid_icd10(),
+            left in 0usize..5,
+            right in 0usize..5,
+        ) {
+            let padded = format!("{}{s}{}", " ".repeat(left), " ".repeat(right));
+            let base = Icd10::normalize(&Code::from(s.as_str())).unwrap();
+            let pad = Icd10::normalize(&Code::from(padded.as_str())).unwrap();
+            prop_assert_eq!(base.as_str(), pad.as_str());
         }
     }
 

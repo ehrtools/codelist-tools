@@ -49,8 +49,10 @@ impl CodingSystem for Snomed {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use codelist_rs::types::Code;
+    use proptest::prelude::*;
+
+    use super::*;
 
     #[test]
     fn valid_snomed_codes_pass_syntax() {
@@ -112,5 +114,51 @@ mod tests {
     fn snomed_normalize_rejects_empty_code() {
         let c = Code::from("   ");
         assert!(Snomed::normalize(&c).is_err());
+    }
+
+    proptest! {
+        #[test]
+        fn valid_shape_snomed_validates_ok(s in r"[0-9]{6,18}") {
+            let c = Code::from(s.as_str());
+            let n = Snomed::normalize(&c).unwrap();
+            prop_assert!(Snomed::validate_syntax(&n).is_ok());
+        }
+
+        #[test]
+        fn snomed_disallowed_chars_fail_invalid_contents(
+            a in r"[0-9]*",
+            b in r"[!@#$%a-zA-Z]+",
+            c in r"[0-9]*",
+        ) {
+            let s = format!("{a}{b}{c}");
+            let code = Code::from(s.as_str());
+            let n = Snomed::normalize(&code).unwrap();
+            let err = Snomed::validate_syntax(&n).unwrap_err();
+            let is_invalid_contents = matches!(err, ValidationError::InvalidContents { .. });
+            prop_assert!(is_invalid_contents);
+        }
+
+        #[test]
+        fn snomed_out_of_range_length_digits_fail_invalid_length(
+            s in prop_oneof![r"[0-9]{1,5}", r"[0-9]{19,25}"],
+        ) {
+            let code = Code::from(s.as_str());
+            let n = Snomed::normalize(&code).unwrap();
+            let err = Snomed::validate_syntax(&n).unwrap_err();
+            let is_invalid_length = matches!(err, ValidationError::InvalidLength { .. });
+            prop_assert!(is_invalid_length);
+        }
+
+        #[test]
+        fn snomed_trim_idempotent(
+            s in r"[0-9]{6,18}",
+            left in 0usize..5,
+            right in 0usize..5,
+        ) {
+            let padded = format!("{}{s}{}", " ".repeat(left), " ".repeat(right));
+            let base = Snomed::normalize(&Code::from(s.as_str())).unwrap();
+            let pad = Snomed::normalize(&Code::from(padded.as_str())).unwrap();
+            prop_assert_eq!(base.as_str(), pad.as_str());
+        }
     }
 }
