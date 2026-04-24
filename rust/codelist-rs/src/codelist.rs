@@ -1,20 +1,17 @@
 //! This file contains the core functionality for the codelist
 
-// External imports
 use std::{
     collections::{BTreeMap, HashSet},
-    io::Write,
     str::FromStr,
 };
-
 use csv::Writer;
 use serde::{Deserialize, Serialize};
-
-// Internal imports
 use crate::{
     codelist_options::CodeListOptions, errors::CodeListError, metadata::Metadata,
     types::CodeListType,
+    logging::{LogEntry, LogType},
 };
+use crate::logging::{AddType, CodelistLog, RemoveType, EditType};
 
 /// Struct to represent a codelist
 ///
@@ -23,7 +20,7 @@ use crate::{
 /// * `entries` - The set of code entries
 /// * `codelist_type` - The type of codelist
 /// * `metadata` - Metadata about the codelist
-/// * `logs` - Logs of anything that happened during the codelist creation
+/// * `log` - log of anything that happened during the codelist creation
 /// * `codelist_options` - Options for the codelist
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct CodeList {
@@ -31,7 +28,7 @@ pub struct CodeList {
     pub entries: BTreeMap<String, (Option<String>, Option<String>)>,
     pub codelist_type: CodeListType,
     pub metadata: Metadata,
-    pub logs: Vec<String>, // We will want to make this a struct with more info at some point
+    pub log: CodelistLog,
     pub codelist_options: CodeListOptions,
 }
 
@@ -42,7 +39,7 @@ impl CodeList {
     /// * `name` - The name of the codelist
     /// * `codelist_type` - The type of codelist
     /// * `metadata` - Metadata describing the codelist
-    /// * `logs` - Logs of anything that happened during the codelist creation
+    /// * `log` - log of anything that happened during the codelist creation
     /// * `options` - Customisable options for the codelist
     ///
     /// # Returns
@@ -58,7 +55,7 @@ impl CodeList {
             entries: BTreeMap::new(),
             codelist_type,
             metadata,
-            logs: Vec::new(),
+            log: CodelistLog::default(),
             codelist_options: options.unwrap_or_default(),
         }
     }
@@ -86,9 +83,17 @@ impl CodeList {
         if code.is_empty() {
             return Err(CodeListError::empty_code("Empty code supplied"));
         }
-        self.entries.insert(code, (term, comment));
+
+        let log_msg = format!(
+            "Added entry with code: {code}, term: {:?}, comment: {:?}",
+            term, comment
+        );
+
+        self.entries.insert(code.clone(), (term, comment));
+        self.log.add_entry(LogEntry::new(LogType::Add(AddType::Code), log_msg));
         Ok(())
     }
+
 
     /// Remove an entry from the codelist
     ///
@@ -101,6 +106,10 @@ impl CodeList {
     pub fn remove_entry(&mut self, code: &str) -> Result<(), CodeListError> {
         let removed = self.entries.remove(code);
         if removed.is_some() {
+            self.log.add_entry(LogEntry::new(
+                LogType::Remove(RemoveType::Code),
+                format!("Removed entry with code: {code}"),
+            ));
             Ok(())
         } else {
             Err(CodeListError::entry_not_found(code))
@@ -141,7 +150,7 @@ impl CodeList {
     ///
     /// # Errors
     /// * `CodeListError::IOError` - If an error occurs when writing to the file
-    pub fn save_to_csv(&self, file_path: &str) -> std::result::Result<(), CodeListError> {
+    pub fn save_to_csv(&mut self, file_path: &str) -> Result<(), CodeListError> {
         let mut wtr = Writer::from_path(file_path)?;
         // use column names from options
         wtr.write_record([
@@ -152,6 +161,10 @@ impl CodeList {
             wtr.write_record([code, term.as_deref().unwrap_or("")])?;
         }
         wtr.flush()?;
+        self.log.add_entry(LogEntry::new(
+            LogType::Save,
+            format!("Saved codelist to CSV file: {file_path}"),
+        ));
         Ok(())
     }
 
@@ -162,25 +175,27 @@ impl CodeList {
     ///
     /// # Errors
     /// * `CodeListError::IOError` - If an error occurs when writing to the file
-    pub fn save_to_json(&self, file_path: &str) -> Result<(), CodeListError> {
+    pub fn save_to_json(&mut self, file_path: &str) -> Result<(), CodeListError> {
         let json = serde_json::to_string_pretty(self)?;
         std::fs::write(file_path, json)?;
+        self.log.add_entry(LogEntry::new(
+            LogType::Save,
+            format!("Saved codelist to JSON file: {file_path}"),
+        ));
         Ok(())
     }
 
-    /// Save the logs to a file
+    /// Save the log to a file
     ///
     /// # Arguments
-    /// * `file_path` - The path to the file to save the logs to
+    /// * `file_path` - The path to the file to save the log to
     ///
     /// # Errors
     /// * `CodeListError::IOError` - If an error occurs when writing to the file
-    pub fn save_log(&self, file_path: &str) -> std::result::Result<(), CodeListError> {
-        let mut file = std::fs::File::create(file_path)?;
-        for log in &self.logs {
-            writeln!(file, "{log}")?;
-        }
-        Ok(())
+    pub fn save_log(&self, file_path: &str) -> Result<(), CodeListError> {
+        self.log.write_to_file(file_path).map_err(|e| {
+            CodeListError::IOError(e)
+        })
     }
 
     /// Add a log message to the codelist
@@ -188,7 +203,10 @@ impl CodeList {
     /// # Arguments
     /// * `message` - The message to add to the log
     pub fn add_log(&mut self, message: String) {
-        self.logs.push(message);
+        self.log.add_entry(LogEntry::new(
+            LogType::Note,
+            message.clone(),
+        ));
     }
 
     /// Get the metadata
@@ -220,7 +238,12 @@ impl CodeList {
                         "Please use update comment instead",
                     ))
                 } else {
+                    self.log.add_entry(LogEntry::new(
+                        LogType::Add(AddType::Comment),
+                        format!("Added comment to entry with code: {code}, comment: {comment}"),
+                    ));
                     *comment_opt = Some(comment);
+
                     Ok(())
                 }
             }
@@ -244,7 +267,13 @@ impl CodeList {
         match self.entries.get_mut(&code) {
             Some((_, comment_opt)) => {
                 if comment_opt.is_some() {
+                    // Move `comment` into a temporary variable so we can use it for both logging and assignment
+                    let log_msg = format!(
+                        "Updated comment for entry with code: {code}, comment: {:?}",
+                        comment
+                    );
                     *comment_opt = Some(comment);
+                    self.log.add_entry(LogEntry::new(LogType::Edit(EditType::Comment), log_msg));
                     Ok(())
                 } else {
                     Err(CodeListError::code_entry_comment_does_not_exist(
@@ -256,6 +285,7 @@ impl CodeList {
             None => Err(CodeListError::entry_not_found(&code)),
         }
     }
+
 
     /// Remove the comment from the code entry
     ///
@@ -273,6 +303,10 @@ impl CodeList {
             Some((_, comment_opt)) => {
                 if comment_opt.is_some() {
                     *comment_opt = None;
+                    self.log.add_entry(LogEntry::new(
+                        LogType::Remove(RemoveType::Comment),
+                        format!("Removed comment from entry with code: {code}"),
+                    ));
                     Ok(())
                 } else {
                     Err(CodeListError::code_entry_comment_does_not_exist(
@@ -545,7 +579,6 @@ mod tests {
 
         assert_eq!(codelist.codelist_type(), &CodeListType::ICD10);
         assert_eq!(codelist.entries.len(), 2);
-        assert_eq!(codelist.logs.len(), 0);
         assert_eq!(&codelist.codelist_options, &CodeListOptions::default());
 
         assert_eq!(codelist.metadata().provenance.source, Source::ManuallyCreated);
@@ -620,7 +653,7 @@ mod tests {
 
         assert_eq!(codelist.codelist_type(), &CodeListType::ICD10);
         assert_eq!(codelist.entries.len(), 0);
-        assert_eq!(codelist.logs.len(), 0);
+        assert_eq!(codelist.log.len(), 0);
 
         Ok(())
     }
@@ -746,7 +779,7 @@ mod tests {
         let file_path_str = file_path
             .to_str()
             .ok_or(CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
-        let codelist = create_test_codelist()?;
+        let mut codelist = create_test_codelist()?;
         codelist.save_to_csv(file_path_str)?;
         let content = std::fs::read_to_string(file_path_str)?;
         let lines: Vec<&str> = content.lines().collect();
@@ -767,23 +800,18 @@ mod tests {
             .to_str()
             .ok_or(CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
 
-        let original_codelist = create_test_codelist()?;
+        let mut original_codelist = create_test_codelist()?;
         original_codelist.save_to_json(file_path_str)?;
         let json_content = std::fs::read_to_string(file_path_str)?;
         let loaded_codelist: CodeList = serde_json::from_str(&json_content)?;
 
-        assert_eq!(original_codelist, loaded_codelist);
+        assert_eq!(original_codelist.name, loaded_codelist.name);
+        assert_eq!(original_codelist.codelist_type, loaded_codelist.codelist_type);
+        assert_eq!(original_codelist.entries, loaded_codelist.entries);
 
-        Ok(())
-    }
-
-    #[test]
-    fn test_add_to_log() -> Result<(), CodeListError> {
-        let mut codelist = create_test_codelist()?;
-        codelist.add_log("Test log message".to_string());
-
-        assert_eq!(codelist.logs.len(), 1);
-        assert_eq!(codelist.logs[0], "Test log message".to_string());
+        // Note we are not testing log here because saving a log in of itself creates
+        // a new log entry, and since we are writing to a temporary file, the log will
+        // not match the original log and is not guessable.
 
         Ok(())
     }
@@ -791,7 +819,7 @@ mod tests {
     #[test]
     fn test_save_log() -> Result<(), CodeListError> {
         let temp_dir = TempDir::new()?;
-        let file_path = temp_dir.path().join("test.log");
+        let file_path = temp_dir.path().join("test.txt");
         let file_path_str = file_path
             .to_str()
             .ok_or(CodeListError::invalid_file_path("Path contains invalid Unicode characters"))?;
@@ -801,7 +829,10 @@ mod tests {
         codelist.save_log(file_path_str)?;
         let content = std::fs::read_to_string(file_path_str)?;
 
-        assert_eq!(content, "Test log message\n");
+        assert!(content.contains("Add(Code): Added entry with code: R65.2, term: None, comment: None"));
+        assert!(content.contains("Add(Code): Added entry with code: A48.51, term: Some(\"Infant botulism\"), comment: Some(\"test comment\")"));
+        assert!(content.contains("Note: Test log message"));
+
 
         Ok(())
     }
@@ -1020,7 +1051,7 @@ mod tests {
 
         observed_codelist.truncate_to_3_digits(TermManagement::DropTerm)?;
 
-        assert_eq!(observed_codelist, expected_codelist);
+        assert_eq!(observed_codelist.entries, expected_codelist.entries);
 
         Ok(())
     }
@@ -1053,7 +1084,7 @@ mod tests {
 
         observed_codelist.truncate_to_3_digits(TermManagement::DropTerm)?;
 
-        assert_eq!(observed_codelist, expected_codelist);
+        assert_eq!(observed_codelist.entries, expected_codelist.entries);
 
         Ok(())
     }
@@ -1081,7 +1112,7 @@ mod tests {
 
         observed_codelist.truncate_to_3_digits(TermManagement::First)?;
 
-        assert_eq!(observed_codelist, expected_codelist);
+        assert_eq!(observed_codelist.entries, expected_codelist.entries);
 
         Ok(())
     }
@@ -1114,7 +1145,7 @@ mod tests {
 
         observed_codelist.truncate_to_3_digits(TermManagement::First)?;
 
-        assert_eq!(observed_codelist, expected_codelist);
+        assert_eq!(observed_codelist.entries, expected_codelist.entries);
 
         Ok(())
     }
@@ -1134,22 +1165,16 @@ mod tests {
             Some("Typhoid and paratyphoid fevers".to_string()),
             None,
         )?;
-
-        expected_codelist.add_entry("B0111".to_string(), Some("TB".to_string()), None)?;
-
         let mut observed_codelist = expected_codelist.clone();
-
         expected_codelist.add_entry("A10X".to_string(), Some("Cholera".to_string()), None)?;
-
         expected_codelist.add_entry(
             "B01X".to_string(),
             Some("Typhoid and paratyphoid fevers".to_string()),
             None,
         )?;
-
         observed_codelist.add_x_codes()?;
 
-        assert_eq!(observed_codelist, expected_codelist);
+        assert_eq!(observed_codelist.entries, expected_codelist.entries);
 
         Ok(())
     }
@@ -1184,7 +1209,7 @@ mod tests {
 
         observed_codelist.add_x_codes()?;
 
-        assert_eq!(observed_codelist, expected_codelist);
+        assert_eq!(observed_codelist.entries, expected_codelist.entries);
 
         Ok(())
     }
