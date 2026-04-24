@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "rust/codelist-rs",
+    "rust/codelist-systems-rs",
     "rust/codelist-validator-rs",
     "rust/codelist-builder-rs",
     "bindings/python",

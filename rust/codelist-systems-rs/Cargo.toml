@@ -1,0 +1,16 @@
+[package]
+name = "codelist-systems-rs"
+version = "0.1.0"
+edition = "2021"
+authors = ["Caroline Morton <caroline@parakeetconsulting.com>"]
+description = "Coding systems (ICD10, SNOMED, OPCS, CTV3) as data with pluggable capabilities."
+
+[dependencies]
+codelist-rs = { path = "../codelist-rs" }
+regex = "1.11.1"
+thiserror = "2.0.9"
+thiserror-ext = "0.3.0"
+serde = { version = "1.0", features = ["derive"] }
+
+[dev-dependencies]
+proptest = "1"
