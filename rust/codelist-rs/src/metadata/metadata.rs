@@ -58,7 +58,7 @@ mod tests {
     use indexmap::IndexSet;
 
     use super::*;
-    use crate::{errors::CodeListError, metadata::Source};
+    use crate::{errors::CodeListError, metadata::Source, types::Contributor};
 
     // helper function to get the time difference between the current time and the
     // given date
@@ -69,8 +69,10 @@ mod tests {
 
     #[test]
     fn test_new() -> Result<(), CodeListError> {
-        let provenance =
-            Provenance::new(Source::ManuallyCreated, Some(IndexSet::from(["Test".to_string()])));
+        let provenance = Provenance::new(
+            Source::ManuallyCreated,
+            Some(IndexSet::from([Contributor::from("Test")])),
+        );
         let categorisation_and_usage = CategorisationAndUsage::new(
             Some(HashSet::from(["tag1".to_string()])),
             Some(HashSet::from(["usage1".to_string()])),
@@ -100,7 +102,7 @@ mod tests {
         assert!(time_difference < 1000);
         let time_difference = get_time_difference(metadata.provenance.last_modified_date);
         assert!(time_difference < 1000);
-        assert_eq!(metadata.provenance.contributors, IndexSet::from(["Test".to_string()]));
+        assert_eq!(metadata.provenance.contributors, IndexSet::from([Contributor::from("Test")]));
 
         assert_eq!(metadata.categorisation_and_usage.tags, HashSet::from(["tag1".to_string()]));
         assert_eq!(metadata.categorisation_and_usage.usage, HashSet::from(["usage1".to_string()]));

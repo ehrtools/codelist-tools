@@ -10,14 +10,14 @@ use serde::{Deserialize, Serialize};
 
 // Internal imports
 use crate::errors::CodeListError;
-use crate::metadata::metadata_source::Source;
+use crate::{metadata::metadata_source::Source, types::Contributor};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Provenance {
     pub source: Source,
     pub created_date: chrono::DateTime<Utc>,
     pub last_modified_date: chrono::DateTime<Utc>,
-    pub contributors: IndexSet<String>,
+    pub contributors: IndexSet<Contributor>,
 }
 
 impl Default for Provenance {
@@ -31,7 +31,7 @@ impl Provenance {
     ///
     /// # Arguments
     /// * `source` - The source of the codelist
-    pub fn new(source: Source, contributors: Option<IndexSet<String>>) -> Provenance {
+    pub fn new(source: Source, contributors: Option<IndexSet<Contributor>>) -> Provenance {
         Self {
             source,
             created_date: Utc::now(),
@@ -53,7 +53,7 @@ impl Provenance {
     /// # Arguments
     /// * `self` - The provenance to update
     /// * `contributor` - The contributor to add
-    pub fn add_contributor(&mut self, contributor: String) {
+    pub fn add_contributor(&mut self, contributor: Contributor) {
         self.contributors.insert(contributor);
     }
 
@@ -62,7 +62,7 @@ impl Provenance {
     /// # Arguments
     /// * `self` - The provenance to update
     /// * `contributor` - The contributor to remove
-    pub fn remove_contributor(&mut self, contributor: String) -> Result<(), CodeListError> {
+    pub fn remove_contributor(&mut self, contributor: Contributor) -> Result<(), CodeListError> {
         if self.contributors.shift_remove(&contributor) {
             Ok(())
         } else {
@@ -88,7 +88,7 @@ mod tests {
 
     fn create_test_provenance_with_contributors() -> Provenance {
         let mut contributors = IndexSet::new();
-        contributors.insert("Example Contributor".to_string());
+        contributors.insert(Contributor::from("Example Contributor"));
         Provenance::new(Source::LoadedFromFile, Some(contributors))
     }
 
@@ -100,14 +100,17 @@ mod tests {
         assert!(time_difference < 1000);
         let time_difference = get_time_difference(provenance.last_modified_date);
         assert!(time_difference < 1000);
-        assert_eq!(provenance.contributors, IndexSet::new());
+        assert_eq!(provenance.contributors, IndexSet::<Contributor>::new());
     }
 
     #[test]
     fn test_new_provenance_with_contributors() {
         let provenance = create_test_provenance_with_contributors();
         assert_eq!(provenance.source, Source::LoadedFromFile);
-        assert_eq!(provenance.contributors, IndexSet::from(["Example Contributor".to_string()]));
+        assert_eq!(
+            provenance.contributors,
+            IndexSet::from([Contributor::from("Example Contributor")])
+        );
         let time_difference = get_time_difference(provenance.created_date);
         assert!(time_difference < 1000);
         let time_difference = get_time_difference(provenance.last_modified_date);
@@ -125,23 +128,35 @@ mod tests {
     #[test]
     fn test_add_contributor() {
         let mut provenance = create_test_provenance_no_contributors();
-        provenance.add_contributor("Example Contributor".to_string());
-        assert_eq!(provenance.contributors, IndexSet::from(["Example Contributor".to_string()]));
+        provenance.add_contributor(Contributor::from("Example Contributor"));
+        assert_eq!(
+            provenance.contributors,
+            IndexSet::from([Contributor::from("Example Contributor")])
+        );
+    }
+
+    #[test]
+    fn add_contributor_uses_newtype() {
+        let mut p = create_test_provenance_no_contributors();
+        let c = Contributor::from("Caroline");
+        p.add_contributor(c.clone());
+        assert!(p.contributors.contains(&c));
     }
 
     #[test]
     fn test_remove_contributor() -> Result<(), CodeListError> {
         let mut provenance = create_test_provenance_with_contributors();
-        provenance.add_contributor("Example Contributor".to_string());
-        provenance.remove_contributor("Example Contributor".to_string())?;
-        assert_eq!(provenance.contributors, IndexSet::new());
+        provenance.add_contributor(Contributor::from("Example Contributor"));
+        provenance.remove_contributor(Contributor::from("Example Contributor"))?;
+        assert_eq!(provenance.contributors, IndexSet::<Contributor>::new());
         Ok(())
     }
 
     #[test]
     fn test_remove_contributor_not_found() {
         let mut provenance = create_test_provenance_no_contributors();
-        let error = provenance.remove_contributor("Example Contributor".to_string()).unwrap_err();
+        let error =
+            provenance.remove_contributor(Contributor::from("Example Contributor")).unwrap_err();
         let error_string = error.to_string();
         assert_eq!(error_string, "Contributor Example Contributor not found");
     }
@@ -150,35 +165,35 @@ mod tests {
     fn test_contributors_order_is_maintained() -> Result<(), CodeListError> {
         let mut provenance = create_test_provenance_no_contributors();
 
-        provenance.add_contributor("Example1".to_string());
+        provenance.add_contributor(Contributor::from("Example1"));
         {
             let mut iter = provenance.contributors.iter();
-            assert_eq!(iter.next(), Some(&"Example1".to_string()));
+            assert_eq!(iter.next(), Some(&Contributor::from("Example1")));
             assert_eq!(iter.next(), None);
         }
 
-        provenance.add_contributor("Example2".to_string());
+        provenance.add_contributor(Contributor::from("Example2"));
         {
             let mut iter = provenance.contributors.iter();
-            assert_eq!(iter.next(), Some(&"Example1".to_string()));
-            assert_eq!(iter.next(), Some(&"Example2".to_string()));
+            assert_eq!(iter.next(), Some(&Contributor::from("Example1")));
+            assert_eq!(iter.next(), Some(&Contributor::from("Example2")));
             assert_eq!(iter.next(), None);
         }
 
-        provenance.add_contributor("Example3".to_string());
+        provenance.add_contributor(Contributor::from("Example3"));
         {
             let mut iter = provenance.contributors.iter();
-            assert_eq!(iter.next(), Some(&"Example1".to_string()));
-            assert_eq!(iter.next(), Some(&"Example2".to_string()));
-            assert_eq!(iter.next(), Some(&"Example3".to_string()));
+            assert_eq!(iter.next(), Some(&Contributor::from("Example1")));
+            assert_eq!(iter.next(), Some(&Contributor::from("Example2")));
+            assert_eq!(iter.next(), Some(&Contributor::from("Example3")));
             assert_eq!(iter.next(), None);
         }
 
-        provenance.remove_contributor("Example2".to_string())?;
+        provenance.remove_contributor(Contributor::from("Example2"))?;
         {
             let mut iter = provenance.contributors.iter();
-            assert_eq!(iter.next(), Some(&"Example1".to_string()));
-            assert_eq!(iter.next(), Some(&"Example3".to_string()));
+            assert_eq!(iter.next(), Some(&Contributor::from("Example1")));
+            assert_eq!(iter.next(), Some(&Contributor::from("Example3")));
             assert_eq!(iter.next(), None);
         }
 

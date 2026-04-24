@@ -3,7 +3,8 @@
 //! Validation Rules
 //! 1. The code must be exactly 5 characters in length.
 //! 2. Only alphanumeric characters (a-z, A-Z, 0-9) and dots (.) are allowed.
-//! 3. The code starts with 0-5 alphanumeric characters followed by dots to pad to 5 characters.
+//! 3. The code starts with 0-5 alphanumeric characters followed by dots to pad
+//!    to 5 characters.
 use std::sync::LazyLock;
 
 use codelist_rs::codelist::CodeList;

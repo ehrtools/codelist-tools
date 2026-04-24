@@ -5,6 +5,8 @@ use std::io;
 use csv;
 use serde_json;
 
+use crate::types::Contributor;
+
 /// Enum to represent the different types of errors that can occur in the
 /// codelist library
 
@@ -53,7 +55,7 @@ pub enum CodeListError {
     CodeEntryTermDoesNotExist { code: String, msg: String },
 
     #[error("Contributor {contributor} not found")]
-    ContributorNotFound { contributor: String },
+    ContributorNotFound { contributor: Contributor },
 
     #[error("Invalid metadata source: {source_string}")]
     InvalidMetadataSource { source_string: String },

@@ -1,5 +1,4 @@
-use codelist_builder_rs::errors::CodeListBuilderError;
-use codelist_builder_rs::snomed_usage_data::SnomedUsageData;
+use codelist_builder_rs::{errors::CodeListBuilderError, snomed_usage_data::SnomedUsageData};
 
 #[tokio::test]
 async fn test_download_usage() -> Result<(), CodeListBuilderError> {
